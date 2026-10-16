@@ -52,8 +52,8 @@ test.describe.serial('Admin Dashboard & User Management Flow (Phase 6)', () => {
     await page.locator('main button[type="submit"]').click();
     await expect(page).toHaveURL('/');
 
-    // 2. Đăng xuất tài khoản mới (menu hover mới hiện nút Đăng xuất)
-    await page.locator('div.relative.group').hover();
+    // 2. Đăng xuất tài khoản mới (menu mở bằng click nút #account-menu-button)
+    await page.locator('#account-menu-button').click();
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL('/');
 
@@ -76,7 +76,8 @@ test.describe.serial('Admin Dashboard & User Management Flow (Phase 6)', () => {
 
     // 7. Chuyển về trang danh sách và kiểm tra badge
     await expect(page).toHaveURL('/Admin/Users');
-    await expect(page.getByText(`Đã cập nhật vai trò phân quyền cho tài khoản '${memberEmail}' thành công.`)).toBeVisible();
+    // Notyf render toast 2 lần (notyf__message + notyf-announcer) nên lấy phần tử đầu
+    await expect(page.getByText(`Đã cập nhật vai trò phân quyền cho tài khoản '${memberEmail}' thành công.`).first()).toBeVisible();
 
     const updatedUserRow = page.locator('tr', { hasText: memberEmail });
     await expect(updatedUserRow.getByText('StoreOperator')).toBeVisible();

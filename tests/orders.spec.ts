@@ -5,7 +5,7 @@ const ordCode = (id: string) => `#ORD-${id.padStart(5, '0')}`;
 
 const gotoProductDetails = async (page: import('@playwright/test').Page, name: string) => {
   await page.goto('/Products');
-  await page.locator('h3', { hasText: name }).getByRole('link').click();
+  await page.locator('h3', { hasText: name }).getByRole('link').first().click();
   await expect(page).toHaveURL(/\/Products\/Details\/\d+/);
 };
 
@@ -25,10 +25,10 @@ test.describe.serial('Checkout & Orders Lifecycle Flow (Phase 5)', () => {
     await page.locator('main button[type="submit"]').click();
     await expect(page).toHaveURL('/');
 
-    // 2. Chọn sản phẩm "USB-C Hub"
-    await gotoProductDetails(page, 'USB-C Hub');
+    // 2. Chọn sản phẩm "Hub USB-C 7-trong-1" (890.000 đ)
+    await gotoProductDetails(page, 'Hub USB-C 7-trong-1');
 
-    // 3. Thêm 2 chiếc vào giỏ hàng
+    // 3. Thêm 2 chiếc vào giỏ hàng (2 x 890.000 = 1.780.000 đ)
     await page.fill('input[name="quantity"]', '2');
     await page.getByRole('button', { name: 'Thêm vào giỏ hàng' }).click();
     await expect(page).toHaveURL('/Cart');
@@ -50,8 +50,8 @@ test.describe.serial('Checkout & Orders Lifecycle Flow (Phase 5)', () => {
     await expect(page.getByText('Đặt hàng thành công!')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toContainText(`Đơn hàng ${ordCode(createdOrderId)}`);
     await expect(page.getByText('Chờ xử lý')).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'USB-C Hub' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: '$78.00' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Hub USB-C 7-trong-1' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '1,780,000 đ' }).first()).toBeVisible();
 
     // 7. Kiểm tra giỏ hàng đã được làm trống sau khi tạo đơn
     await page.goto('/Cart');
@@ -61,7 +61,7 @@ test.describe.serial('Checkout & Orders Lifecycle Flow (Phase 5)', () => {
     await page.goto('/Orders');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Đơn hàng của tôi');
     // Lịch sử đơn dùng card (không phải table): tổng tiền là span
-    await expect(page.getByText('$78.00').first()).toBeVisible();
+    await expect(page.getByText('1,780,000 đ').first()).toBeVisible();
     await expect(page.getByText(`Mã ĐH: ${ordCode(createdOrderId)}`)).toBeVisible();
   });
 

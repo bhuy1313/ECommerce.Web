@@ -59,14 +59,17 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// Chống brute-force Login/Register: 10 req/phút theo IP.
+// Chống brute-force Login/Register: mặc định 10 req/phút theo IP.
+// E2E (Playwright) chạy dày từ cùng 1 IP nên cho phép nâng qua cấu hình
+// "RateLimiting:AuthPermitLimit" (env: RateLimiting__AuthPermitLimit).
 builder.Services.AddRateLimiter(options =>
 {
+    var authPermitLimit = builder.Configuration.GetValue<int?>("RateLimiting:AuthPermitLimit") ?? 10;
     options.AddPolicy("auth", httpContext => RateLimitPartition.GetFixedWindowLimiter(
         partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         factory: _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 10,
+            PermitLimit = authPermitLimit,
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0
         }));

@@ -15,5 +15,9 @@ export default defineConfig({
     url: 'http://localhost:5135',
     reuseExistingServer: true,
     timeout: 120_000,
+    // Suite chạy dày từ cùng 1 IP nên nới budget brute-force auth (prod giữ mặc định 10/phút).
+    env: {
+      RateLimiting__AuthPermitLimit: '1000',
+    },
   },
 });

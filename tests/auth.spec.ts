@@ -48,8 +48,8 @@ test.describe('Authentication & Authorization Flow', () => {
     await page.fill('input[name="Password"]', testPassword);
     await page.locator('main button[type="submit"]').click();
 
-    // Menu tài khoản chỉ mở khi hover rồi mới bấm đăng xuất
-    await page.locator('div.relative.group').hover();
+    // Menu tài khoản mở bằng click nút #account-menu-button (xem _LoginPartial.cshtml)
+    await page.locator('#account-menu-button').click();
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
 
     await expect(page).toHaveURL('/');
@@ -68,8 +68,8 @@ test.describe('Authentication & Authorization Flow', () => {
     await expect(page).toHaveURL('/');
     await expect(page.getByText('admin@ecommerce.local').first()).toBeAttached();
 
-    // Link "Trang Quản trị" nằm trong dropdown tài khoản
-    await page.locator('div.relative.group').hover();
+    // Link "Trang Quản trị" nằm trong dropdown tài khoản (mở bằng click)
+    await page.locator('#account-menu-button').click();
     const adminLink = page.getByRole('link', { name: 'Trang Quản trị' });
     await expect(adminLink).toBeVisible();
     await adminLink.click();

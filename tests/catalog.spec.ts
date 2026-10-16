@@ -9,35 +9,35 @@ test.describe('Catalog & Product Management Flow (Phase 3)', () => {
     await page.goto('/Products');
 
     await expect(page.getByRole('heading', { name: 'Danh sách sản phẩm' })).toBeVisible();
-    await expect(productHeading(page, 'Mechanical Keyboard')).toBeVisible();
+    await expect(productHeading(page, 'Bàn phím cơ RGB')).toBeVisible();
 
     // Bấm vào tên sản phẩm để xem chi tiết
-    await productHeading(page, 'Mechanical Keyboard').getByRole('link').click();
+    await productHeading(page, 'Bàn phím cơ RGB').getByRole('link').click();
 
     await expect(page).toHaveURL(/\/Products\/Details\/\d+/);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Mechanical Keyboard');
-    await expect(page.getByText('$89.50')).toBeVisible();
-    await expect(page.getByText('Electronics').first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Bàn phím cơ RGB');
+    await expect(page.getByText('1,890,000 đ')).toBeVisible();
+    await expect(page.getByText('Gaming & Phụ kiện').first()).toBeVisible();
     await expect(page.getByText(/Còn hàng/)).toBeVisible();
   });
 
   test('2. Khách hàng tìm kiếm sản phẩm theo từ khóa và lọc theo danh mục', async ({ page }) => {
     await page.goto('/Products');
 
-    // Tìm kiếm với từ khóa "Keyboard" (submit form bằng Enter vì nút tìm là icon)
-    await page.fill('aside input[name="search"]', 'Keyboard');
+    // Tìm kiếm với từ khóa "chuột" (submit form bằng Enter vì nút tìm là icon)
+    await page.fill('aside input[name="search"]', 'chuột');
     await page.press('aside input[name="search"]', 'Enter');
 
-    await expect(productHeading(page, 'Mechanical Keyboard')).toBeVisible();
-    await expect(productHeading(page, 'Cotton T-Shirt')).not.toBeVisible();
+    await expect(productHeading(page, 'Chuột không dây Silent')).toBeVisible();
+    await expect(productHeading(page, 'Áo thun cotton basic')).not.toBeVisible();
 
-    // Lọc theo danh mục "Clothing" bằng link danh mục ở sidebar
+    // Lọc theo danh mục "Thời trang công sở" bằng link danh mục ở sidebar
     await page.goto('/Products');
-    await page.locator('aside').getByRole('link', { name: 'Clothing' }).click();
+    await page.locator('aside').getByRole('link', { name: 'Thời trang công sở' }).click();
 
-    await expect(productHeading(page, 'Cotton T-Shirt')).toBeVisible();
-    await expect(productHeading(page, 'Denim Jacket')).toBeVisible();
-    await expect(productHeading(page, 'Mechanical Keyboard')).not.toBeVisible();
+    await expect(productHeading(page, 'Áo thun cotton basic')).toBeVisible();
+    await expect(productHeading(page, 'Áo khoác denim')).toBeVisible();
+    await expect(productHeading(page, 'Bàn phím cơ RGB')).not.toBeVisible();
   });
 
   test('3. Admin quản lý CRUD Category, CRUD Product và kích hoạt / lưu kho sản phẩm', async ({ page }) => {

@@ -117,6 +117,16 @@ public static class DbInitializer
             await db.SaveChangesAsync();
         }
 
+        // allProducts đã cũ sau các SaveChanges xóa junk ở trên — tải lại để khối
+        // legacy không xóa trùng các dòng vừa xóa (gây DbUpdateConcurrencyException
+        // làm sập server lúc startup, vd sản phẩm test "Hi-Fi Headphones {timestamp}"
+        // giá 149.99 vừa khớp junk vừa khớp legacy Price < 1000).
+        allProducts = await db.Products
+            .Include(p => p.Category)
+            .Include(p => p.OrderItems)
+            .Include(p => p.CartItems)
+            .ToListAsync();
+
         // Dọn sản phẩm mẫu cũ giá USD (vd 25.99, 52.00) còn sót từ bản seed tiếng Anh
         // và danh mục test (vd "VerifyCat_..."). Chỉ xóa khi chưa phát sinh đơn/giỏ.
         var legacyProducts = allProducts
