@@ -114,6 +114,13 @@ using (var scope = app.Services.CreateScope())
     if (useSqlite)
     {
         await db.Database.EnsureCreatedAsync();
+        // Demo nhiều người bấm cùng lúc: WAL cho phép đọc song song khi đang ghi,
+        // giảm lỗi "database is locked" (vẫn có thể xảy ra nếu 2 checkout cùng lúc —
+        // xem runbook demo).
+        var journalMode = (await db.Database.SqlQueryRaw<string>("PRAGMA journal_mode=WAL;").ToListAsync())
+            .FirstOrDefault();
+        var sqliteLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SQLite");
+        sqliteLogger.LogInformation("SQLite journal_mode={JournalMode}", journalMode);
     }
     else
     {
@@ -141,7 +148,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
-app.UseHttpsRedirection();
+// Health check của host gọi qua HTTP nội bộ — không redirect sang HTTPS
+// (một số checker không theo redirect, service sẽ mãi không healthy).
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/healthz"),
+    branch => branch.UseHttpsRedirection());
 app.UseRouting();
 
 app.UseRateLimiter();

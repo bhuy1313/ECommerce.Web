@@ -32,7 +32,6 @@ public static class DbInitializer
         // Dev fallback chỉ dùng khi IsDevelopment để E2E/tests chạy được.
         var adminEmail = configuration["SeedAdmin:Email"] ?? "admin@ecommerce.local";
         var adminPassword = configuration["SeedAdmin:Password"];
-        var skipAdminSeed = false;
         if (string.IsNullOrEmpty(adminPassword))
         {
             if (environment.IsDevelopment())
@@ -42,13 +41,17 @@ public static class DbInitializer
             }
             else
             {
-                logger.LogError("SeedAdmin:Password chưa cấu hình — bỏ qua tạo tài khoản admin mặc định.");
-                skipAdminSeed = true;
+                // Fail nhanh thay vì seed thiếu admin trong im lặng: không có admin
+                // thì demo/deploy login thất bại mà không để lại dấu hiệu rõ ràng.
+                throw new InvalidOperationException(
+                    "SeedAdmin:Password chưa cấu hình — không thể tạo tài khoản admin. " +
+                    "Hãy đặt biến môi trường SeedAdmin__Password (mật khẩu cần đủ mạnh " +
+                    "theo policy Identity: tối thiểu 8 ký tự, hoa/thường/số/ký tự đặc biệt).");
             }
         }
 
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null && !skipAdminSeed)
+        if (adminUser == null)
         {
             adminUser = new ApplicationUser
             {
@@ -61,6 +64,14 @@ public static class DbInitializer
             if (createAdminResult.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
+            }
+            else
+            {
+                // Mật khẩu yếu (không đạt policy Identity) cũng làm seed admin thất bại
+                // trong im lặng — fail nhanh để người deploy thấy ngay trong log.
+                throw new InvalidOperationException(
+                    "Không tạo được tài khoản admin seed: " +
+                    string.Join("; ", createAdminResult.Errors.Select(e => e.Description)));
             }
         }
 
