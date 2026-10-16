@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ecommerce-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: ConnectionStrings__DefaultConnection
+        value: Data Source=/tmp/ecommerce-demo.db
+      - key: SeedAdmin__Password
+        sync: false
