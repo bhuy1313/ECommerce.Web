@@ -26,8 +26,20 @@ builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
+var useSqlite = defaultConnection.Contains(".db", StringComparison.OrdinalIgnoreCase);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (useSqlite)
+    {
+        options.UseSqlite(defaultConnection);
+    }
+    else
+    {
+        options.UseSqlServer(defaultConnection);
+    }
+});
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -99,7 +111,14 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    db.Database.Migrate();
+    if (useSqlite)
+    {
+        await db.Database.EnsureCreatedAsync();
+    }
+    else
+    {
+        await db.Database.MigrateAsync();
+    }
     await DbInitializer.SeedAsync(
         db,
         userManager,
