@@ -55,3 +55,6 @@ appsettings.*.local.json
 # Scratch / local notes
 .scratch/
 *.bak-bench
+
+# Git worktrees (isolated implementation workspaces)
+.worktrees/
