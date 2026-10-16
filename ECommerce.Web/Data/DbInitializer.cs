@@ -11,7 +11,10 @@ public static class DbInitializer
     public static async Task SeedAsync(
         ApplicationDbContext db,
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration,
+        IHostEnvironment environment,
+        ILogger logger)
     {
         // 1. Seed Roles
         string[] roles = [AppRoles.Admin, AppRoles.StoreOperator, AppRoles.Customer];
@@ -24,9 +27,28 @@ public static class DbInitializer
         }
 
         // 2. Seed Default Admin User
-        var adminEmail = "admin@ecommerce.local";
+        // Mật khẩu KHÔNG hardcode: đọc từ "SeedAdmin:Password"
+        // (Development: dotnet user-secrets / Production: env SeedAdmin__Password, Key Vault...).
+        // Dev fallback chỉ dùng khi IsDevelopment để E2E/tests chạy được.
+        var adminEmail = configuration["SeedAdmin:Email"] ?? "admin@ecommerce.local";
+        var adminPassword = configuration["SeedAdmin:Password"];
+        var skipAdminSeed = false;
+        if (string.IsNullOrEmpty(adminPassword))
+        {
+            if (environment.IsDevelopment())
+            {
+                adminPassword = "Admin@12345";
+                logger.LogWarning("SeedAdmin:Password chưa cấu hình — dùng mật khẩu admin mặc định, CHỈ cho Development.");
+            }
+            else
+            {
+                logger.LogError("SeedAdmin:Password chưa cấu hình — bỏ qua tạo tài khoản admin mặc định.");
+                skipAdminSeed = true;
+            }
+        }
+
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        if (adminUser == null && !skipAdminSeed)
         {
             adminUser = new ApplicationUser
             {
@@ -35,7 +57,7 @@ public static class DbInitializer
                 EmailConfirmed = true
             };
 
-            var createAdminResult = await userManager.CreateAsync(adminUser, "Admin@12345");
+            var createAdminResult = await userManager.CreateAsync(adminUser, adminPassword!);
             if (createAdminResult.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);

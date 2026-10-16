@@ -1,6 +1,7 @@
 using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerce.Web.Controllers;
 
@@ -24,6 +25,7 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> AddToCart(int productId, int quantity = 1, string? returnUrl = null)
     {
         var (success, message) = await _cartService.AddItemAsync(productId, quantity);
@@ -46,6 +48,7 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> UpdateQuantity(int productId, int quantity)
     {
         var (success, message) = await _cartService.UpdateQuantityAsync(productId, quantity);
@@ -63,6 +66,7 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> RemoveItem(int productId)
     {
         await _cartService.RemoveItemAsync(productId);
@@ -72,6 +76,7 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> Clear()
     {
         await _cartService.ClearCartAsync();

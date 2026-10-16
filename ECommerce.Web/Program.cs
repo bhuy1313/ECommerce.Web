@@ -35,7 +35,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
-        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireNonAlphanumeric = true;
         options.User.RequireUniqueEmail = true;
         options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = 5;
@@ -51,9 +51,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    // SameAsRequest thay vì Always để dev http://localhost vẫn login được;
-    // production ép HTTPS bằng UseHttpsRedirection + HSTS nên cookie luôn đi TLS.
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    // SameAsRequest chỉ cho dev http://localhost; production luôn ép Secure.
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
 });
@@ -66,6 +67,15 @@ builder.Services.AddRateLimiter(options =>
         factory: _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+    // Chống spam/abuse các thao tác thay đổi dữ liệu: 60 req/phút theo IP.
+    options.AddPolicy("mutating", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0
         }));
@@ -87,11 +97,18 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
     db.Database.Migrate();
-    await DbInitializer.SeedAsync(db, userManager, roleManager);
+    await DbInitializer.SeedAsync(
+        db,
+        userManager,
+        roleManager,
+        services.GetRequiredService<IConfiguration>(),
+        services.GetRequiredService<IHostEnvironment>(),
+        services.GetRequiredService<ILoggerFactory>().CreateLogger("DbInitializer"));
 }
 
 // Configure the HTTP request pipeline.
 app.UseGlobalExceptionHandling();
+app.UseSecurityHeaders();
 
 if (!app.Environment.IsDevelopment())
 {

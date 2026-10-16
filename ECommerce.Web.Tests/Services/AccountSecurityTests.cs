@@ -130,19 +130,20 @@ public class AccountSecurityTests : IDisposable
     [InlineData("nouppercase@123", false)] // thiếu hoa (policy mới)
     [InlineData("NOLOWERCASE@123", false)] // thiếu thường (policy mới)
     [InlineData("NoDigitHere@", false)] // thiếu số
+    [InlineData("NoSpecial123", false)] // thiếu ký tự đặc biệt (policy mới)
     [InlineData("Valid@123", true)]
     public async Task PasswordValidator_EnforcesConfiguredPolicy(string password, bool expectedValid)
     {
         var (db, _) = TestDbContextFactory.CreateInMemoryDbContext();
         using var _ = db;
-        // Options mirror chính sách trong Program.cs (8 + số + hoa + thường).
+        // Options mirror chính sách trong Program.cs (8 + số + hoa + thường + ký tự đặc biệt).
         var users = CreateUserManager(db, o =>
         {
             o.Password.RequiredLength = 8;
             o.Password.RequireDigit = true;
             o.Password.RequireLowercase = true;
             o.Password.RequireUppercase = true;
-            o.Password.RequireNonAlphanumeric = false;
+            o.Password.RequireNonAlphanumeric = true;
         });
         var validator = new PasswordValidator<ApplicationUser>();
         var user = new ApplicationUser { UserName = "pw@test.local", Email = "pw@test.local" };

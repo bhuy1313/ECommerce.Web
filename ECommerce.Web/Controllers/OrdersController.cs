@@ -4,6 +4,7 @@ using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerce.Web.Controllers;
 
@@ -54,6 +55,7 @@ public class OrdersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> Checkout()
     {
         var userId = _userManager.GetUserId(User);
@@ -75,6 +77,7 @@ public class OrdersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> Cancel(int id)
     {
         var userId = _userManager.GetUserId(User);

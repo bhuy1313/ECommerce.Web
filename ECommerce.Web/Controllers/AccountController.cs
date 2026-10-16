@@ -55,7 +55,9 @@ public class AccountController : Controller
         var existingUser = await _userManager.FindByEmailAsync(model.Email);
         if (existingUser != null)
         {
-            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
+            // Chống user-enumeration: không tiết lộ email đã tồn tại (chỉ log server).
+            _logger.LogWarning("Đăng ký với email đã tồn tại: {Email}", model.Email);
+            ModelState.AddModelError(string.Empty, "Không thể tạo tài khoản với email này. Nếu bạn đã có tài khoản, vui lòng đăng nhập.");
             return View(model);
         }
 
@@ -121,8 +123,9 @@ public class AccountController : Controller
 
         if (result.IsLockedOut)
         {
+            // Chống user-enumeration: lockout trả cùng message chung như sai mật khẩu.
             _logger.LogWarning("Tài khoản {Email} bị tạm khóa do đăng nhập sai nhiều lần.", model.Email);
-            ModelState.AddModelError(string.Empty, "Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.");
+            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
             return View(model);
         }
 

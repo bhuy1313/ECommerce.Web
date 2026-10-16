@@ -2,6 +2,7 @@ using ECommerce.Web.Data;
 using ECommerce.Web.Models;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -14,12 +15,14 @@ public class HomeController : Controller
     private readonly ApplicationDbContext _db;
     private readonly ILogger<HomeController> _logger;
     private readonly ICurrencyService _fx;
+    private readonly IWebHostEnvironment _env;
 
-    public HomeController(ApplicationDbContext db, ILogger<HomeController> logger, ICurrencyService fx)
+    public HomeController(ApplicationDbContext db, ILogger<HomeController> logger, ICurrencyService fx, IWebHostEnvironment env)
     {
         _db = db;
         _logger = logger;
         _fx = fx;
+        _env = env;
     }
 
     public async Task<IActionResult> Index()
@@ -49,6 +52,7 @@ public class HomeController : Controller
     /// <summary>Lưu lựa chọn tiền tệ hiển thị (cookie 1 năm), quay lại trang cũ.</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public IActionResult SetCurrency(string code, string? returnUrl = null)
     {
         var normalized = code?.Trim().ToUpperInvariant();
@@ -56,6 +60,8 @@ public class HomeController : Controller
         {
             Response.Cookies.Append(_fx.CookieName, normalized!, new CookieOptions
             {
+                HttpOnly = true,
+                Secure = !_env.IsDevelopment(),
                 MaxAge = TimeSpan.FromDays(365),
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true

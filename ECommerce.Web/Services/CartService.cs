@@ -2,6 +2,7 @@ using System.Text.Json;
 using ECommerce.Web.Data;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,21 +11,29 @@ namespace ECommerce.Web.Services;
 public class CartService : ICartService
 {
     private const string GuestCartCookie = "Ecommerce_GuestCart";
+    private const int MaxGuestQuantity = 100000;
     private readonly ApplicationDbContext _db;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<CartService> _logger;
+    private readonly IDataProtector? _cartProtector;
+    private readonly bool _cookieSecure;
 
     public CartService(
         ApplicationDbContext db,
         IHttpContextAccessor httpContextAccessor,
         UserManager<ApplicationUser> userManager,
-        ILogger<CartService> logger)
+        ILogger<CartService> logger,
+        IDataProtectionProvider? dataProtection = null,
+        IWebHostEnvironment? webEnvironment = null)
     {
         _db = db;
         _httpContextAccessor = httpContextAccessor;
         _userManager = userManager;
         _logger = logger;
+        _cartProtector = dataProtection?.CreateProtector("Ecommerce_GuestCart.v1");
+        // Localhost dev http vẫn chạy được; production ép Secure.
+        _cookieSecure = webEnvironment == null || !webEnvironment.IsDevelopment();
     }
 
     public async Task<CartViewModel> GetCartAsync()
@@ -424,7 +433,29 @@ public class CartService : ICartService
 
         try
         {
-            return JsonSerializer.Deserialize<List<GuestCartItemDto>>(cookie) ?? new List<GuestCartItemDto>();
+            // Cookie do client kiểm soát: ưu tiên unprotect (định dạng mới có ký);
+            // rớt về JSON trần để tương thích cookie cũ, thất bại nữa thì giỏ rỗng.
+            var json = cookie;
+            if (_cartProtector != null)
+            {
+                try
+                {
+                    json = _cartProtector.Unprotect(cookie);
+                }
+                catch
+                {
+                    json = cookie;
+                }
+            }
+
+            var items = JsonSerializer.Deserialize<List<GuestCartItemDto>>(json)
+                ?? new List<GuestCartItemDto>();
+            // Lọc giá trị bất thường (số âm/khổng lồ, id không hợp lệ) trước khi dùng.
+            return items
+                .Where(i => i.ProductId > 0 && i.Quantity > 0 && i.Quantity <= MaxGuestQuantity)
+                .GroupBy(i => i.ProductId)
+                .Select(g => new GuestCartItemDto(g.Key, Math.Min(g.Sum(i => i.Quantity), MaxGuestQuantity)))
+                .ToList();
         }
         catch
         {
@@ -444,9 +475,11 @@ public class CartService : ICartService
         }
 
         var json = JsonSerializer.Serialize(items);
-        httpContext.Response.Cookies.Append(GuestCartCookie, json, new CookieOptions
+        var value = _cartProtector?.Protect(json) ?? json;
+        httpContext.Response.Cookies.Append(GuestCartCookie, value, new CookieOptions
         {
             HttpOnly = true,
+            Secure = _cookieSecure,
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
