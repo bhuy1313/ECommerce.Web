@@ -153,6 +153,8 @@ app.UseNotyf();
 
 app.MapStaticAssets();
 
+app.MapGet("/healthz", () => Results.Ok("healthy"));
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
