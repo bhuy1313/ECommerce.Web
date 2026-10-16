@@ -1,0 +1,195 @@
+﻿@model ECommerce.Web.Models.Entities.Product
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@functions {
+    string GetProductImage(string? categoryName, int id)
+    {
+        var cat = categoryName?.ToLower() ?? "";
+        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80",
+                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80",
+                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80",
+                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80",
+                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("book"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=80",
+                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=800&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80";
+    }
+}
+
+@{
+    var mainImage = GetProductImage(Model.Category?.Name, Model.Id);
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-8 items-center">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <a asp-controller="Products" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Sản phẩm</a>
+        @if (Model.Category != null)
+        {
+            <span class="mx-2 text-gray-400">/</span>
+            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">@Model.Category.Name</a>
+        }
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium truncate max-w-xs">@Model.Name</span>
+    </nav>
+
+    <div class="flex flex-col lg:flex-row gap-12 bg-white dark:bg-gray-900 p-6 sm:p-10 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
+        <!-- Ảnh sản phẩm -->
+        <div class="w-full lg:w-1/2">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 mb-4 relative aspect-square flex items-center justify-center border border-gray-100 dark:border-gray-800">
+                <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+            </div>
+            <!-- Thumbnails mô phỏng -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border-2 border-primary aspect-square flex items-center justify-center">
+                    <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border border-gray-200 dark:border-gray-700 aspect-square flex items-center justify-center opacity-60">
+                    <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin sản phẩm -->
+        <div class="w-full lg:w-1/2 flex flex-col">
+            <div class="mb-6">
+                @if (Model.StockQuantity > 0)
+                {
+                    <span class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full mb-3 border border-emerald-200">
+                        <i class="fas fa-check-circle mr-1.5 text-emerald-500"></i> Còn hàng (@Model.StockQuantity sản phẩm khả dụng)
+                    </span>
+                }
+                else
+                {
+                    <span class="inline-flex items-center px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full mb-3 border border-rose-200">
+                        <i class="fas fa-times-circle mr-1.5 text-rose-500"></i> Tạm hết hàng
+                    </span>
+                }
+
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">@Model.Name</h1>
+                <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span class="text-primary dark:text-indigo-300 font-medium">@Model.Category?.Name</span>
+                    <span class="text-gray-300">|</span>
+                    <span>Mã SP: #PRD-@Model.Id.ToString("D4")</span>
+                </div>
+            </div>
+
+            <div class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-baseline gap-4 mb-2">
+                    <span class="text-3xl font-bold text-gray-900 dark:text-gray-100"><vc:money amount="@Model.Price" /></span>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400 text-xs">Giá đã bao gồm thuế VAT và bảo hành chính hãng</p>
+            </div>
+
+            <!-- Tóm tắt mô tả -->
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2">Giới thiệu ngắn:</h3>
+                <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                    @(string.IsNullOrWhiteSpace(Model.Description) ? "Sản phẩm chất lượng cao được phân phối trực tiếp bởi TechNova." : Model.Description)
+                </p>
+            </div>
+
+            @if (Model.StockQuantity > 0)
+            {
+                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mt-auto">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Id" />
+
+                    <div class="mb-6">
+                        <label for="quantity-input" class="block font-medium text-gray-900 dark:text-gray-100 text-sm mb-2">Số lượng:</label>
+                        <div class="flex items-center">
+                            <div class="flex items-center border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 w-36">
+                                <button type="button" onclick="decrementQty()" class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <input type="number" id="quantity-input" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="w-full text-center font-bold text-gray-800 dark:text-gray-200 focus:outline-none text-sm" />
+                                <button type="button" onclick="incrementQty(@Model.StockQuantity)" class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 bg-primary hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center text-sm">
+                            <i class="fas fa-cart-plus mr-2"></i> Thêm vào giỏ hàng
+                        </button>
+                        <a asp-action="Index" class="px-6 py-3.5 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors text-sm flex items-center justify-center">
+                            Quay lại
+                        </a>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800 flex gap-4">
+                    <button disabled class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-400 font-bold py-3.5 px-6 rounded-xl cursor-not-allowed text-sm">
+                        Sản phẩm tạm hết hàng
+                    </button>
+                    <a asp-action="Index" class="px-6 py-3.5 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors text-sm">
+                        Xem sản phẩm khác
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tabs Mô tả -->
+    <div class="mt-12 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div class="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50">
+            <button class="py-4 px-8 font-semibold text-primary dark:text-indigo-300 border-b-2 border-primary bg-white dark:bg-gray-900">Mô tả chi tiết</button>
+            <button class="py-4 px-8 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors">Chính sách bảo hành & Đổi trả</button>
+        </div>
+        <div class="p-8 text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Chi tiết về @Model.Name</h3>
+            <p class="mb-4">
+                @(string.IsNullOrWhiteSpace(Model.Description) ? "Thông tin chi tiết đang được cập nhật." : Model.Description)
+            </p>
+            <ul class="list-disc pl-5 space-y-2 text-gray-600 dark:text-gray-400">
+                <li>Cam kết 100% hàng chính hãng, nguồn gốc xuất xứ rõ ràng.</li>
+                <li>Đổi trả miễn phí trong vòng 7 ngày nếu có lỗi từ nhà sản xuất.</li>
+                <li>Hỗ trợ vận chuyển toàn quốc với thời gian giao nhận nhanh chóng.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function decrementQty() {
+        const input = document.getElementById('quantity-input');
+        let val = parseInt(input.value) || 1;
+        if (val > 1) {
+            input.value = val - 1;
+        }
+    }
+    function incrementQty(max) {
+        const input = document.getElementById('quantity-input');
+        let val = parseInt(input.value) || 1;
+        if (val < max) {
+            input.value = val + 1;
+        }
+    }
+</script>

@@ -1,0 +1,57 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+out/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results & coverage
+TestResults/
+coverage*/
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node (Playwright tooling around the repo)
+node_modules/
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# Env & secrets (keep .env.example, ignore real ones)
+.env
+.env.local
+.env.*.local
+appsettings.*.local.json
+
+# SQLite / local dev databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.mdf
+*.ldf
+
+# Scratch / local notes
+.scratch/
+*.bak-bench

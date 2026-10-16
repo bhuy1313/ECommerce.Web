@@ -1,0 +1,111 @@
+﻿@model IEnumerable<ECommerce.Web.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <i class="fas fa-box-check text-primary dark:text-indigo-300 mr-3"></i>Đơn hàng của tôi
+            </h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Theo dõi trạng thái và tiến độ xử lý của tất cả các đơn hàng</p>
+        </div>
+        <a asp-controller="Products" asp-action="Index" class="inline-flex items-center px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold transition-colors">
+            <i class="fas fa-shopping-bag mr-2 text-primary dark:text-indigo-300"></i> Tiếp tục mua hàng
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="bg-white dark:bg-gray-900 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-800 shadow-sm max-w-xl mx-auto">
+            <div class="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-3xl">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Bạn chưa có đơn hàng nào</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Hãy dạo quanh cửa hàng và chọn cho mình những sản phẩm công nghệ tuyệt vời nhé!</p>
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center px-6 py-3 rounded-full bg-primary hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-md">
+                Khám phá sản phẩm ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-6">
+            @foreach (var order in Model)
+            {
+                <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 transition-all hover:shadow-md">
+                    <div class="flex flex-wrap justify-between items-center pb-4 mb-4 border-b border-gray-100 dark:border-gray-800 gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-base font-bold text-gray-900 dark:text-gray-100">Mã ĐH: #ORD-@order.Id.ToString("D5")</span>
+                            <span class="text-xs text-gray-400">|</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @switch (order.Status)
+                            {
+                                case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
+                                    <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
+                                        <i class="fas fa-clock mr-1"></i> Chờ xử lý
+                                    </span>
+                                    break;
+                                case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
+                                    <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-200">
+                                        <i class="fas fa-cog mr-1 fa-spin"></i> Đang xử lý
+                                    </span>
+                                    break;
+                                case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
+                                    <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
+                                        <i class="fas fa-truck mr-1"></i> Đang giao hàng
+                                    </span>
+                                    break;
+                                case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
+                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
+                                        <i class="fas fa-check-circle mr-1"></i> Hoàn thành
+                                    </span>
+                                    break;
+                                case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
+                                    <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold rounded-full border border-gray-200 dark:border-gray-700">
+                                        <i class="fas fa-ban mr-1"></i> Đã hủy
+                                    </span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mb-4">
+                        @foreach (var item in order.Items.Take(3))
+                        {
+                            <div class="flex justify-between items-center text-sm">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 flex items-center justify-center text-primary dark:text-indigo-300 text-xs">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800 dark:text-gray-200 line-clamp-1">@item.ProductName</p>
+                                        <p class="text-xs text-gray-400">SL: @item.Quantity × <vc:money amount="@item.UnitPrice" /></p>
+                                    </div>
+                                </div>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300"><vc:money amount="@(item.Quantity * item.UnitPrice)" /></span>
+                            </div>
+                        }
+                        @if (order.Items.Count > 3)
+                        {
+                            <p class="text-xs text-gray-400 italic">Và @(order.Items.Count - 3) sản phẩm khác...</p>
+                        }
+                    </div>
+
+                    <div class="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-800 gap-4">
+                        <div class="text-sm">
+                            <span class="text-gray-500 dark:text-gray-400">Tổng thanh toán:</span>
+                            <span class="text-lg font-bold text-primary dark:text-indigo-300 ml-1"><vc:money amount="@order.TotalAmount" /></span>
+                        </div>
+                        <a asp-action="Details" asp-route-id="@order.Id" class="inline-flex items-center px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 hover:text-primary dark:hover:text-indigo-300 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-colors border border-gray-200 dark:border-gray-700">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

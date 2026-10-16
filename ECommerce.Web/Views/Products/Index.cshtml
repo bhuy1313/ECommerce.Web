@@ -1,0 +1,234 @@
+﻿@model ECommerce.Web.Models.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = "Tất cả sản phẩm";
+}
+
+@functions {
+    string GetProductImage(string? categoryName, int id)
+    {
+        var cat = categoryName?.ToLower() ?? "";
+        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear")
+            || cat.Contains("thiết bị"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=500&q=80",
+                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=500&q=80",
+                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500&q=80",
+                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("gaming") || cat.Contains("phụ kiện") || cat.Contains("keyboard") || cat.Contains("mouse"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=500&q=80",
+                "https://images.unsplash.com/photo-1527814050087-3793815479db?w=500&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion")
+            || cat.Contains("thời trang") || cat.Contains("áo"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&q=80",
+                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("book") || cat.Contains("sách"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80",
+                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=500&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80";
+    }
+}
+
+<!-- Breadcrumb -->
+<div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="flex text-sm text-gray-500 dark:text-gray-400 items-center">
+            <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
+            <span class="mx-2 text-gray-400">/</span>
+            <span class="text-gray-900 dark:text-gray-100 font-medium">Tất cả sản phẩm</span>
+            @if (Model.SelectedCategoryId.HasValue)
+            {
+                var selectedCat = Model.Categories.FirstOrDefault(c => c.Id == Model.SelectedCategoryId.Value);
+                if (selectedCat != null)
+                {
+                    <span class="mx-2 text-gray-400">/</span>
+                    <span class="text-primary dark:text-indigo-300 font-semibold">@selectedCat.Name</span>
+                }
+            }
+        </nav>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Bộ Lọc (Cột trái) -->
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+                <div class="flex items-center justify-between mb-4 border-b pb-3">
+                    <h3 class="font-bold text-lg text-gray-900 dark:text-gray-100 flex items-center">
+                        <i class="fas fa-filter text-primary dark:text-indigo-300 mr-2 text-sm"></i>Bộ Lọc
+                    </h3>
+                    @if (!string.IsNullOrWhiteSpace(Model.SearchQuery) || Model.SelectedCategoryId.HasValue)
+                    {
+                        <a asp-action="Index" class="text-xs text-rose-500 hover:underline font-medium">
+                            Đặt lại
+                        </a>
+                    }
+                </div>
+
+                <!-- Tìm kiếm -->
+                <form method="get" asp-action="Index" class="mb-6">
+                    @if (Model.SelectedCategoryId.HasValue)
+                    {
+                        <input type="hidden" name="categoryId" value="@Model.SelectedCategoryId.Value" />
+                    }
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Tìm kiếm</label>
+                    <div class="relative">
+                        <input type="text" name="search" value="@Model.SearchQuery" placeholder="Tên sản phẩm..." class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none pr-8">
+                        <button type="submit" class="absolute right-2.5 top-2.5 text-gray-400 hover:text-primary dark:hover:text-indigo-300">
+                            <i class="fas fa-search text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Danh mục -->
+                <div class="mb-6">
+                    <h4 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Danh mục</h4>
+                    <ul class="space-y-1 text-sm">
+                        <li>
+                            <a asp-action="Index" asp-route-search="@Model.SearchQuery" class="flex items-center justify-between px-3 py-2 rounded-xl transition-colors @(Model.SelectedCategoryId == null ? "bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 font-bold" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")">
+                                <span>Tất cả</span>
+                                <span class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400">@Model.Products.Count()</span>
+                            </a>
+                        </li>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            var isSelected = Model.SelectedCategoryId == cat.Id;
+                            <li>
+                                <a asp-action="Index" asp-route-categoryId="@cat.Id" asp-route-search="@Model.SearchQuery" class="flex items-center justify-between px-3 py-2 rounded-xl transition-colors @(isSelected ? "bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 font-bold" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")">
+                                    <span>@cat.Name</span>
+                                    <i class="fas fa-chevron-right text-xs @(isSelected ? "text-primary dark:text-indigo-300" : "text-gray-300")"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Danh sách sản phẩm (Cột phải) -->
+        <div class="flex-1">
+            <!-- Top Bar -->
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-wrap justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">
+                        Danh sách sản phẩm
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tìm thấy <strong>@Model.Products.Count()</strong> sản phẩm phù hợp</p>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+                {
+                    <div class="inline-flex items-center bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-medium">
+                        Từ khóa: "@Model.SearchQuery"
+                        <a asp-action="Index" asp-route-categoryId="@Model.SelectedCategoryId" class="ml-2 hover:text-indigo-900">
+                            <i class="fas fa-times-circle"></i>
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Product Grid -->
+            @if (!Model.Products.Any())
+            {
+                <div class="bg-white dark:bg-gray-900 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div class="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-3xl">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Không tìm thấy sản phẩm nào</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">Rất tiếc, không có sản phẩm nào khớp với tiêu chí tìm kiếm của bạn. Hãy thử tìm từ khóa khác hoặc xóa bộ lọc.</p>
+                    <a asp-action="Index" class="inline-flex items-center px-6 py-2.5 rounded-full bg-primary hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-sm">
+                        Xem tất cả sản phẩm
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                    @foreach (var product in Model.Products)
+                    {
+                        var imgUrl = GetProductImage(product.Category?.Name, product.Id);
+                        <div class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col hover:-translate-y-1">
+                            <div class="relative pt-[85%] bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                                @if (product.StockQuantity <= 0)
+                                {
+                                    <span class="absolute top-3 left-3 bg-gray-800/90 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 backdrop-blur-sm">
+                                        Hết hàng
+                                    </span>
+                                }
+                                else if (product.StockQuantity <= 15)
+                                {
+                                    <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-sm">
+                                        Còn @product.StockQuantity sp
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="absolute top-3 left-3 bg-primary/90 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-sm">
+                                        @product.Category?.Name
+                                    </span>
+                                }
+
+                                <a asp-action="Details" asp-route-id="@product.Id" class="absolute inset-0 p-6 flex items-center justify-center" aria-label="Xem chi tiết @product.Name">
+                                    <img src="@imgUrl" alt="@product.Name" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
+                                </a>
+                            </div>
+
+                            <div class="p-5 flex flex-col flex-grow">
+                                <div class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+                                    @product.Category?.Name
+                                </div>
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 hover:text-primary dark:hover:text-indigo-300 line-clamp-2 transition-colors">
+                                    <a asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">
+                                    @(string.IsNullOrWhiteSpace(product.Description) ? "Sản phẩm chính hãng với bảo hành tiêu chuẩn." : product.Description)
+                                </p>
+
+                                <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-xl font-bold text-gray-900 dark:text-gray-100"><vc:money amount="@product.Price" /></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <a asp-action="Details" asp-route-id="@product.Id" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center text-xs" title="Xem chi tiết" aria-label="Xem chi tiết @product.Name">
+                                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                        </a>
+                                        @if (product.StockQuantity > 0)
+                                        {
+                                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@product.Id" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                <button type="submit" class="w-9 h-9 rounded-full bg-primary text-white hover:bg-indigo-700 transition-colors flex items-center justify-center shadow-sm" title="Thêm vào giỏ" aria-label="Thêm @product.Name vào giỏ">
+                                                    <i class="fas fa-cart-plus text-xs" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

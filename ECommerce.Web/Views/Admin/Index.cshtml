@@ -1,0 +1,284 @@
+﻿@model ECommerce.Web.Models.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan Dashboard";
+}
+
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
+            <i class="fas fa-chart-pie text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Tổng quan hệ thống
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Giám sát doanh thu, đơn hàng, trạng thái kho vận và tài khoản người dùng</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a asp-action="Products" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
+            <i class="fas fa-boxes mr-2 text-primary dark:text-indigo-300"></i> Quản lý kho hàng
+        </a>
+        <a asp-action="ProductForm" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-colors">
+            <i class="fas fa-plus mr-1.5"></i> Thêm sản phẩm
+        </a>
+    </div>
+</div>
+
+<!-- 4 Thẻ KPI chính -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <!-- Card 1: Doanh thu -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng doanh thu</span>
+            <div class="text-2xl sm:text-3xl font-extrabold text-primary dark:text-indigo-300 mt-1">@Model.TotalRevenue.ToString("N0") đ</div>
+            <p class="text-xs text-slate-400 mt-1"><i class="fas fa-check-circle text-emerald-500 mr-1"></i>Tính trên đơn hợp lệ</p>
+        </div>
+        <div class="w-13 h-13 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 flex items-center justify-center text-2xl p-3.5">
+            <i class="fas fa-coins"></i>
+        </div>
+    </div>
+
+    <!-- Card 2: Đơn hàng -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng đơn hàng</span>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-gray-100 mt-1">@Model.TotalOrders</div>
+            <p class="text-xs text-slate-400 mt-1">
+                Chờ duyệt: <strong class="text-amber-500">@Model.PendingOrders</strong> | Xong: <strong class="text-emerald-600">@Model.CompletedOrders</strong>
+            </p>
+        </div>
+        <div class="w-13 h-13 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-2xl p-3.5">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+    </div>
+
+    <!-- Card 3: Sản phẩm -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sản phẩm & Danh mục</span>
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">@Model.TotalProducts</div>
+            <p class="text-xs text-slate-400 mt-1">
+                Đang bán: <strong>@Model.ActiveProducts</strong> | Danh mục: <strong>@Model.TotalCategories</strong>
+            </p>
+        </div>
+        <div class="w-13 h-13 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl p-3.5">
+            <i class="fas fa-box-open"></i>
+        </div>
+    </div>
+
+    <!-- Card 4: Người dùng & Tồn kho -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Khách hàng & Cảnh báo</span>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-gray-100 mt-1">@Model.TotalUsers <span class="text-xs text-slate-400 font-normal">users</span></div>
+            <p class="text-xs mt-1 @(Model.LowStockCount > 0 ? "text-rose-600 font-bold animate-pulse" : "text-slate-400")">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Tồn kho ít (&lt;@ECommerce.Web.Models.Constants.AppConstants.LowStockThreshold): @Model.LowStockCount
+            </p>
+        </div>
+        <div class="w-13 h-13 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl p-3.5">
+            <i class="fas fa-users"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Lọc nhanh trạng thái đơn hàng -->
+<div class="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-gray-800 mb-8 flex flex-wrap items-center gap-3">
+    <span class="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mr-2">Trạng thái đơn:</span>
+    <a asp-action="Orders" asp-route-status="Pending" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition-colors">
+        Chờ xử lý: @Model.PendingOrders
+    </a>
+    <a asp-action="Orders" asp-route-status="Processing" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold border border-blue-200 transition-colors">
+        Đang xử lý: @Model.ProcessingOrders
+    </a>
+    <a asp-action="Orders" asp-route-status="Shipped" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 text-indigo-800 text-xs font-bold border border-indigo-200 transition-colors">
+        Đang giao: @Model.ShippedOrders
+    </a>
+    <a asp-action="Orders" asp-route-status="Completed" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors">
+        Hoàn thành: @Model.CompletedOrders
+    </a>
+    <a asp-action="Orders" asp-route-status="Cancelled" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-bold border border-slate-200 dark:border-gray-700 transition-colors">
+        Đã hủy: @Model.CancelledOrders
+    </a>
+</div>
+
+<!-- 2 Cột: Đơn hàng gần đây & Cảnh báo tồn kho -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+    <!-- Đơn hàng gần đây (Cột 7) -->
+    <div class="lg:col-span-7 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+            <h2 class="font-bold text-slate-800 dark:text-gray-200 flex items-center text-base">
+                <i class="fas fa-history text-primary dark:text-indigo-300 mr-2"></i> Đơn hàng phát sinh gần đây
+            </h2>
+            <a asp-action="Orders" class="text-xs text-primary dark:text-indigo-300 hover:text-indigo-800 font-semibold flex items-center">
+                Xem tất cả <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="flex-1 overflow-x-auto">
+            @if (Model.RecentOrders.Any())
+            {
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                        <tr>
+                            <th class="py-3 px-5 font-semibold">Mã đơn</th>
+                            <th class="py-3 px-5 font-semibold">Khách hàng</th>
+                            <th class="py-3 px-5 font-semibold text-right">Tổng tiền</th>
+                            <th class="py-3 px-5 font-semibold text-center">Trạng thái</th>
+                            <th class="py-3 px-5 font-semibold text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="py-3.5 px-5 font-bold text-slate-800 dark:text-gray-200 text-xs">
+                                    #ORD-@order.Id.ToString("D5")
+                                </td>
+                                <td class="py-3.5 px-5">
+                                    <div class="font-medium text-slate-800 dark:text-gray-200 text-xs truncate max-w-[150px]">
+                                        @(order.User?.Email ?? $"User #{order.UserId}")
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">@order.OrderDate.ToString("dd/MM HH:mm")</div>
+                                </td>
+                                <td class="py-3.5 px-5 text-right font-bold text-slate-900 dark:text-gray-100 text-xs">
+                                    @order.TotalAmount.ToString("N0") đ
+                                </td>
+                                <td class="py-3.5 px-5 text-center">
+                                    @switch (order.Status)
+                                    {
+                                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
+                                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full border border-amber-200">Chờ duyệt</span>
+                                            break;
+                                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
+                                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-full border border-blue-200">Đang đóng gói</span>
+                                            break;
+                                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
+                                            <span class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-[11px] font-bold rounded-full border border-indigo-200">Đang giao</span>
+                                            break;
+                                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
+                                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-200">Hoàn tất</span>
+                                            break;
+                                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
+                                            <span class="px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400 text-[11px] font-bold rounded-full border border-slate-200 dark:border-gray-700">Đã hủy</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="py-3.5 px-5 text-center">
+                                    <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 hover:bg-indigo-50 hover:text-primary dark:hover:text-indigo-300 text-slate-600 dark:text-gray-400 rounded-lg text-xs font-semibold transition-colors">
+                                        Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="p-8 text-center text-slate-400 text-sm">
+                    Chưa có đơn hàng nào phát sinh trong hệ thống.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Cảnh báo tồn kho ít (Cột 5) -->
+    <div class="lg:col-span-5 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+            <h2 class="font-bold text-rose-600 flex items-center text-base">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Cảnh báo kho (&lt;10 sp)
+            </h2>
+            <a asp-action="Products" class="text-xs text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200 font-semibold">
+                Quản lý kho →
+            </a>
+        </div>
+
+        <div class="flex-1 overflow-x-auto">
+            @if (Model.LowStockProducts.Any())
+            {
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                        <tr>
+                            <th class="py-3 px-5 font-semibold">Sản phẩm</th>
+                            <th class="py-3 px-5 font-semibold text-center">Tồn kho</th>
+                            <th class="py-3 px-5 font-semibold text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                        @foreach (var prod in Model.LowStockProducts)
+                        {
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="py-3.5 px-5">
+                                    <div class="font-bold text-slate-800 dark:text-gray-200 text-xs truncate max-w-[160px]">@prod.Name</div>
+                                    <div class="text-[10px] text-slate-400">@(prod.Category?.Name ?? "N/A") • @prod.Price.ToString("N0") đ</div>
+                                </td>
+                                <td class="py-3.5 px-5 text-center">
+                                    @if (prod.StockQuantity == 0)
+                                    {
+                                        <span class="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-extrabold rounded-full">Hết hàng (0)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-extrabold rounded-full">Còn @prod.StockQuantity sp</span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-5 text-right">
+                                    <a asp-action="ProductForm" asp-route-id="@prod.Id" class="inline-flex items-center px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 hover:bg-primary text-primary dark:text-indigo-300 hover:text-white rounded-lg text-xs font-semibold transition-colors">
+                                        Cập nhật
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="p-8 text-center text-slate-400 text-sm">
+                    <i class="fas fa-check-circle text-emerald-500 text-2xl mb-2 block"></i>
+                    Tất cả sản phẩm đều đảm bảo lượng tồn kho an toàn!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Lối tắt quản trị nhanh -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <a asp-action="ProductForm" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-primary/30 transition-all flex items-center space-x-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div>
+            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Thêm sản phẩm mới</div>
+            <div class="text-xs text-slate-400">Mở rộng danh mục bán</div>
+        </div>
+    </a>
+
+    <a asp-action="CategoryForm" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-emerald-600/30 transition-all flex items-center space-x-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fas fa-tag"></i>
+        </div>
+        <div>
+            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Tạo danh mục mới</div>
+            <div class="text-xs text-slate-400">Phân loại hàng hóa</div>
+        </div>
+    </a>
+
+    <a asp-action="Orders" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-amber-500/30 transition-all flex items-center space-x-4">
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <div>
+            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Xử lý toàn bộ đơn</div>
+            <div class="text-xs text-slate-400">Duyệt & cập nhật giao nhận</div>
+        </div>
+    </a>
+
+    <a asp-action="Users" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-primary/30 transition-all flex items-center space-x-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div>
+            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Phân quyền tài khoản</div>
+            <div class="text-xs text-slate-400">Quản lý roles Admin</div>
+        </div>
+    </a>
+</div>

@@ -1,0 +1,161 @@
+﻿@model IEnumerable<ECommerce.Web.Models.Entities.Product>
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+    var categories = ViewBag.Categories as IEnumerable<ECommerce.Web.Models.Entities.Category> ?? Enumerable.Empty<ECommerce.Web.Models.Entities.Category>();
+    int? selectedCategory = ViewBag.SelectedCategoryId;
+    string? searchQuery = ViewBag.SearchQuery;
+}
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
+            <i class="fas fa-boxes text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Quản lý Sản phẩm
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Quản lý kho hàng, đơn giá, số lượng tồn và trạng thái hiển thị</p>
+    </div>
+    <a asp-action="CreateProduct" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-sm font-semibold shadow-md transition-colors w-max">
+        <i class="fas fa-plus mr-2 text-xs"></i> Thêm sản phẩm mới
+    </a>
+</div>
+
+<!-- Thanh tìm kiếm & lọc Admin -->
+<div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 mb-6">
+    <form method="get" asp-action="Products" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        <div class="md:col-span-6 relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fas fa-search text-sm"></i>
+            </div>
+            <input type="text" name="search" value="@searchQuery" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Tìm theo tên hoặc mô tả sản phẩm..." />
+        </div>
+        <div class="md:col-span-4">
+            <select name="categoryId" class="w-full py-2.5 px-3 text-sm border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-900">
+                <option value="">-- Tất cả danh mục --</option>
+                @foreach (var cat in categories)
+                {
+                    if (selectedCategory == cat.Id)
+                    {
+                        <option value="@cat.Id" selected>@cat.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@cat.Id">@cat.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="md:col-span-2 flex items-center gap-2">
+            <button type="submit" class="flex-1 py-2.5 px-4 bg-slate-900 hover:bg-black text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                Lọc
+            </button>
+            @if (!string.IsNullOrWhiteSpace(searchQuery) || selectedCategory.HasValue)
+            {
+                <a asp-action="Products" class="py-2.5 px-3 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-400 rounded-xl text-sm font-semibold transition-colors" title="Xóa bộ lọc">
+                    ✕
+                </a>
+            }
+        </div>
+    </form>
+</div>
+
+<!-- Bảng danh sách sản phẩm -->
+<div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                <tr>
+                    <th class="py-4 px-6 font-semibold w-16">ID</th>
+                    <th class="py-4 px-6 font-semibold">Tên sản phẩm</th>
+                    <th class="py-4 px-6 font-semibold">Danh mục</th>
+                    <th class="py-4 px-6 font-semibold text-right">Đơn giá</th>
+                    <th class="py-4 px-6 font-semibold text-center">Tồn kho</th>
+                    <th class="py-4 px-6 font-semibold text-center">Trạng thái</th>
+                    <th class="py-4 px-6 font-semibold text-right">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <i class="fas fa-box-open text-3xl mb-2 block"></i>
+                            Không tìm thấy sản phẩm nào phù hợp.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var product in Model)
+                    {
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="py-4 px-6 font-bold text-slate-400 text-xs">
+                                #@product.Id
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-900 dark:text-gray-100 text-sm">@product.Name</div>
+                                <div class="text-xs text-slate-400 truncate max-w-xs mt-0.5">
+                                    @(string.IsNullOrWhiteSpace(product.Description) ? "Không có mô tả chi tiết" : product.Description)
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="inline-block px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 text-xs font-semibold rounded-lg border border-indigo-100">
+                                    @product.Category?.Name
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right font-extrabold text-slate-900 dark:text-gray-100 text-sm">
+                                @product.Price.ToString("N0") đ
+                            </td>
+                            <td class="py-4 px-6 text-center">
+                                @if (product.StockQuantity <= 0)
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200">
+                                        Hết hàng (0)
+                                    </span>
+                                }
+                                else if (product.StockQuantity < ECommerce.Web.Models.Constants.AppConstants.LowStockThreshold)
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
+                                        Sắp hết (@product.StockQuantity)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 text-xs font-bold rounded-full">
+                                        @product.StockQuantity sp
+                                    </span>
+                                }
+                            </td>
+                            <td class="py-4 px-6 text-center">
+                                @if (product.IsActive)
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> Đang bán
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400 text-xs font-semibold rounded-full border border-slate-200 dark:border-gray-700">
+                                        Lưu kho (Ẩn)
+                                    </span>
+                                }
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <a asp-action="EditProduct" asp-route-id="@product.Id" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold transition-colors">
+                                        <i class="fas fa-edit mr-1"></i> Sửa
+                                    </a>
+                                    <form asp-action="ToggleProductStatus" asp-route-id="@product.Id" method="post" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors @(product.IsActive ? "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200" : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200")" title="@(product.IsActive ? "Ẩn sản phẩm" : "Mở bán lại")">
+                                            @(product.IsActive ? "Lưu kho" : "Kích hoạt")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

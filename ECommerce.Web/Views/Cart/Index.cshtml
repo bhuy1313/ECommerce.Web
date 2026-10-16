@@ -1,0 +1,237 @@
+﻿@model ECommerce.Web.Models.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+
+@functions {
+    string GetProductImage(string? categoryName, int id)
+    {
+        var cat = categoryName?.ToLower() ?? "";
+        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=200&q=80",
+                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=200&q=80",
+                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=200&q=80",
+                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=200&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200&q=80",
+                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("book"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80",
+                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=200&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80";
+    }
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <i class="fas fa-shopping-cart text-primary dark:text-indigo-300 mr-3"></i>Giỏ hàng của bạn
+        </h1>
+        @if (Model.Items.Any())
+        {
+            <form asp-action="Clear" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="text-xs text-rose-500 hover:text-rose-700 font-medium flex items-center">
+                    <i class="fas fa-trash-alt mr-1"></i> Xóa tất cả
+                </button>
+            </form>
+        }
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="bg-white dark:bg-gray-900 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-800 shadow-sm max-w-2xl mx-auto">
+            <div class="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/40 rounded-full flex items-center justify-center mx-auto mb-4 text-primary dark:text-indigo-300 text-3xl">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Giỏ hàng của bạn đang trống</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Bạn chưa chọn sản phẩm nào. Hãy khám phá bộ sưu tập sản phẩm để chọn món đồ phù hợp!</p>
+            <a asp-controller="Products" asp-action="Index" class="inline-flex items-center px-6 py-3 rounded-full bg-primary hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-md">
+                Khám phá sản phẩm ngay <i class="fas fa-arrow-right ml-2 text-xs"></i>
+            </a>
+        </div>
+    }
+    else
+    {
+        @if (Model.HasAnyStockIssue)
+        {
+            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-2xl flex items-start shadow-sm" role="alert">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-xl mr-3 mt-0.5"></i>
+                <div class="text-sm">
+                    <span class="font-bold">Cảnh báo tồn kho:</span> Một số sản phẩm trong giỏ hàng vượt quá số lượng hàng khả dụng trong kho hoặc tạm thời hết hàng. Vui lòng điều chỉnh lại số lượng trước khi tiếp tục thanh toán.
+                </div>
+            </div>
+        }
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Danh sách sản phẩm -->
+            <div class="w-full lg:w-2/3">
+                <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                    <!-- Bảng Desktop -->
+                    <table class="w-full text-left hidden sm:table">
+                        <thead class="bg-gray-50/75 border-b border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="py-4 px-6 font-semibold">Sản phẩm</th>
+                                <th class="py-4 px-6 font-semibold text-right">Đơn giá</th>
+                                <th class="py-4 px-6 font-semibold text-center">Số lượng</th>
+                                <th class="py-4 px-6 font-semibold text-right">Thành tiền</th>
+                                <th class="py-4 px-6 font-semibold text-center">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach (var item in Model.Items)
+                            {
+                                var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
+                                <tr class="hover:bg-gray-50/50 transition-colors @(item.HasStockIssue ? "bg-rose-50/40" : "")">
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-gray-800 p-2">
+                                                <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                            </div>
+                                            <div>
+                                                <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="font-semibold text-gray-800 dark:text-gray-200 hover:text-primary dark:hover:text-indigo-300 transition-colors text-sm line-clamp-1">
+                                                    @item.ProductName
+                                                </a>
+                                                <span class="text-xs text-gray-400 mt-0.5 block">@item.CategoryName</span>
+                                                @if (item.HasStockIssue)
+                                                {
+                                                    <span class="inline-block mt-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                                                        @(item.AvailableStock <= 0 ? "Hết hàng" : $"Chỉ còn {item.AvailableStock} sp")
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-right font-medium text-gray-700 dark:text-gray-300 text-sm">
+                                        <vc:money amount="@item.UnitPrice" />
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <form asp-action="UpdateQuantity" method="post" class="flex items-center justify-center">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <div class="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+                                                <button type="submit" name="quantity" value="@(item.Quantity - 1)" class="px-2.5 py-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none" title="Giảm 1">
+                                                    <i class="fas fa-minus text-xs"></i>
+                                                </button>
+                                                <input type="number" readonly value="@item.Quantity" class="w-10 text-center text-xs font-bold text-gray-800 dark:text-gray-200 focus:outline-none bg-transparent" />
+                                                <button type="submit" name="quantity" value="@(item.Quantity + 1)" class="px-2.5 py-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none" title="Tăng 1">
+                                                    <i class="fas fa-plus text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                    <td class="py-4 px-6 text-right font-bold text-gray-900 dark:text-gray-100 text-sm">
+                                        <vc:money amount="@item.LineTotal" />
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <form asp-action="RemoveItem" method="post" class="inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" class="text-gray-400 hover:text-rose-600 p-2 transition-colors" title="Xóa khỏi giỏ">
+                                                <i class="fas fa-trash-alt text-sm"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <!-- Mobile List -->
+                    <div class="sm:hidden p-4 space-y-4 divide-y divide-gray-100">
+                        @foreach (var item in Model.Items)
+                        {
+                            var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
+                            <div class="pt-4 first:pt-0 flex gap-4">
+                                <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-xl p-2 flex-shrink-0 border border-gray-100 dark:border-gray-800">
+                                    <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                </div>
+                                <div class="flex-1 flex flex-col">
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="font-semibold text-gray-800 dark:text-gray-200 text-sm line-clamp-1 mb-1">
+                                        @item.ProductName
+                                    </a>
+                                    <span class="font-bold text-primary dark:text-indigo-300 text-sm mb-2"><vc:money amount="@item.LineTotal" /></span>
+
+                                    <div class="flex items-center justify-between mt-auto">
+                                        <form asp-action="UpdateQuantity" method="post" class="flex items-center border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" name="quantity" value="@(item.Quantity - 1)" class="px-2 py-0.5 text-gray-500 dark:text-gray-400"><i class="fas fa-minus text-xs"></i></button>
+                                            <input type="text" readonly value="@item.Quantity" class="w-8 text-center text-xs font-bold focus:outline-none" />
+                                            <button type="submit" name="quantity" value="@(item.Quantity + 1)" class="px-2 py-0.5 text-gray-500 dark:text-gray-400"><i class="fas fa-plus text-xs"></i></button>
+                                        </form>
+                                        <form asp-action="RemoveItem" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" class="text-rose-500 text-xs p-1"><i class="fas fa-trash-alt"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="p-5 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                        <a asp-controller="Products" asp-action="Index" class="text-primary dark:text-indigo-300 hover:text-indigo-800 font-semibold text-sm flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> Tiếp tục mua sắm
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tóm tắt Đơn hàng -->
+            <div class="w-full lg:w-1/3">
+                <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-7 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 border-b pb-4">Tóm tắt đơn hàng</h2>
+
+                    <div class="space-y-4 text-gray-600 dark:text-gray-400 text-sm mb-6 border-b pb-6">
+                        <div class="flex justify-between">
+                            <span>Tạm tính (@Model.TotalItems sản phẩm):</span>
+                            <span class="font-semibold text-gray-800 dark:text-gray-200"><vc:money amount="@Model.TotalAmount" /></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Phí giao hàng:</span>
+                            <span class="font-semibold text-emerald-600">Miễn phí</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-end mb-8">
+                        <span class="text-gray-800 dark:text-gray-200 font-semibold text-base">Tổng cộng:</span>
+                        <div class="text-right">
+                            <span class="block text-2xl font-bold text-primary dark:text-indigo-300"><vc:money amount="@Model.TotalAmount" /></span>
+                            <span class="text-xs text-gray-400">(Đã bao gồm thuế nếu có)</span>
+                        </div>
+                    </div>
+
+                    @if (Model.HasAnyStockIssue)
+                    {
+                        <button disabled class="w-full bg-gray-300 text-gray-500 dark:text-gray-400 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed text-center text-sm shadow-sm">
+                            Vui lòng điều chỉnh số lượng
+                        </button>
+                    }
+                    else
+                    {
+                        <a asp-action="Checkout" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg text-center block text-sm">
+                            Tiến hành thanh toán <i class="fas fa-chevron-right ml-2 text-xs"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

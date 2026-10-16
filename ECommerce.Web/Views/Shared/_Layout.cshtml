@@ -1,0 +1,219 @@
+@inject ECommerce.Web.Services.ICartService CartService
+@inject ECommerce.Web.Services.ICurrencyService CurrencyService
+@{
+    var cartCount = await CartService.GetCartItemCountAsync();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - TechNova Cửa Hàng Công Nghệ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        secondary: '#10B981', // Emerald 500
+                        dark: '#1F2937', // Gray 800
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Áp theme trước khi paint để tránh nháy (FOUC): localStorage > hệ điều hành.
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem('technova-theme'); } catch (e) {}
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        html.dark { color-scheme: dark; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 flex flex-col min-h-screen text-gray-800 dark:text-gray-200">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50 dark:border-b dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold text-primary flex items-center hover:opacity-90 transition-opacity">
+                        <i class="fas fa-layer-group mr-2"></i>TechNova
+                    </a>
+                </div>
+
+                <!-- Thanh tìm kiếm (Desktop) -->
+                <div class="hidden md:flex flex-1 max-w-lg mx-8">
+                    <form asp-controller="Products" asp-action="Index" method="get" class="w-full relative">
+                        <input type="text" name="search" value="@Context.Request.Query["search"]" class="w-full bg-gray-100 dark:bg-gray-800 border border-transparent rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-700 dark:text-gray-100 transition-colors" placeholder="Tìm kiếm sản phẩm, danh mục..." aria-label="Tìm kiếm sản phẩm">
+                        <button type="submit" aria-label="Tìm kiếm" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-primary">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Menu Phải (Giỏ hàng & User) -->
+                <div class="flex items-center space-x-6">
+                    <a asp-controller="Products" asp-action="Index" class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-indigo-300 font-medium hidden md:block transition-colors">
+                        Sản phẩm
+                    </a>
+
+                    <!-- Chuyển đơn vị tiền tệ (hiển thị tham khảo, thanh toán VNĐ) -->
+                    <form asp-controller="Home" asp-action="SetCurrency" method="post" title="Tỉ giá tham khảo — thanh toán bằng VNĐ">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        <select name="code" onchange="this.form.submit()" aria-label="Đơn vị tiền tệ" class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-semibold rounded-full pl-3 pr-7 py-2 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+                            @foreach (var c in CurrencyService.Supported)
+                            {
+                                <option value="@c.Code" selected="@(c.Code == CurrencyService.CurrentCode ? "selected" : null)">@c.Code</option>
+                            }
+                        </select>
+                    </form>
+
+                    <!-- Chuyển chế độ sáng/tối -->
+                    <button type="button" id="theme-toggle" aria-label="Chuyển chế độ sáng/tối" title="Chuyển chế độ sáng/tối" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-amber-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-moon dark:hidden" aria-hidden="true"></i>
+                        <i class="fas fa-sun hidden dark:inline" aria-hidden="true"></i>
+                    </button>
+
+                    <!-- Giỏ hàng -->
+                    <a asp-controller="Cart" asp-action="Index" aria-label="Giỏ hàng" class="relative text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-indigo-300 transition-colors flex items-center">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        @if (cartCount > 0)
+                        {
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                                @cartCount
+                            </span>
+                        }
+                    </a>
+
+                    <!-- Avatar / Đăng nhập Partial -->
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+
+            <!-- Thanh tìm kiếm (Mobile) -->
+            <div class="md:hidden pb-3">
+                <form asp-controller="Products" asp-action="Index" method="get" class="relative w-full">
+                    <input type="text" name="search" value="@Context.Request.Query["search"]" class="w-full bg-gray-100 dark:bg-gray-800 border border-transparent rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-700 dark:text-gray-100 text-sm" placeholder="Tìm kiếm..." aria-label="Tìm kiếm sản phẩm">
+                    <button type="submit" aria-label="Tìm kiếm" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="flex-grow">
+        @RenderBody()
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-dark dark:bg-black text-gray-300 pt-16 pb-8 border-t border-gray-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <!-- Thông tin thương hiệu -->
+                <div>
+                    <div class="flex items-center text-white mb-6">
+                        <i class="fas fa-layer-group text-3xl text-primary mr-3"></i>
+                        <span class="text-2xl font-bold tracking-wider">TechNova</span>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-6">
+                        Tiên phong mang đến các sản phẩm công nghệ tiên tiến nhất với giá cả hợp lý và dịch vụ khách hàng xuất sắc.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary text-white transition-colors"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary text-white transition-colors"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary text-white transition-colors"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <!-- Danh mục -->
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-6">Danh mục</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a asp-controller="Products" asp-action="Index" class="text-gray-400 hover:text-primary transition-colors">Tất cả sản phẩm</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" class="text-gray-400 hover:text-primary transition-colors">Laptop & Thiết bị số</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" class="text-gray-400 hover:text-primary transition-colors">Phụ kiện & Gaming</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" class="text-gray-400 hover:text-primary transition-colors">Sách chuyên ngành</a></li>
+                    </ul>
+                </div>
+
+                <!-- Chính sách -->
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-6">Hỗ trợ khách hàng</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Chính sách giao hàng</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Chính sách đổi trả</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy" class="text-gray-400 hover:text-primary transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Điều khoản dịch vụ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Liên hệ -->
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-6">Liên hệ</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mt-1 mr-3 text-primary"></i>
+                            <span class="text-gray-400 leading-relaxed">Khu Công Nghệ Cao, TP. Thủ Đức,<br>TP. Hồ Chí Minh, Việt Nam</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt mr-3 text-primary"></i>
+                            <span class="text-gray-400">Hotline: 1900 8888</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-3 text-primary"></i>
+                            <span class="text-gray-400">Email: support@technova.vn</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 mt-8 text-center sm:flex sm:justify-between sm:text-left">
+                <p class="text-sm text-gray-500">&copy; @DateTime.UtcNow.Year TechNova. Tất cả quyền được bảo lưu.</p>
+                <div class="mt-4 sm:mt-0 flex justify-center space-x-4 text-2xl text-gray-600">
+                    <i class="fab fa-cc-visa hover:text-white transition-colors"></i>
+                    <i class="fab fa-cc-mastercard hover:text-white transition-colors"></i>
+                    <i class="fab fa-cc-paypal hover:text-white transition-colors"></i>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    @await Component.InvokeAsync("Notyf")
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // Toggle Sáng/Tối + lưu lựa chọn.
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var dark = document.documentElement.classList.toggle('dark');
+                try { localStorage.setItem('technova-theme', dark ? 'dark' : 'light'); } catch (e) {}
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+﻿@model ECommerce.Web.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
+    var canCancel = Model.Status == ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending ||
+                    Model.Status == ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing;
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-6 items-center">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <a asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Đơn hàng của tôi</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium">Chi tiết #@Model.Id</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 sm:p-8 mb-8">
+        <!-- Header thông tin đơn -->
+        <div class="flex flex-wrap justify-between items-start gap-4 pb-6 mb-6 border-b border-gray-100 dark:border-gray-800">
+            <div>
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Thông tin đơn hàng</span>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">Đơn hàng #ORD-@Model.Id.ToString("D5")</h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <i class="far fa-calendar-alt mr-1"></i> Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                @switch (Model.Status)
+                {
+                    case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
+                        <span class="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-bold rounded-full border border-amber-200">
+                            <i class="fas fa-clock mr-1.5"></i> Chờ xử lý
+                        </span>
+                        break;
+                    case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
+                        <span class="px-3.5 py-1.5 bg-blue-50 text-blue-700 text-sm font-bold rounded-full border border-blue-200">
+                            <i class="fas fa-cog mr-1.5 fa-spin"></i> Đang xử lý
+                        </span>
+                        break;
+                    case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
+                        <span class="px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-sm font-bold rounded-full border border-indigo-200">
+                            <i class="fas fa-truck mr-1.5"></i> Đang giao hàng
+                        </span>
+                        break;
+                    case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
+                        <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 text-sm font-bold rounded-full border border-emerald-200">
+                            <i class="fas fa-check-circle mr-1.5"></i> Hoàn thành
+                        </span>
+                        break;
+                    case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
+                        <span class="px-3.5 py-1.5 bg-rose-50 text-rose-700 text-sm font-bold rounded-full border border-rose-200">
+                            <i class="fas fa-ban mr-1.5"></i> Đã hủy
+                        </span>
+                        break;
+                }
+            </div>
+        </div>
+
+        @if (Model.Status == ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled)
+        {
+            <div class="mb-6 bg-rose-50 border border-rose-200 text-rose-800 px-5 py-4 rounded-2xl flex items-start text-sm">
+                <i class="fas fa-info-circle text-rose-500 text-lg mr-3 mt-0.5"></i>
+                <div>
+                    <strong>Đơn hàng đã hủy:</strong> Toàn bộ số lượng sản phẩm trong đơn đã được hoàn trả lại tồn kho khả dụng của hệ thống.
+                </div>
+            </div>
+        }
+
+        <!-- Bảng danh sách sản phẩm -->
+        <h2 class="text-base font-bold text-gray-800 dark:text-gray-200 mb-4">Các mặt hàng đã đặt</h2>
+        <div class="overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-2xl mb-6">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                    <tr>
+                        <th class="py-3 px-5 font-semibold">Tên sản phẩm</th>
+                        <th class="py-3 px-5 font-semibold text-center">Số lượng</th>
+                        <th class="py-3 px-5 font-semibold text-right">Đơn giá</th>
+                        <th class="py-3 px-5 font-semibold text-right">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var item in Model.Items)
+                    {
+                        var lineTotal = item.Quantity * item.UnitPrice;
+                        <tr class="hover:bg-gray-50/50">
+                            <td class="py-3.5 px-5 font-medium text-gray-800 dark:text-gray-200">
+                                @item.ProductName
+                            </td>
+                            <td class="py-3.5 px-5 text-center text-gray-600 dark:text-gray-400">
+                                @item.Quantity
+                            </td>
+                            <td class="py-3.5 px-5 text-right text-gray-600 dark:text-gray-400">
+                                <vc:money amount="@item.UnitPrice" />
+                            </td>
+                            <td class="py-3.5 px-5 text-right font-bold text-gray-900 dark:text-gray-100">
+                                <vc:money amount="@lineTotal" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="bg-gray-50/75 border-t border-gray-100 dark:border-gray-800">
+                    <tr>
+                        <td colspan="3" class="py-4 px-5 text-right font-bold text-gray-700 dark:text-gray-300">Tổng thanh toán:</td>
+                        <td class="py-4 px-5 text-right font-extrabold text-primary dark:text-indigo-300 text-xl"><vc:money amount="@Model.TotalAmount" /></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Thao tác đơn hàng -->
+        <div class="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-800 gap-4">
+            <a asp-action="Index" class="inline-flex items-center px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách đơn hàng
+            </a>
+
+            @if (canCancel)
+            {
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Số lượng tồn kho sẽ được tự động hoàn lại.');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="inline-flex items-center px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-sm font-semibold transition-colors">
+                        <i class="fas fa-times-circle mr-2"></i> Hủy đơn hàng
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

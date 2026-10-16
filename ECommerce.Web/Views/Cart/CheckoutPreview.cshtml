@@ -1,0 +1,156 @@
+﻿@model ECommerce.Web.Models.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Thanh toán an toàn";
+}
+
+@functions {
+    string GetProductImage(string? categoryName, int id)
+    {
+        var cat = categoryName?.ToLower() ?? "";
+        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=100&q=80",
+                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=100&q=80",
+                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=100&q=80",
+                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=100&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&q=80",
+                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        if (cat.Contains("book"))
+        {
+            var images = new[] {
+                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100&q=80",
+                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=100&q=80"
+            };
+            return images[Math.Abs(id) % images.Length];
+        }
+        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80";
+    }
+}
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-6 items-center">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <a asp-controller="Cart" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Giỏ hàng</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium">Xác nhận thanh toán</span>
+    </nav>
+
+    <div class="text-center mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Xác nhận & Hoàn tất đơn hàng</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kiểm tra thông tin giao nhận và tóm tắt sản phẩm trước khi tạo đơn</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <!-- Form Thông tin giao hàng -->
+            <div class="w-full md:w-3/5 p-6 sm:p-8 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800">
+                <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
+                    <i class="fas fa-map-marker-alt text-primary dark:text-indigo-300 mr-2"></i>Thông tin nhận hàng
+                </h2>
+
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Tài khoản khách hàng</label>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-medium">
+                            <i class="fas fa-user-circle text-primary dark:text-indigo-300 mr-2"></i>@User.Identity?.Name
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức thanh toán</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center p-3.5 border border-primary rounded-xl bg-indigo-50/50 cursor-pointer">
+                                <input type="radio" name="paymentMethod" checked class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
+                                <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Thanh toán khi nhận hàng (COD)</span>
+                                <i class="fas fa-hand-holding-usd text-primary dark:text-indigo-300 ml-auto text-lg"></i>
+                            </label>
+                            <label class="flex items-center p-3.5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors opacity-75">
+                                <input type="radio" name="paymentMethod" disabled class="h-4 w-4 text-gray-400" />
+                                <span class="ml-3 text-gray-500 dark:text-gray-400">Chuyển khoản / Cổng thanh toán (Sắp mở)</span>
+                                <i class="fab fa-cc-visa text-gray-400 ml-auto text-xl"></i>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-800 leading-relaxed flex items-start">
+                        <i class="fas fa-shield-alt text-blue-500 text-base mr-2.5 mt-0.5"></i>
+                        <div>
+                            <strong>Bảo đảm tồn kho an toàn:</strong> Khi bạn bấm "Xác nhận Đặt Hàng", hệ thống sẽ tự động tạo đơn, kích hoạt transaction để trừ kho và lưu đơn hàng vào lịch sử tài khoản của bạn.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Đơn hàng -->
+            <div class="w-full md:w-2/5 bg-gray-50/75 p-6 sm:p-8 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center justify-between">
+                        <span>Đơn hàng của bạn</span>
+                        <span class="text-xs bg-indigo-100 text-primary dark:text-indigo-300 font-bold px-2.5 py-1 rounded-full">@Model.TotalItems món</span>
+                    </h2>
+
+                    <!-- Mini Cart Items -->
+                    <div class="overflow-y-auto max-h-64 pr-1 mb-6 space-y-3 divide-y divide-gray-100">
+                        @foreach (var item in Model.Items)
+                        {
+                            var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
+                            <div class="pt-3 first:pt-0 flex justify-between items-start gap-3 text-sm">
+                                <div class="flex gap-3">
+                                    <div class="w-12 h-12 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-1.5 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                                        <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800 dark:text-gray-200 line-clamp-1">@item.ProductName</p>
+                                        <p class="text-xs text-gray-400">SL: @item.Quantity × <vc:money amount="@item.UnitPrice" /></p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap"><vc:money amount="@item.LineTotal" /></span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 mb-6 text-sm">
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Tạm tính</span>
+                            <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.TotalAmount" /></span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Phí vận chuyển</span>
+                            <span class="font-medium text-emerald-600">Miễn phí</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-gray-900 dark:text-gray-100 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <span>Tổng thanh toán</span>
+                            <span class="text-primary dark:text-indigo-300 text-xl font-extrabold"><vc:money amount="@Model.TotalAmount" /></span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 italic">Ngoại tệ chỉ để tham khảo — đơn hàng thanh toán bằng VNĐ.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-4">
+                    <form asp-controller="Orders" asp-action="Checkout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group">
+                            Xác nhận Đặt Hàng <i class="fas fa-check-circle ml-2 group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </form>
+                    <a asp-controller="Cart" asp-action="Index" class="block w-full text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 transition-colors">
+                        ← Quay lại giỏ hàng
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

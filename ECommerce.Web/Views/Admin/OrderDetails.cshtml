@@ -1,0 +1,186 @@
+﻿@model ECommerce.Web.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id} (Admin)";
+}
+
+<div class="max-w-5xl mx-auto py-4">
+    <!-- Breadcrumb -->
+    <nav class="flex text-xs text-slate-400 mb-6 items-center">
+        <a asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Dashboard</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <a asp-action="Orders" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Đơn hàng</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-700 dark:text-gray-300 font-medium">Đơn #@Model.Id</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Thông tin chi tiết đơn hàng (Cột 8) -->
+        <div class="lg:col-span-8 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 sm:p-8">
+            <div class="flex flex-wrap justify-between items-start gap-4 pb-6 mb-6 border-b border-slate-100 dark:border-gray-800">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-gray-100">
+                        Đơn hàng #ORD-@Model.Id.ToString("D5")
+                    </h1>
+                    <div class="text-xs text-slate-500 dark:text-gray-400 mt-1 space-y-0.5">
+                        <p><i class="far fa-user mr-1 text-slate-400"></i> Khách hàng: <strong>@(Model.User?.Email ?? Model.UserId)</strong></p>
+                        <p><i class="far fa-clock mr-1 text-slate-400"></i> Thời gian đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng chi tiết sản phẩm -->
+            <h2 class="text-sm font-bold text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-4">Các mặt hàng trong đơn</h2>
+            <div class="overflow-x-auto border border-slate-100 dark:border-gray-800 rounded-2xl mb-6">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                        <tr>
+                            <th class="py-3 px-5 font-semibold">Sản phẩm</th>
+                            <th class="py-3 px-5 font-semibold text-center">Số lượng</th>
+                            <th class="py-3 px-5 font-semibold text-right">Đơn giá</th>
+                            <th class="py-3 px-5 font-semibold text-right">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                        @foreach (var item in Model.Items)
+                        {
+                            var lineTotal = item.Quantity * item.UnitPrice;
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50">
+                                <td class="py-3.5 px-5">
+                                    <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">@item.ProductName</div>
+                                    <div class="text-[11px] text-slate-400">Mã SP: #PRD-@item.ProductId</div>
+                                </td>
+                                <td class="py-3.5 px-5 text-center font-bold text-slate-700 dark:text-gray-300">
+                                    @item.Quantity
+                                </td>
+                                <td class="py-3.5 px-5 text-right text-slate-600 dark:text-gray-400">
+                                    @item.UnitPrice.ToString("N0") đ
+                                </td>
+                                <td class="py-3.5 px-5 text-right font-extrabold text-slate-900 dark:text-gray-100">
+                                    @lineTotal.ToString("N0") đ
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="bg-slate-50 dark:bg-gray-800 border-t border-slate-100 dark:border-gray-800">
+                        <tr>
+                            <td colspan="3" class="py-4 px-5 text-right font-bold text-slate-700 dark:text-gray-300">Tổng thanh toán:</td>
+                            <td class="py-4 px-5 text-right font-extrabold text-primary dark:text-indigo-300 text-xl">@Model.TotalAmount.ToString("N0") đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-gray-800">
+                <a asp-action="Orders" class="inline-flex items-center text-xs font-semibold text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i> Trở về danh sách đơn hàng
+                </a>
+            </div>
+        </div>
+
+        <!-- Bảng điều khiển trạng thái (Workflow Control - Cột 4) -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- Cập nhật trạng thái đơn -->
+            <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
+                <h2 class="text-sm font-bold text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-4 flex items-center">
+                    <i class="fas fa-stream text-primary dark:text-indigo-300 mr-2"></i>Trạng thái đơn hàng
+                </h2>
+
+                <div class="mb-4">
+                    <span class="text-xs text-slate-400 block mb-1">Hiện tại:</span>
+                    @switch (Model.Status)
+                    {
+                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
+                            <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">Chờ xử lý (Pending)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-200">Đang đóng gói (Processing)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
+                            <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">Đang giao hàng (Shipped)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">Hoàn tất (Completed)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
+                            <span class="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200">Đã hủy (Cancelled)</span>
+                            break;
+                    }
+                </div>
+
+                <form asp-action="UpdateOrderStatus" method="post" class="space-y-3 pt-3 border-t border-slate-100 dark:border-gray-800">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.Id" />
+
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-gray-300">Chuyển sang trạng thái:</label>
+                    <select name="status" class="w-full py-2.5 px-3 text-xs border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-900 font-medium">
+                        @foreach (ECommerce.Web.Models.Entities.Enums.OrderStatus st in Enum.GetValues(typeof(ECommerce.Web.Models.Entities.Enums.OrderStatus)))
+                        {
+                            if (Model.Status == st)
+                            {
+                                <option value="@st" selected>@st (Hiện tại)</option>
+                            }
+                            else
+                            {
+                                <option value="@st">@st</option>
+                            }
+                        }
+                    </select>
+
+                    <button type="submit" class="w-full py-2.5 px-4 bg-primary hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md transition-colors">
+                        Cập nhật trạng thái đơn
+                    </button>
+                </form>
+            </div>
+
+            <!-- Cập nhật thanh toán -->
+            <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
+                <h2 class="text-sm font-bold text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-4 flex items-center">
+                    <i class="fas fa-credit-card text-emerald-600 mr-2"></i>Thanh toán
+                </h2>
+
+                <div class="mb-4">
+                    <span class="text-xs text-slate-400 block mb-1">Hiện tại:</span>
+                    @switch (Model.PaymentStatus)
+                    {
+                        case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Pending:
+                            <span class="px-3 py-1 bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-400 text-xs font-bold rounded-full">Chưa thanh toán (Pending)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Paid:
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">Đã thanh toán (Paid)</span>
+                            break;
+                        case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Refunded:
+                            <span class="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200">Đã hoàn tiền (Refunded)</span>
+                            break;
+                    }
+                </div>
+
+                @if (User.IsInRole(ECommerce.Web.Models.Constants.AppRoles.Admin))
+                {
+                <form asp-action="UpdatePaymentStatus" method="post" class="space-y-3 pt-3 border-t border-slate-100 dark:border-gray-800">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.Id" />
+
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-gray-300">Đổi trạng thái thanh toán:</label>
+                    <select name="status" class="w-full py-2.5 px-3 text-xs border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-900 font-medium">
+                        @foreach (ECommerce.Web.Models.Entities.Enums.PaymentStatus st in Enum.GetValues(typeof(ECommerce.Web.Models.Entities.Enums.PaymentStatus)))
+                        {
+                            if (Model.PaymentStatus == st)
+                            {
+                                <option value="@st" selected>@st (Hiện tại)</option>
+                            }
+                            else
+                            {
+                                <option value="@st">@st</option>
+                            }
+                        }
+                    </select>
+
+                    <button type="submit" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-semibold shadow-md transition-colors">
+                        Xác nhận thanh toán
+                    </button>
+                </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

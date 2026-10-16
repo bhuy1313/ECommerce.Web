@@ -1,0 +1,100 @@
+@model ECommerce.Web.Models.ViewModels.EditUserRolesViewModel
+@{
+    ViewData["Title"] = "Phân vai trò người dùng";
+}
+
+<div class="max-w-2xl mx-auto py-4">
+    <!-- Breadcrumb -->
+    <nav class="flex text-xs text-slate-400 mb-6 items-center">
+        <a asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Dashboard</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <a asp-action="Users" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Người dùng</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-700 dark:text-gray-300 font-medium">Phân quyền</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 sm:p-10">
+        <div class="flex items-center space-x-3 pb-6 mb-6 border-b border-slate-100 dark:border-gray-800">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 flex items-center justify-center text-xl">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-gray-100">
+                    Phân vai trò & Quyền hạn
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5">Thiết lập các vai trò quản trị hoặc mua sắm cho tài khoản</p>
+            </div>
+        </div>
+
+        <div class="mb-6 p-4 bg-slate-50 dark:bg-gray-800 rounded-2xl border border-slate-100 dark:border-gray-800">
+            <div class="text-xs text-slate-400 font-medium">Tài khoản được phân quyền:</div>
+            <div class="text-base font-bold text-slate-900 dark:text-gray-100 mt-0.5">@Model.Email</div>
+            <div class="text-[11px] text-slate-400 font-mono mt-0.5">User ID: @Model.UserId</div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs" role="alert">
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <form method="post" asp-action="EditUserRoles" class="space-y-6">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="Email" />
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-3">Chọn các vai trò phân bổ:</label>
+                <div class="space-y-3">
+                    @for (int i = 0; i < Model.Roles.Count; i++)
+                    {
+                        <input type="hidden" asp-for="Roles[i].RoleName" />
+                        <label for="role_@Model.Roles[i].RoleName" class="flex items-start p-4 border border-slate-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-900 hover:bg-slate-50/50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors shadow-sm">
+                            <input class="mt-1 h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary border-slate-300 dark:border-gray-600 rounded cursor-pointer mr-3.5" type="checkbox" asp-for="Roles[i].IsSelected" id="role_@Model.Roles[i].RoleName" />
+                            <div class="flex-1 text-sm">
+                                <div class="font-bold flex items-center">
+                                    @if (Model.Roles[i].RoleName == ECommerce.Web.Models.Constants.AppRoles.Admin)
+                                    {
+                                        <span class="text-rose-600"><i class="fas fa-crown mr-1.5 text-xs"></i> @Model.Roles[i].RoleName (Toàn quyền hệ thống)</span>
+                                    }
+                                    else if (Model.Roles[i].RoleName == ECommerce.Web.Models.Constants.AppRoles.StoreOperator)
+                                    {
+                                        <span class="text-amber-700"><i class="fas fa-tools mr-1.5 text-xs"></i> @Model.Roles[i].RoleName (Vận hành cửa hàng)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-700 dark:text-gray-300"><i class="far fa-user mr-1.5 text-xs"></i> @Model.Roles[i].RoleName (Khách hàng thông thường)</span>
+                                    }
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    @if (Model.Roles[i].RoleName == ECommerce.Web.Models.Constants.AppRoles.Admin)
+                                    {
+                                        <span>Toàn quyền Dashboard, Sản phẩm, Danh mục, Đơn hàng, Phân quyền.</span>
+                                    }
+                                    else if (Model.Roles[i].RoleName == ECommerce.Web.Models.Constants.AppRoles.StoreOperator)
+                                    {
+                                        <span>Quản lý đơn hàng, theo dõi kho và sản phẩm.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Mua sắm, quản lý giỏ hàng và theo dõi đơn mua cá nhân.</span>
+                                    }
+                                </p>
+                            </div>
+                        </label>
+                    }
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-gray-800">
+                <a asp-action="Users" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors">
+                    Hủy bỏ
+                </a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-sm font-semibold shadow-md transition-colors">
+                    Lưu thay đổi phân quyền
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

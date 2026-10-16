@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Chính sách bảo mật";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 sm:p-12">
+        <div class="flex items-center text-primary dark:text-indigo-300 mb-6">
+            <i class="fas fa-shield-alt text-3xl mr-3"></i>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Chính sách bảo mật TechNova</h1>
+        </div>
+
+        <div class="prose max-w-none text-gray-600 dark:text-gray-400 text-sm leading-relaxed space-y-6">
+            <p>
+                Chào mừng bạn đến với TechNova. Chúng tôi cam kết bảo vệ tuyệt đối quyền riêng tư và thông tin cá nhân của quý khách hàng khi mua sắm và sử dụng dịch vụ trên nền tảng của chúng tôi.
+            </p>
+
+            <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">1. Thu thập thông tin</h3>
+            <p>
+                Chúng tôi chỉ thu thập thông tin cần thiết phục vụ cho việc quản lý đơn hàng, liên hệ giao nhận và hỗ trợ kỹ thuật khách hàng bao gồm email, tên và thông tin liên hệ.
+            </p>
+
+            <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">2. Sử dụng và bảo mật dữ liệu</h3>
+            <p>
+                Mọi thông tin cá nhân đều được mã hóa và lưu trữ an toàn trong hệ thống dữ liệu bảo mật. Chúng tôi không chia sẻ hoặc cung cấp thông tin cho bất kỳ bên thứ ba nào ngoại trừ các đối tác vận chuyển phục vụ đơn hàng.
+            </p>
+
+            <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">3. Quyền của khách hàng</h3>
+            <p>
+                Quý khách có quyền xem lại, cập nhật hoặc yêu cầu xóa bỏ thông tin tài khoản của mình bất cứ lúc nào thông qua trang quản lý tài khoản hoặc liên hệ bộ phận hỗ trợ khách hàng.
+            </p>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex items-center text-sm font-semibold text-primary dark:text-indigo-300 hover:text-indigo-800">
+                <i class="fas fa-arrow-left mr-2"></i> Quay lại trang chủ
+            </a>
+            <span class="text-xs text-gray-400">Cập nhật lần cuối: @DateTime.UtcNow.ToString("MM/yyyy")</span>
+        </div>
+    </div>
+</div>
