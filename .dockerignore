@@ -1,0 +1,8 @@
+bin/
+obj/
+.git/
+.vs/
+node_modules/
+test-results/
+TestResults/
+*.user
