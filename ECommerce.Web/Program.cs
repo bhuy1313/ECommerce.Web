@@ -113,14 +113,23 @@ using (var scope = app.Services.CreateScope())
 
     if (useSqlite)
     {
-        await db.Database.EnsureCreatedAsync();
+        // Dùng MigrateAsync cho SQLite (prod hardening): tránh bỏ qua migration incremental
+        await db.Database.MigrateAsync();
         // Demo nhiều người bấm cùng lúc: WAL cho phép đọc song song khi đang ghi,
         // giảm lỗi "database is locked" (vẫn có thể xảy ra nếu 2 checkout cùng lúc —
         // xem runbook demo).
-        var journalMode = (await db.Database.SqlQueryRaw<string>("PRAGMA journal_mode=WAL;").ToListAsync())
-            .FirstOrDefault();
-        var sqliteLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SQLite");
-        sqliteLogger.LogInformation("SQLite journal_mode={JournalMode}", journalMode);
+        try
+        {
+            var journalMode = (await db.Database.SqlQueryRaw<string>("PRAGMA journal_mode=WAL;").ToListAsync())
+                .FirstOrDefault();
+            var sqliteLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SQLite");
+            sqliteLogger.LogInformation("SQLite journal_mode={JournalMode}", journalMode);
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SQLite");
+            logger.LogWarning(ex, "Failed to set/read PRAGMA journal_mode=WAL");
+        }
     }
     else
     {

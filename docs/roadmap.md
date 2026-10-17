@@ -87,12 +87,16 @@ Dựa trên `01-Project-Overview-E-Commerce.docx`, chia nhỏ theo các phase c�
 - [x] Quản lý Người dùng: `Views/Admin/Users.cshtml` & `Views/Admin/EditUserRoles.cshtml` (Danh sách user, số đơn, form phân quyền role an toàn)
 - [x] Kiểm thử & Verification: `dotnet build` và chạy lại 23/23 unit tests
 
-## Phase 9 — Deploy (Tạm đóng băng / Freeze)
-- [ ] Chốt hosting (Azure / IIS / Docker) — Tạm dừng
-- [ ] Migration production
-- [ ] Cấu hình appsettings.Production, HSTS, HTTPS
-- [ ] Kiểm thử trên môi trường public
+## Phase 9 — Deploy
+- [x] Chốt hosting (Render Free, Docker) — hoàn thành (deploy `https://ecommerce-demo-9phe.onrender.com/`)
+- [x] Triển khai production (SQLite `/tmp/ecommerce-demo.db` với `EnsureCreated` + WAL)
+- [x] Bảo mật HTTP (HSTS + redirect HTTPS, bypass `/healthz` cho healthcheck)
+- [x] Kiểm thử môi trường public (`/healthz` 200, `/` 200)
+- [x] Tạo `appsettings.Production.json` (cấu hình mặc định prod)
+- [x] Chuyển sang migration-based (MigrateAsync) thay vì `EnsureCreated` cho prod (hardening schema)
 
 ## Backlog (ngoài scope v1 — theo Non-Goals trong doc)
 - Payment gateway, product images, coupon/giảm giá, reviews, reporting nâng cao,
   audit log, background jobs, caching, CI/CD
+- Prod schema hardening: `appsettings.Production.json` + migration-based deploy
+- Render cold-start UX: warming/keepalive nếu cần
