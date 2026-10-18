@@ -1,6 +1,7 @@
 using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
+using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,12 +16,18 @@ public class OrdersController : Controller
     private readonly IOrderService _orderService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly INotyfService _notyf;
+    private readonly ICartService _cartService;
 
-    public OrdersController(IOrderService orderService, UserManager<ApplicationUser> userManager, INotyfService notyf)
+    public OrdersController(
+        IOrderService orderService,
+        UserManager<ApplicationUser> userManager,
+        INotyfService notyf,
+        ICartService cartService)
     {
         _orderService = orderService;
         _userManager = userManager;
         _notyf = notyf;
+        _cartService = cartService;
     }
 
     [HttpGet]
@@ -57,7 +64,7 @@ public class OrdersController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("mutating")]
-    public async Task<IActionResult> Checkout()
+    public async Task<IActionResult> Checkout(CheckoutViewModel model)
     {
         var userId = _userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId))
@@ -65,7 +72,22 @@ public class OrdersController : Controller
             return Challenge();
         }
 
-        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, new ShippingDetails());
+        if (!ModelState.IsValid)
+        {
+            model.Cart = await _cartService.GetCartAsync();
+            _notyf.Error("Vui lòng kiểm tra thông tin nhận hàng.");
+            return View("CheckoutPreview", model);
+        }
+
+        var shipping = new ShippingDetails
+        {
+            RecipientName = model.RecipientName,
+            RecipientPhone = model.RecipientPhone,
+            ShippingAddress = model.ShippingAddress,
+            Note = model.Note
+        };
+
+        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, shipping);
         if (success && orderId.HasValue)
         {
             _notyf.Success(message);

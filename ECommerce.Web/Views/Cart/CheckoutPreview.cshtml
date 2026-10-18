@@ -1,4 +1,4 @@
-﻿@model ECommerce.Web.Models.ViewModels.CartViewModel
+﻿@model ECommerce.Web.Models.ViewModels.CheckoutViewModel
 @{
     ViewData["Title"] = "Thanh toán an toàn";
 }
@@ -53,6 +53,7 @@
     </div>
 
     <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <form asp-controller="Orders" asp-action="Checkout" method="post">
         <div class="flex flex-col md:flex-row">
             <!-- Form Thông tin giao hàng -->
             <div class="w-full md:w-3/5 p-6 sm:p-8 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800">
@@ -66,6 +67,34 @@
                         <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-medium">
                             <i class="fas fa-user-circle text-primary dark:text-indigo-300 mr-2"></i>@User.Identity?.Name
                         </div>
+                    </div>
+
+                    <div>
+                        <label asp-for="RecipientName" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <input asp-for="RecipientName" autocomplete="name" placeholder="Nguyễn Văn A"
+                               class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
+                        <span asp-validation-for="RecipientName" class="block mt-1 text-xs text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="RecipientPhone" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <input asp-for="RecipientPhone" type="tel" autocomplete="tel" placeholder="09xx xxx xxx"
+                               class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
+                        <span asp-validation-for="RecipientPhone" class="block mt-1 text-xs text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="ShippingAddress" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <textarea asp-for="ShippingAddress" rows="3" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                                  class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary"></textarea>
+                        <span asp-validation-for="ShippingAddress" class="block mt-1 text-xs text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Note" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <textarea asp-for="Note" rows="2" placeholder="Ví dụ: giao ngoài giờ hành chính"
+                                  class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary"></textarea>
+                        <span asp-validation-for="Note" class="block mt-1 text-xs text-red-600"></span>
                     </div>
 
                     <div>
@@ -98,12 +127,12 @@
                 <div>
                     <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center justify-between">
                         <span>Đơn hàng của bạn</span>
-                        <span class="text-xs bg-indigo-100 text-primary dark:text-indigo-300 font-bold px-2.5 py-1 rounded-full">@Model.TotalItems món</span>
+                        <span class="text-xs bg-indigo-100 text-primary dark:text-indigo-300 font-bold px-2.5 py-1 rounded-full">@Model.Cart.TotalItems món</span>
                     </h2>
 
                     <!-- Mini Cart Items -->
                     <div class="overflow-y-auto max-h-64 pr-1 mb-6 space-y-3 divide-y divide-gray-100">
-                        @foreach (var item in Model.Items)
+                        @foreach (var item in Model.Cart.Items)
                         {
                             var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
                             <div class="pt-3 first:pt-0 flex justify-between items-start gap-3 text-sm">
@@ -125,7 +154,7 @@
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 mb-6 text-sm">
                         <div class="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Tạm tính</span>
-                            <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.TotalAmount" /></span>
+                            <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.Cart.TotalAmount" /></span>
                         </div>
                         <div class="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Phí vận chuyển</span>
@@ -133,24 +162,23 @@
                         </div>
                         <div class="flex justify-between text-base font-bold text-gray-900 dark:text-gray-100 pt-3 border-t border-gray-200 dark:border-gray-700">
                             <span>Tổng thanh toán</span>
-                            <span class="text-primary dark:text-indigo-300 text-xl font-extrabold"><vc:money amount="@Model.TotalAmount" /></span>
+                            <span class="text-primary dark:text-indigo-300 text-xl font-extrabold"><vc:money amount="@Model.Cart.TotalAmount" /></span>
                         </div>
                         <p class="text-[11px] text-gray-400 italic">Ngoại tệ chỉ để tham khảo — đơn hàng thanh toán bằng VNĐ.</p>
                     </div>
                 </div>
 
                 <div class="space-y-3 pt-4">
-                    <form asp-controller="Orders" asp-action="Checkout" method="post">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group">
-                            Xác nhận Đặt Hàng <i class="fas fa-check-circle ml-2 group-hover:scale-110 transition-transform"></i>
-                        </button>
-                    </form>
+                    <button type="submit" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group">
+                        Xác nhận Đặt Hàng <i class="fas fa-check-circle ml-2 group-hover:scale-110 transition-transform"></i>
+                    </button>
                     <a asp-controller="Cart" asp-action="Index" class="block w-full text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 transition-colors">
                         ← Quay lại giỏ hàng
                     </a>
                 </div>
             </div>
         </div>
+        @Html.AntiForgeryToken()
+        </form>
     </div>
 </div>

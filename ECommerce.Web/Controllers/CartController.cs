@@ -1,4 +1,5 @@
 using AspNetCoreHero.ToastNotification.Abstractions;
+using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -107,6 +108,6 @@ public class CartController : Controller
         }
 
         // Đã thỏa mãn tất cả điều kiện stock và login (sẵn sàng chuyển giao cho Phase 5)
-        return View("CheckoutPreview", cart);
+        return View("CheckoutPreview", new CheckoutViewModel { Cart = cart });
     }
 }
