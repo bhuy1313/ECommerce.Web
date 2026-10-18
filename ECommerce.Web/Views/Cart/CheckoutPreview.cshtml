@@ -1,4 +1,5 @@
 ﻿@model ECommerce.Web.Models.ViewModels.CheckoutViewModel
+@using ECommerce.Web.Models.Entities.Enums
 @{
     ViewData["Title"] = "Thanh toán an toàn";
 }
@@ -64,19 +65,22 @@
                     </div>
 
                     <div>
-                        <label asp-for="PaymentMethod" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
-                        <div class="space-y-3" id="paymentOptions">
-                            <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
-                                <input asp-for="PaymentMethod" type="radio" value="Cod" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
-                                <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Thanh toán khi nhận hàng (COD)</span>
-                                <i class="fas fa-hand-holding-usd text-primary dark:text-indigo-300 ml-auto text-lg"></i>
-                            </label>
-                            <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
-                                <input asp-for="PaymentMethod" type="radio" value="VnPay" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
-                                <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Chuyển khoản / Cổng thanh toán VNPay</span>
-                                <i class="fab fa-cc-visa text-primary dark:text-indigo-300 ml-auto text-xl"></i>
-                            </label>
-                        </div>
+                        <fieldset>
+                            <legend class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức thanh toán</legend>
+                            <div class="space-y-3" id="paymentOptions">
+                                <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                    <input type="radio" name="PaymentMethod" value="Cod" id="paymentMethodCod" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" @(Model.PaymentMethod == PaymentMethod.Cod ? "checked" : null) />
+                                    <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Thanh toán khi nhận hàng (COD)</span>
+                                    <i class="fas fa-hand-holding-usd text-primary dark:text-indigo-300 ml-auto text-lg"></i>
+                                </label>
+                                <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                    <input type="radio" name="PaymentMethod" value="VnPay" id="paymentMethodVnPay" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" @(Model.PaymentMethod == PaymentMethod.VnPay ? "checked" : null) />
+                                    <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Chuyển khoản / Cổng thanh toán VNPay</span>
+                                    <i class="fab fa-cc-visa text-primary dark:text-indigo-300 ml-auto text-xl"></i>
+                                </label>
+                            </div>
+                            <span asp-validation-for="PaymentMethod" class="block mt-1 text-xs text-red-600"></span>
+                        </fieldset>
                         <div id="vnPayNote" class="hidden mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start">
                             <i class="fas fa-info-circle text-amber-500 mr-2 mt-0.5"></i>
                             <span>Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch. Đơn hàng chỉ được ghi nhận là đã thanh toán sau khi VNPay xác nhận với hệ thống.</span>

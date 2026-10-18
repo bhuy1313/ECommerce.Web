@@ -24,6 +24,7 @@ public class CheckoutControllerTests
     private static OrdersController CreateController(
         Mock<IOrderService> orderService,
         Mock<ICartService> cartService,
+        Mock<IPaymentService>? paymentService = null,
         string userId = "user-checkout")
     {
         var store = new Mock<IUserStore<ApplicationUser>>();
@@ -38,7 +39,7 @@ public class CheckoutControllerTests
             userManager.Object,
             notyf.Object,
             cartService.Object,
-            new Mock<IPaymentService>().Object,
+            (paymentService ?? new Mock<IPaymentService>()).Object,
             Mock.Of<ILogger<OrdersController>>())
         {
             ControllerContext = new ControllerContext
@@ -77,6 +78,73 @@ public class CheckoutControllerTests
         orderService.Verify(
             s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenPaymentMethodUndefined_ReRendersFormAndDoesNotCreateOrder()
+    {
+        // Arrange
+        var orderService = new Mock<IOrderService>();
+        var cartService = new Mock<ICartService>();
+        cartService.Setup(s => s.GetCartAsync()).ReturnsAsync(new CartViewModel());
+
+        var controller = CreateController(orderService, cartService);
+        var model = new CheckoutViewModel { Cart = new CartViewModel() };
+
+        // Model binding từ chối giá trị enum ngoài miền; test này ghim rằng hệ quả là
+        // render lại form chứ KHÔNG tạo đơn.
+        controller.ModelState.AddModelError(
+            nameof(CheckoutViewModel.PaymentMethod),
+            "Vui lòng chọn phương thức thanh toán hợp lệ.");
+
+        // Act
+        var result = await controller.Checkout(model);
+
+        // Assert
+        Assert.Equal("~/Views/Cart/CheckoutPreview.cshtml", Assert.IsType<ViewResult>(result).ViewName);
+        Assert.True(controller.ModelState.ContainsKey(nameof(CheckoutViewModel.PaymentMethod)));
+        orderService.Verify(
+            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenValid_ForwardsSelectedPaymentMethodToOrderService()
+    {
+        // Pin hợp đồng: phương thức khách chọn phải được chuyển nguyên vẹn xuống
+        // OrderService — không bị rơi về mặc định Cod trên đường đi.
+        var orderService = new Mock<IOrderService>();
+        orderService
+            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()))
+            .ReturnsAsync((true, "Đặt hàng thành công!", 77));
+
+        var paymentService = new Mock<IPaymentService>();
+        paymentService
+            .Setup(s => s.StartPaymentAsync(It.IsAny<int>(), It.IsAny<PaymentMethod>(), It.IsAny<string>()))
+            .ReturnsAsync(new PaymentInitResult { Success = true });
+
+        var cartService = new Mock<ICartService>();
+        var controller = CreateController(orderService, cartService, paymentService);
+
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "Nguyen Van A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi, Q1",
+            PaymentMethod = PaymentMethod.VnPay,
+            Cart = new CartViewModel()
+        };
+
+        // Act
+        var result = await controller.Checkout(model);
+
+        // Assert
+        orderService.Verify(
+            s => s.CreateOrderFromCartAsync("user-checkout", It.IsAny<ShippingDetails>(), PaymentMethod.VnPay),
+            Times.Once);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
+        Assert.Equal(77, redirect.RouteValues?["id"]);
     }
 
     private static string ResolveAppRelativePath(string viewName)

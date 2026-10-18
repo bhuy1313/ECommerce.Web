@@ -25,6 +25,7 @@ public class CheckoutViewModel
     [Display(Name = "Ghi chú")]
     public string? Note { get; set; }
 
+    [EnumDataType(typeof(PaymentMethod), ErrorMessage = "Vui lòng chọn phương thức thanh toán hợp lệ.")]
     [Display(Name = "Phương thức thanh toán")]
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;
 

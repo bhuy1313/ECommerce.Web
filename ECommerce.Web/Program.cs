@@ -13,6 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
+{
+    // Thông báo lỗi binding mặc định của ASP.NET Core là tiếng Anh ("The value '999' is invalid.")
+    // và được render thẳng vào form cho khách hàng. Ví dụ thực tế: một giá trị PaymentMethod
+    // ngoài miền enum bị model binding từ chối TRƯỚC khi ValidationAttribute kịp chạy, nên
+    // [EnumDataType].ErrorMessage không bao giờ hiển thị cho trường hợp đó — phải Việt hóa ở đây.
+    var messages = options.ModelBindingMessageProvider;
+    messages.SetAttemptedValueIsInvalidAccessor((value, fieldName) =>
+        $"Giá trị '{value}' không hợp lệ cho {fieldName}.");
+    messages.SetValueIsInvalidAccessor(value => $"Giá trị '{value}' không hợp lệ.");
+});
 builder.Services.AddNotyf(config =>
 {
     config.DurationInSeconds = 5;
