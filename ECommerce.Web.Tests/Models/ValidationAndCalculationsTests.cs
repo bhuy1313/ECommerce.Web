@@ -1,6 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using ECommerce.Web.Models.Entities;
+using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Models.ViewModels;
+using ECommerce.Web.Tests.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Web.Tests.Models;
 
@@ -204,5 +207,39 @@ public class ValidationAndCalculationsTests
 
         // Assert
         Assert.Contains(errors, e => e.MemberNames.Contains(nameof(RegisterViewModel.Email)));
+    }
+
+    [Fact]
+    public async Task PaymentTransaction_DuplicateProviderAndTransactionRef_ThrowsDbUpdateException()
+    {
+        // Arrange
+        var (db, _) = TestDbContextFactory.CreateInMemoryDbContext();
+        using var _db = db;
+
+        db.PaymentTransactions.Add(new PaymentTransaction
+        {
+            OrderId = 1,
+            Provider = "VnPay",
+            TransactionRef = "REF-1",
+            Amount = 100m,
+            Status = PaymentTransactionStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        db.PaymentTransactions.Add(new PaymentTransaction
+        {
+            OrderId = 2,
+            Provider = "VnPay",
+            TransactionRef = "REF-1",
+            Amount = 50m,
+            Status = PaymentTransactionStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+
+        // Act + Assert: unique index (Provider, TransactionRef) là chốt idempotency
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
     }
 }

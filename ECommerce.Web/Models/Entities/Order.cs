@@ -14,6 +14,7 @@ public class Order
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
+    public PaymentMethod Method { get; set; } = PaymentMethod.Cod;
     public decimal TotalAmount { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

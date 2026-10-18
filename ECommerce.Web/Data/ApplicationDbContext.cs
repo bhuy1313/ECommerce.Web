@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -30,5 +31,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<CartItem>().Property(c => c.UnitPrice).HasPrecision(18, 2);
         builder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
         builder.Entity<OrderItem>().Property(o => o.UnitPrice).HasPrecision(18, 2);
+
+        var paymentTransaction = builder.Entity<PaymentTransaction>();
+        paymentTransaction.Property(t => t.Amount).HasPrecision(18, 2);
+        // SQL Server giới hạn khoá index 900 byte => phải có độ dài cột, không được nvarchar(max).
+        paymentTransaction.Property(t => t.Provider).HasMaxLength(50);
+        paymentTransaction.Property(t => t.TransactionRef).HasMaxLength(100);
+        paymentTransaction.HasIndex(t => new { t.Provider, t.TransactionRef }).IsUnique();
     }
 }
