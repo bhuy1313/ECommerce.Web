@@ -83,6 +83,11 @@
                             <i class="fas fa-rotate-left mr-1.5"></i> Đã hoàn tiền
                         </span>
                         break;
+                    case PaymentStatus.RefundPending:
+                        <span class="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-bold rounded-full border border-amber-200">
+                            <i class="fas fa-hourglass-half mr-1.5"></i> Chờ hoàn tiền
+                        </span>
+                        break;
                     default:
                         <span class="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-bold rounded-full border border-amber-200">
                             <i class="fas fa-hourglass-half mr-1.5"></i> Chưa thanh toán
@@ -98,6 +103,10 @@
                 <i class="fas fa-info-circle text-rose-500 text-lg mr-3 mt-0.5"></i>
                 <div>
                     <strong>Đơn hàng đã hủy:</strong> Toàn bộ số lượng sản phẩm trong đơn đã được hoàn trả lại tồn kho khả dụng của hệ thống.
+                    @if (Model.PaymentStatus == PaymentStatus.RefundPending)
+                    {
+                        <span class="block mt-1 font-semibold">Đơn đã thanh toán trước khi hủy: khoản tiền đang chờ được hoàn lại cho bạn.</span>
+                    }
                 </div>
             </div>
         }

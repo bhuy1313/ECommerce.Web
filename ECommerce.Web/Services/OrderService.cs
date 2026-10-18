@@ -190,7 +190,9 @@ public class OrderService : IOrderService
                 order.Status = OrderStatus.Cancelled;
                 if (order.PaymentStatus == PaymentStatus.Paid)
                 {
-                    order.PaymentStatus = PaymentStatus.Refunded;
+                    // Đơn đã thu tiền nhưng khoản hoàn chưa xảy ra: đánh dấu đang chờ hoàn tiền.
+                    // Admin chỉ chuyển sang Refunded sau khi thực sự hoàn tiền cho khách.
+                    order.PaymentStatus = PaymentStatus.RefundPending;
                 }
 
                 await _db.SaveChangesAsync();

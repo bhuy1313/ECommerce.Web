@@ -229,7 +229,7 @@ public class OrderServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CancelOrderAsync_WhenOrderPaid_SetsRefunded()
+    public async Task CancelOrderAsync_WhenOrderPaid_SetsRefundPending()
     {
         // Arrange
         var userId = "user-refund-order";
@@ -257,7 +257,7 @@ public class OrderServiceTests : IDisposable
 
         var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
         Assert.Equal(OrderStatus.Cancelled, updatedOrder.Status);
-        Assert.Equal(PaymentStatus.Refunded, updatedOrder.PaymentStatus);
+        Assert.Equal(PaymentStatus.RefundPending, updatedOrder.PaymentStatus);
 
         var updatedProduct = await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id);
         Assert.Equal(4, updatedProduct.StockQuantity); // 3 + 1
