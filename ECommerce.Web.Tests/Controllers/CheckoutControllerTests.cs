@@ -58,9 +58,34 @@ public class CheckoutControllerTests
 
         // Assert
         var view = Assert.IsType<ViewResult>(result);
-        Assert.Equal("CheckoutPreview", view.ViewName);
+        Assert.Equal("~/Views/Cart/CheckoutPreview.cshtml", view.ViewName);
+        Assert.True(
+            File.Exists(ResolveAppRelativePath(view.ViewName!)),
+            $"View '{view.ViewName}' does not resolve to an existing file (resolved: " +
+            $"'{ResolveAppRelativePath(view.ViewName!)}'). A bare view name would be " +
+            "searched under /Views/Orders/ and /Views/Shared/ and throw at runtime, because the " +
+            "checkout view lives in /Views/Cart/.");
         orderService.Verify(
             s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>()),
             Times.Never);
+    }
+
+    private static string ResolveAppRelativePath(string viewName)
+    {
+        Assert.StartsWith("~/", viewName);
+
+        var relative = viewName[2..].Replace('/', Path.DirectorySeparatorChar);
+
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+        {
+            var projectDir = Path.Combine(dir.FullName, "ECommerce.Web");
+            if (Directory.Exists(Path.Combine(projectDir, "Views")))
+            {
+                return Path.Combine(projectDir, relative);
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Could not locate the ECommerce.Web project folder walking up from '{AppContext.BaseDirectory}'.");
     }
 }

@@ -76,7 +76,7 @@ public class OrdersController : Controller
         {
             model.Cart = await _cartService.GetCartAsync();
             _notyf.Error("Vui lòng kiểm tra thông tin nhận hàng.");
-            return View("CheckoutPreview", model);
+            return View("~/Views/Cart/CheckoutPreview.cshtml", model);
         }
 
         var shipping = new ShippingDetails
