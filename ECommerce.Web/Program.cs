@@ -1,9 +1,12 @@
 using ECommerce.Web.Data;
 using ECommerce.Web.Middlewares;
+using ECommerce.Web.Models.Configuration;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +28,10 @@ builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
 });
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("VnPay"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<VnPayOptions>>().Value);
+builder.Services.AddSingleton<IPaymentGateway, CodPaymentGateway>();
+builder.Services.AddScoped<IPaymentGateway, VnPayGateway>();
 
 var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 var useSqlite = defaultConnection.Contains(".db", StringComparison.OrdinalIgnoreCase);
