@@ -226,6 +226,41 @@ public class OrderServiceTests : IDisposable
         Assert.Equal(7, updatedProduct!.StockQuantity); // 5 + 2 = 7
     }
 
+    [Fact]
+    public async Task CancelOrderAsync_WhenOrderPaid_SetsRefunded()
+    {
+        // Arrange
+        var userId = "user-refund-order";
+        var product = new Product { Name = "Refundable", Price = 100.00m, StockQuantity = 3, IsActive = true };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        var order = new Order
+        {
+            UserId = userId,
+            Status = OrderStatus.Processing,
+            PaymentStatus = PaymentStatus.Paid,
+            TotalAmount = 100.00m
+        };
+        order.Items.Add(new OrderItem { ProductId = product.Id, Quantity = 1, UnitPrice = 100.00m });
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var (success, message) = await _orderService.CancelOrderAsync(order.Id, userId);
+
+        // Assert
+        Assert.True(success);
+        Assert.Contains("thành công", message);
+
+        var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
+        Assert.Equal(OrderStatus.Cancelled, updatedOrder.Status);
+        Assert.Equal(PaymentStatus.Refunded, updatedOrder.PaymentStatus);
+
+        var updatedProduct = await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id);
+        Assert.Equal(4, updatedProduct.StockQuantity); // 3 + 1
+    }
+
     [Theory]
     [InlineData(OrderStatus.Shipped)]
     [InlineData(OrderStatus.Completed)]

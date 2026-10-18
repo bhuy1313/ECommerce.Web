@@ -32,6 +32,7 @@ builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("VnPay
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<VnPayOptions>>().Value);
 builder.Services.AddSingleton<IPaymentGateway, CodPaymentGateway>();
 builder.Services.AddScoped<IPaymentGateway, VnPayGateway>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 var useSqlite = defaultConnection.Contains(".db", StringComparison.OrdinalIgnoreCase);
