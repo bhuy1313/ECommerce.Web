@@ -140,6 +140,45 @@ public class PaymentService : IPaymentService
             return Failed(PaymentCallbackOutcome.AmountMismatch, "Số tiền thanh toán không khớp với đơn hàng.", order.Id);
         }
 
+        // Đơn đã bị khách hủy (tồn kho đã được hoàn) nhưng tiền vẫn về sau đó.
+        // KHÔNG được hồi sinh đơn: hàng đã trả lại kho, hồi sinh sẽ bán vượt tồn.
+        // Chỉ ghi nhận đã thu tiền của đơn đã hủy để vận hành hoàn tiền thủ công.
+        if (order.Status == OrderStatus.Cancelled)
+        {
+            var cancelledOrderStrategy = _db.Database.CreateExecutionStrategy();
+            return await cancelledOrderStrategy.ExecuteAsync(async () =>
+            {
+                await using var dbTransaction = await _db.Database.BeginTransactionAsync();
+                try
+                {
+                    transaction.Status = PaymentTransactionStatus.Succeeded;
+                    transaction.UpdatedAt = DateTime.UtcNow;
+                    transaction.RawResponse = BuildRawResponse(query);
+
+                    // Giữ nguyên order.Status = Cancelled; chỉ đánh dấu khoản tiền cần hoàn.
+                    order.PaymentStatus = PaymentStatus.RefundPending;
+
+                    await _db.SaveChangesAsync();
+                    await dbTransaction.CommitAsync();
+
+                    _logger.LogError(
+                        "CẢNH BÁO HOÀN TIỀN: đơn hàng #{OrderId} đã bị hủy nhưng nhận được {Amount} qua {Provider} (ref {TransactionRef}) — cần hoàn tiền thủ công.",
+                        order.Id, callback.Amount, provider, transaction.TransactionRef);
+
+                    return Handled(
+                        PaymentCallbackOutcome.PaidButCancelled,
+                        $"Đơn hàng #{order.Id} đã bị hủy nhưng giao dịch đã được thu tiền. Bộ phận vận hành sẽ xử lý hoàn tiền.",
+                        order.Id);
+                }
+                catch (Exception ex)
+                {
+                    await dbTransaction.RollbackAsync();
+                    _logger.LogError(ex, "Lỗi khi xử lý callback thanh toán cho đơn hàng đã hủy #{OrderId}", order.Id);
+                    return Failed(PaymentCallbackOutcome.GatewayError, "Đã xảy ra lỗi khi xử lý thanh toán.");
+                }
+            });
+        }
+
         var executionStrategy = _db.Database.CreateExecutionStrategy();
         return await executionStrategy.ExecuteAsync(async () =>
         {

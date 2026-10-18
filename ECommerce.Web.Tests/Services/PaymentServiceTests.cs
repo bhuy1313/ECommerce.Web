@@ -199,6 +199,52 @@ public class PaymentServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task HandleCallback_WhenOrderCancelled_DoesNotResurrectOrderAndFlagsRefund()
+    {
+        // Arrange: khách đã hủy đơn (tồn kho đã được hoàn) nhưng tiền vẫn về sau đó.
+        var order = await SeedOrderAsync(status: OrderStatus.Cancelled);
+        var transaction = await SeedTransactionAsync(order.Id);
+        var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal);
+
+        // Act
+        var result = await _service.HandleCallbackAsync("VnPay", query);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.PaidButCancelled, result.Outcome);
+        Assert.Equal(order.Id, result.OrderId);
+
+        var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
+        Assert.Equal(OrderStatus.Cancelled, updatedOrder.Status);
+        Assert.Equal(PaymentStatus.RefundPending, updatedOrder.PaymentStatus);
+
+        var updatedTransaction = await _db.PaymentTransactions.AsNoTracking().SingleAsync(t => t.Id == transaction.Id);
+        Assert.Equal(PaymentTransactionStatus.Succeeded, updatedTransaction.Status);
+    }
+
+    [Fact]
+    public async Task HandleCallback_WhenOrderCancelledAndReplayed_StaysIdempotent()
+    {
+        // Arrange
+        var order = await SeedOrderAsync(status: OrderStatus.Cancelled);
+        await SeedTransactionAsync(order.Id);
+        var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal);
+
+        // Act
+        var first = await _service.HandleCallbackAsync("VnPay", query);
+        var second = await _service.HandleCallbackAsync("VnPay", query);
+
+        // Assert
+        Assert.Equal(PaymentCallbackOutcome.PaidButCancelled, first.Outcome);
+        Assert.Equal(PaymentCallbackOutcome.AlreadyProcessed, second.Outcome);
+
+        var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
+        Assert.Equal(OrderStatus.Cancelled, updatedOrder.Status);
+        Assert.Equal(PaymentStatus.RefundPending, updatedOrder.PaymentStatus);
+        Assert.Equal(1, await _db.PaymentTransactions.CountAsync(t => t.Status == PaymentTransactionStatus.Succeeded));
+    }
+
+    [Fact]
     public async Task StartPaymentAsync_ForVnPay_CreatesPendingTransactionAndReturnsRedirectUrl()
     {
         // Arrange

@@ -19,11 +19,11 @@ namespace ECommerce.Web.Tests.Controllers;
 /// </summary>
 public class PaymentControllerTests
 {
-    private static PaymentController CreateController(Mock<IPaymentService> paymentService)
+    private static PaymentController CreateController(Mock<IPaymentService> paymentService, Mock<INotyfService>? notyf = null)
     {
         return new PaymentController(
             paymentService.Object,
-            new Mock<INotyfService>().Object,
+            (notyf ?? new Mock<INotyfService>()).Object,
             Mock.Of<ILogger<PaymentController>>())
         {
             ControllerContext = new ControllerContext
@@ -202,6 +202,26 @@ public class PaymentControllerTests
         Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
         Assert.Equal("Orders", redirect.ControllerName);
         Assert.Equal(42, redirect.RouteValues?["id"]);
+    }
+
+    [Fact]
+    public async Task Return_WhenPaidButCancelled_RedirectsWithInformationNotice()
+    {
+        // Tiền đã thu nhưng đơn đã bị hủy: khách phải được đưa về trang đơn hàng để thấy
+        // trạng thái "Chờ hoàn tiền", và thông báo phải là Information chứ không phải Success.
+        var notyf = new Mock<INotyfService>();
+        var controller = CreateController(
+            ServiceReturning(PaymentCallbackOutcome.PaidButCancelled, "Đơn hàng đã bị hủy nhưng giao dịch đã được thu tiền.", 9),
+            notyf);
+
+        var result = await controller.Return();
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
+        Assert.Equal("Orders", redirect.ControllerName);
+        Assert.Equal(9, redirect.RouteValues?["id"]);
+        notyf.Verify(n => n.Information("Đơn hàng đã bị hủy nhưng giao dịch đã được thu tiền."), Times.Once);
+        notyf.Verify(n => n.Success(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

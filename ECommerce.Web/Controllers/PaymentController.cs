@@ -49,6 +49,14 @@ public class PaymentController : Controller
             return RedirectToAction(nameof(OrdersController.Details), "Orders", new { id = result.OrderId.Value });
         }
 
+        // Tiền đã thu nhưng đơn đã bị hủy: vẫn đưa khách về đơn hàng để thấy trạng thái
+        // "Chờ hoàn tiền", nhưng dùng thông báo trung tính thay vì toast xanh "thành công".
+        if (result.Outcome == PaymentCallbackOutcome.PaidButCancelled && result.OrderId.HasValue)
+        {
+            _notyf.Information(result.Message);
+            return RedirectToAction(nameof(OrdersController.Details), "Orders", new { id = result.OrderId.Value });
+        }
+
         _logger.LogWarning("VNPay return thất bại cho đơn {OrderId}: {Message}", result.OrderId, result.Message);
         _notyf.Error(result.Message);
         return View("Result", new PaymentResultViewModel
