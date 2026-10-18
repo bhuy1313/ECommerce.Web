@@ -93,7 +93,7 @@
                                 #@product.Id
                             </td>
                             <td class="py-4 px-6 text-center">
-                                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/product-placeholder.svg" : product.ImageUrl)" onerror="this.onerror=null;this.src='/img/product-placeholder.svg';" alt="Ảnh sản phẩm @product.Name" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-gray-700 object-cover bg-slate-50 dark:bg-gray-800" />
+                                <img src="@ProductImage.Resolve(product.ImageUrl)" onerror="this.onerror=null;this.src='@ProductImage.Placeholder';" alt="Ảnh sản phẩm @product.Name" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-gray-700 object-cover bg-slate-50 dark:bg-gray-800" />
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-900 dark:text-gray-100 text-sm">@product.Name</div>
