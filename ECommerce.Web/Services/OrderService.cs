@@ -1,4 +1,5 @@
 using ECommerce.Web.Data;
+using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
-    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId)
+    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping)
     {
         var cart = await _db.Carts
             .Include(c => c.Items)
@@ -59,6 +60,10 @@ public class OrderService : IOrderService
                 var order = new Order
                 {
                     UserId = userId,
+                    RecipientName = shipping.RecipientName.Trim(),
+                    RecipientPhone = shipping.RecipientPhone.Trim(),
+                    ShippingAddress = shipping.ShippingAddress.Trim(),
+                    Note = string.IsNullOrWhiteSpace(shipping.Note) ? null : shipping.Note,
                     OrderDate = DateTime.UtcNow,
                     Status = OrderStatus.Pending,
                     PaymentStatus = PaymentStatus.Pending,

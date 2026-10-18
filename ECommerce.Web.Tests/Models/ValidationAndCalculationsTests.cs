@@ -33,6 +33,16 @@ public class ValidationAndCalculationsTests
     }
 
     [Fact]
+    public void CheckoutViewModel_MissingRequiredFields_IsInvalid()
+    {
+        var vm = new CheckoutViewModel { RecipientName = "", RecipientPhone = "", ShippingAddress = "" };
+        var results = new List<ValidationResult>();
+        var ok = Validator.TryValidateObject(vm, new ValidationContext(vm), results, validateAllProperties: true);
+        Assert.False(ok);
+        Assert.Equal(3, results.Count);
+    }
+
+    [Fact]
     public void OrderTotal_CalculatesSumOfAllItemsAccurately()
     {
         // Arrange

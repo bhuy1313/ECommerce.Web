@@ -1,4 +1,5 @@
 using ECommerce.Web.Data;
+using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Services;
@@ -30,6 +31,8 @@ public class OrderServiceTests : IDisposable
         _connection.Dispose();
     }
 
+    private static ShippingDetails Ship() => new() { RecipientName = "Test", RecipientPhone = "0900000000", ShippingAddress = "Test Address" };
+
     [Fact]
     public async Task CreateOrderFromCartAsync_WhenCartEmpty_ReturnsFailure()
     {
@@ -37,12 +40,45 @@ public class OrderServiceTests : IDisposable
         var userId = "user-empty-cart";
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
 
         // Assert
         Assert.False(result.Success);
         Assert.Contains("trống", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Null(result.OrderId);
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_PersistsShippingDetails()
+    {
+        // Arrange
+        var userId = "user-ship";
+        var product = new Product { Name = "Mouse", Price = 25m, StockQuantity = 5, IsActive = true };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 25m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        var shipping = new ShippingDetails
+        {
+            RecipientName = "Tran Thi B",
+            RecipientPhone = "0912345678",
+            ShippingAddress = "1 Nguyen Hue, Q1",
+            Note = "Gọi trước khi giao"
+        };
+
+        // Act
+        var result = await _orderService.CreateOrderFromCartAsync(userId, shipping);
+
+        // Assert
+        Assert.True(result.Success);
+        var order = await _db.Orders.AsNoTracking().FirstAsync(o => o.Id == result.OrderId);
+        Assert.Equal("Tran Thi B", order.RecipientName);
+        Assert.Equal("0912345678", order.RecipientPhone);
+        Assert.Equal("1 Nguyen Hue, Q1", order.ShippingAddress);
+        Assert.Equal("Gọi trước khi giao", order.Note);
     }
 
     [Fact]
@@ -64,7 +100,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
 
         // Assert
         Assert.True(result.Success);
@@ -107,7 +143,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
 
         // Assert
         Assert.False(result.Success);
@@ -139,8 +175,8 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var first = await _orderService.CreateOrderFromCartAsync("user-race-a");
-        var second = await _orderService.CreateOrderFromCartAsync("user-race-b");
+        var first = await _orderService.CreateOrderFromCartAsync("user-race-a", Ship());
+        var second = await _orderService.CreateOrderFromCartAsync("user-race-b", Ship());
 
         // Assert: đúng 1 đơn thắng, stock về 0 và không bao giờ âm, đơn thua báo hết hàng
         Assert.True(first.Success);

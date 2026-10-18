@@ -1,4 +1,5 @@
 using AspNetCoreHero.ToastNotification.Abstractions;
+using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -64,7 +65,7 @@ public class OrdersController : Controller
             return Challenge();
         }
 
-        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId);
+        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, new ShippingDetails());
         if (success && orderId.HasValue)
         {
             _notyf.Success(message);
