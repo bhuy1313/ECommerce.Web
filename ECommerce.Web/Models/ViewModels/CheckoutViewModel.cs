@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ECommerce.Web.Models.Entities.Enums;
 
 namespace ECommerce.Web.Models.ViewModels;
 
@@ -23,6 +24,9 @@ public class CheckoutViewModel
     [StringLength(500)]
     [Display(Name = "Ghi chú")]
     public string? Note { get; set; }
+
+    [Display(Name = "Phương thức thanh toán")]
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;
 
     public CartViewModel Cart { get; set; } = new();
 }

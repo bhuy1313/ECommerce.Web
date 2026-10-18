@@ -31,6 +31,26 @@ public class VnPayGateway : IPaymentGateway
 
     public Task<PaymentInitResult> CreatePaymentAsync(PaymentRequest request, string returnUrl, string ipAddress)
     {
+        var resolvedReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? _options.ReturnUrl : returnUrl;
+
+        // Thiếu cấu hình thì VNPay từ chối URL ("Input data required"), và chữ ký ký bằng
+        // secret rỗng thì ai cũng giả được. Dừng ngay ở đây thay vì đẩy khách sang trang lỗi
+        // của cổng thanh toán — đơn hàng vẫn được giữ để khách thanh toán lại sau.
+        if (string.IsNullOrWhiteSpace(_options.TmnCode))
+        {
+            return Task.FromResult(Failure("Cổng thanh toán VNPay chưa được cấu hình (thiếu TmnCode)."));
+        }
+
+        if (string.IsNullOrWhiteSpace(_options.HashSecret))
+        {
+            return Task.FromResult(Failure("Cổng thanh toán VNPay chưa được cấu hình (thiếu HashSecret)."));
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedReturnUrl))
+        {
+            return Task.FromResult(Failure("Cổng thanh toán VNPay chưa được cấu hình (thiếu ReturnUrl)."));
+        }
+
         var transactionRef = BuildTransactionRef(request.OrderId);
         var createDate = DateTimeOffset.UtcNow.ToOffset(VietnamOffset);
         var parameters = new Dictionary<string, string>
@@ -44,7 +64,7 @@ public class VnPayGateway : IPaymentGateway
             ["vnp_OrderInfo"] = ToAscii(request.OrderInfo),
             ["vnp_OrderType"] = OrderType,
             ["vnp_Amount"] = ToVnPayAmount(request.Amount),
-            ["vnp_ReturnUrl"] = string.IsNullOrWhiteSpace(returnUrl) ? _options.ReturnUrl : returnUrl,
+            ["vnp_ReturnUrl"] = resolvedReturnUrl,
             ["vnp_IpAddr"] = ipAddress,
             ["vnp_CreateDate"] = ToVnPayDate(createDate),
             ["vnp_ExpireDate"] = ToVnPayDate(createDate.AddMinutes(15))
@@ -62,6 +82,18 @@ public class VnPayGateway : IPaymentGateway
 
     public Task<PaymentCallbackResult> VerifyCallbackAsync(IQueryCollection query)
     {
+        // HashSecret rỗng ⇒ chữ ký HMAC(empty-key) mà ai cũng tính được: từ chối thẳng,
+        // đừng để một cấu hình thiếu biến callback thành đường ghi DB không xác thực.
+        if (string.IsNullOrWhiteSpace(_options.HashSecret))
+        {
+            return Task.FromResult(new PaymentCallbackResult
+            {
+                IsValidSignature = false,
+                Success = false,
+                TransactionRef = query["vnp_TxnRef"].ToString()
+            });
+        }
+
         var parameters = query
             .Where(kv => kv.Key.StartsWith("vnp_", StringComparison.Ordinal)
                 && kv.Key is not (SecureHashKey or SecureHashTypeKey))
@@ -81,6 +113,8 @@ public class VnPayGateway : IPaymentGateway
             OrderId = TryParseOrderId(transactionRef)
         });
     }
+
+    private static PaymentInitResult Failure(string error) => new() { Success = false, Error = error };
 
     private string Sign(IEnumerable<KeyValuePair<string, string>> parameters) =>
         Convert.ToHexString(HMACSHA512.HashData(

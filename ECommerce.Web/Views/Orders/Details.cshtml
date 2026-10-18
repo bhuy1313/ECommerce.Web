@@ -1,8 +1,12 @@
 ﻿@model ECommerce.Web.Models.Entities.Order
+@using ECommerce.Web.Models.Entities.Enums
 @{
     ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
     var canCancel = Model.Status == ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending ||
                     Model.Status == ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing;
+    var paymentMethodLabel = Model.Method == PaymentMethod.VnPay
+        ? "VNPay"
+        : "Thanh toán khi nhận hàng (COD)";
 }
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -51,6 +55,37 @@
                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
                         <span class="px-3.5 py-1.5 bg-rose-50 text-rose-700 text-sm font-bold rounded-full border border-rose-200">
                             <i class="fas fa-ban mr-1.5"></i> Đã hủy
+                        </span>
+                        break;
+                }
+
+                <span class="px-3.5 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-full border border-gray-200 dark:border-gray-700">
+                    @if (Model.Method == PaymentMethod.VnPay)
+                    {
+                        <i class="fab fa-cc-visa mr-1.5"></i>
+                    }
+                    else
+                    {
+                        <i class="fas fa-hand-holding-usd mr-1.5"></i>
+                    }
+                    @paymentMethodLabel
+                </span>
+
+                @switch (Model.PaymentStatus)
+                {
+                    case PaymentStatus.Paid:
+                        <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 text-sm font-bold rounded-full border border-emerald-200">
+                            <i class="fas fa-check-double mr-1.5"></i> Đã thanh toán
+                        </span>
+                        break;
+                    case PaymentStatus.Refunded:
+                        <span class="px-3.5 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-bold rounded-full border border-gray-200 dark:border-gray-700">
+                            <i class="fas fa-rotate-left mr-1.5"></i> Đã hoàn tiền
+                        </span>
+                        break;
+                    default:
+                        <span class="px-3.5 py-1.5 bg-amber-50 text-amber-700 text-sm font-bold rounded-full border border-amber-200">
+                            <i class="fas fa-hourglass-half mr-1.5"></i> Chưa thanh toán
                         </span>
                         break;
                 }

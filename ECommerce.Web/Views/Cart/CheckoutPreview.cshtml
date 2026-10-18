@@ -64,18 +64,22 @@
                     </div>
 
                     <div>
-                        <label class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức thanh toán</label>
-                        <div class="space-y-3">
-                            <label class="flex items-center p-3.5 border border-primary rounded-xl bg-indigo-50/50 cursor-pointer">
-                                <input type="radio" name="paymentMethod" checked class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
+                        <label asp-for="PaymentMethod" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <div class="space-y-3" id="paymentOptions">
+                            <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                <input asp-for="PaymentMethod" type="radio" value="Cod" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
                                 <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Thanh toán khi nhận hàng (COD)</span>
                                 <i class="fas fa-hand-holding-usd text-primary dark:text-indigo-300 ml-auto text-lg"></i>
                             </label>
-                            <label class="flex items-center p-3.5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors opacity-75">
-                                <input type="radio" name="paymentMethod" disabled class="h-4 w-4 text-gray-400" />
-                                <span class="ml-3 text-gray-500 dark:text-gray-400">Chuyển khoản / Cổng thanh toán (Sắp mở)</span>
-                                <i class="fab fa-cc-visa text-gray-400 ml-auto text-xl"></i>
+                            <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                <input asp-for="PaymentMethod" type="radio" value="VnPay" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" />
+                                <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Chuyển khoản / Cổng thanh toán VNPay</span>
+                                <i class="fab fa-cc-visa text-primary dark:text-indigo-300 ml-auto text-xl"></i>
                             </label>
+                        </div>
+                        <div id="vnPayNote" class="hidden mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start">
+                            <i class="fas fa-info-circle text-amber-500 mr-2 mt-0.5"></i>
+                            <span>Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch. Đơn hàng chỉ được ghi nhận là đã thanh toán sau khi VNPay xác nhận với hệ thống.</span>
                         </div>
                     </div>
 
@@ -147,3 +151,30 @@
         </form>
     </div>
 </div>
+
+<script>
+    (function () {
+        var options = document.querySelectorAll('#paymentOptions input[name="PaymentMethod"]');
+        var note = document.getElementById('vnPayNote');
+
+        function sync() {
+            options.forEach(function (input) {
+                var label = input.closest('label');
+                var selected = input.checked;
+                label.classList.toggle('border-primary', selected);
+                label.classList.toggle('bg-indigo-50/50', selected);
+                label.classList.toggle('border-gray-200', !selected);
+                label.classList.toggle('dark:border-gray-700', !selected);
+            });
+
+            var vnPay = document.querySelector('#paymentOptions input[value="VnPay"]');
+            note.classList.toggle('hidden', !(vnPay && vnPay.checked));
+        }
+
+        options.forEach(function (input) {
+            input.addEventListener('change', sync);
+        });
+
+        sync();
+    })();
+</script>

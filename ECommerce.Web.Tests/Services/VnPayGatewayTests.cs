@@ -107,4 +107,64 @@ public class VnPayGatewayTests
         var query = VnPaySignatureHelper.ParseQuery(new Uri(result.RedirectUrl!).Query);
         Assert.Equal("Thanh toan don hang 5", query["vnp_OrderInfo"]);
     }
+
+    [Theory]
+    [InlineData("", "secret")]
+    [InlineData("   ", "secret")]
+    [InlineData("T", "")]
+    [InlineData("T", "   ")]
+    public async Task CreatePaymentAsync_WhenCredentialsMissing_FailsInsteadOfRedirecting(string tmnCode, string hashSecret)
+    {
+        // Thiếu TmnCode/HashSecret thì URL sinh ra luôn bị VNPay từ chối ("Input data required"),
+        // và chữ ký rỗng-secret thì ai cũng giả được. Không được đẩy khách sang một trang lỗi
+        // của cổng thanh toán: phải trả về thất bại để tầng gọi dừng lại và báo cho người dùng.
+        var options = Options();
+        options.TmnCode = tmnCode;
+        options.HashSecret = hashSecret;
+        var gateway = new VnPayGateway(options);
+
+        var result = await gateway.CreatePaymentAsync(
+            new PaymentRequest { OrderId = 5, Amount = Amount, OrderInfo = "Thanh toan don hang 5" },
+            options.ReturnUrl,
+            "127.0.0.1");
+
+        Assert.False(result.Success);
+        Assert.Null(result.RedirectUrl);
+        Assert.False(string.IsNullOrWhiteSpace(result.Error));
+    }
+
+    [Fact]
+    public async Task CreatePaymentAsync_WhenReturnUrlMissing_FailsInsteadOfRedirecting()
+    {
+        // vnp_ReturnUrl là bắt buộc: không có nó khách thanh toán xong sẽ không quay về được đâu.
+        var options = Options();
+        options.ReturnUrl = string.Empty;
+        var gateway = new VnPayGateway(options);
+
+        var result = await gateway.CreatePaymentAsync(
+            new PaymentRequest { OrderId = 5, Amount = Amount, OrderInfo = "Thanh toan don hang 5" },
+            string.Empty,
+            "127.0.0.1");
+
+        Assert.False(result.Success);
+        Assert.Null(result.RedirectUrl);
+        Assert.False(string.IsNullOrWhiteSpace(result.Error));
+    }
+
+    [Fact]
+    public async Task VerifyCallback_WhenCredentialsMissing_RejectsSignature()
+    {
+        // HashSecret rỗng nghĩa là chữ ký HMAC(empty-key) mà bất kỳ ai cũng tính được.
+        // Chấp nhận nó sẽ biến callback thành đường ghi DB không cần xác thực.
+        var configured = Options();
+        var query = VnPaySignatureHelper.BuildCallbackQuery(configured, TxnRef, Amount);
+
+        var unconfigured = Options();
+        unconfigured.HashSecret = string.Empty;
+        var gateway = new VnPayGateway(unconfigured);
+
+        var result = await gateway.VerifyCallbackAsync(query);
+
+        Assert.False(result.IsValidSignature);
+    }
 }

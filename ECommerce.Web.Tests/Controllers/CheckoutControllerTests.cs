@@ -3,11 +3,14 @@ using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Controllers;
 using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
+using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace ECommerce.Web.Tests.Controllers;
@@ -30,7 +33,13 @@ public class CheckoutControllerTests
 
         var notyf = new Mock<INotyfService>();
 
-        var controller = new OrdersController(orderService.Object, userManager.Object, notyf.Object, cartService.Object)
+        var controller = new OrdersController(
+            orderService.Object,
+            userManager.Object,
+            notyf.Object,
+            cartService.Object,
+            new Mock<IPaymentService>().Object,
+            Mock.Of<ILogger<OrdersController>>())
         {
             ControllerContext = new ControllerContext
             {
@@ -66,7 +75,7 @@ public class CheckoutControllerTests
             "searched under /Views/Orders/ and /Views/Shared/ and throw at runtime, because the " +
             "checkout view lives in /Views/Cart/.");
         orderService.Verify(
-            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>()),
+            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()),
             Times.Never);
     }
 

@@ -40,7 +40,7 @@ public class OrderServiceTests : IDisposable
         var userId = "user-empty-cart";
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
 
         // Assert
         Assert.False(result.Success);
@@ -70,7 +70,7 @@ public class OrderServiceTests : IDisposable
         };
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, shipping);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, shipping, PaymentMethod.VnPay);
 
         // Assert
         Assert.True(result.Success);
@@ -79,6 +79,8 @@ public class OrderServiceTests : IDisposable
         Assert.Equal("0912345678", order.RecipientPhone);
         Assert.Equal("1 Nguyen Hue, Q1", order.ShippingAddress);
         Assert.Equal("Gọi trước khi giao", order.Note);
+        Assert.Equal(PaymentMethod.VnPay, order.Method);
+        Assert.Equal(PaymentStatus.Pending, order.PaymentStatus);
     }
 
     [Fact]
@@ -100,7 +102,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
 
         // Assert
         Assert.True(result.Success);
@@ -143,7 +145,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship());
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
 
         // Assert
         Assert.False(result.Success);
@@ -175,8 +177,8 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var first = await _orderService.CreateOrderFromCartAsync("user-race-a", Ship());
-        var second = await _orderService.CreateOrderFromCartAsync("user-race-b", Ship());
+        var first = await _orderService.CreateOrderFromCartAsync("user-race-a", Ship(), PaymentMethod.Cod);
+        var second = await _orderService.CreateOrderFromCartAsync("user-race-b", Ship(), PaymentMethod.Cod);
 
         // Assert: đúng 1 đơn thắng, stock về 0 và không bao giờ âm, đơn thua báo hết hàng
         Assert.True(first.Success);

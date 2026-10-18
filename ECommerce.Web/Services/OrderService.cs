@@ -17,7 +17,7 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
-    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping)
+    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method)
     {
         var cart = await _db.Carts
             .Include(c => c.Items)
@@ -67,6 +67,7 @@ public class OrderService : IOrderService
                     OrderDate = DateTime.UtcNow,
                     Status = OrderStatus.Pending,
                     PaymentStatus = PaymentStatus.Pending,
+                    Method = method,
                     TotalAmount = cart.Items.Sum(i => i.Quantity * i.UnitPrice)
                 };
 

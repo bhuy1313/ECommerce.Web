@@ -3,6 +3,7 @@ using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +18,23 @@ public class OrdersController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly INotyfService _notyf;
     private readonly ICartService _cartService;
+    private readonly IPaymentService _paymentService;
+    private readonly ILogger<OrdersController> _logger;
 
     public OrdersController(
         IOrderService orderService,
         UserManager<ApplicationUser> userManager,
         INotyfService notyf,
-        ICartService cartService)
+        ICartService cartService,
+        IPaymentService paymentService,
+        ILogger<OrdersController> logger)
     {
         _orderService = orderService;
         _userManager = userManager;
         _notyf = notyf;
         _cartService = cartService;
+        _paymentService = paymentService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -87,15 +94,34 @@ public class OrdersController : Controller
             Note = model.Note
         };
 
-        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, shipping);
-        if (success && orderId.HasValue)
+        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, shipping, model.PaymentMethod);
+        if (!success || !orderId.HasValue)
         {
-            _notyf.Success(message);
-            return RedirectToAction(nameof(Details), new { id = orderId.Value });
+            _notyf.Error(message);
+            return RedirectToAction("Index", "Cart");
         }
 
-        _notyf.Error(message);
-        return RedirectToAction("Index", "Cart");
+        // Đơn hàng đã được tạo (tồn kho đã trừ). Bước khởi tạo thanh toán chỉ ghi
+        // PaymentTransaction và (với VNPay) trả URL cổng thanh toán; thất bại ở bước này
+        // KHÔNG huỷ đơn — đơn vẫn nằm trong lịch sử ở trạng thái chưa thanh toán.
+        // (Chưa có nút "thanh toán lại" trên trang chi tiết đơn: xem ghi chú trong report A10.)
+        var payment = await _paymentService.StartPaymentAsync(
+            orderId.Value,
+            model.PaymentMethod,
+            HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+
+        if (payment.Success && !string.IsNullOrWhiteSpace(payment.RedirectUrl))
+        {
+            return Redirect(payment.RedirectUrl);
+        }
+
+        if (!payment.Success)
+        {
+            _logger.LogWarning("Không khởi tạo được thanh toán cho đơn {OrderId}: {Error}", orderId.Value, payment.Error);
+        }
+
+        _notyf.Success(message);
+        return RedirectToAction(nameof(Details), new { id = orderId.Value });
     }
 
     [HttpPost]
