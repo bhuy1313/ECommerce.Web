@@ -9,6 +9,7 @@ public class CartItemViewModel
     public int Quantity { get; set; }
     public int AvailableStock { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? ImageUrl { get; set; }
 
     public decimal LineTotal => Quantity * UnitPrice;
     public bool HasStockIssue => Quantity > AvailableStock || AvailableStock <= 0 || !IsActive;

@@ -3,40 +3,6 @@
     ViewData["Title"] = "Thanh toán an toàn";
 }
 
-@functions {
-    string GetProductImage(string? categoryName, int id)
-    {
-        var cat = categoryName?.ToLower() ?? "";
-        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=100&q=80",
-                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=100&q=80",
-                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=100&q=80",
-                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=100&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&q=80",
-                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=100&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("book"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100&q=80",
-                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=100&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80";
-    }
-}
-
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- Breadcrumb -->
     <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-6 items-center">
@@ -134,11 +100,10 @@
                     <div class="overflow-y-auto max-h-64 pr-1 mb-6 space-y-3 divide-y divide-gray-100">
                         @foreach (var item in Model.Cart.Items)
                         {
-                            var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
                             <div class="pt-3 first:pt-0 flex justify-between items-start gap-3 text-sm">
                                 <div class="flex gap-3">
                                     <div class="w-12 h-12 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-1.5 border border-gray-200 dark:border-gray-700 flex-shrink-0">
-                                        <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                        <img src="@ProductImage.Resolve(item.ImageUrl)" alt="@item.ProductName" class="w-full h-full object-contain">
                                     </div>
                                     <div>
                                         <p class="font-medium text-gray-800 dark:text-gray-200 line-clamp-1">@item.ProductName</p>

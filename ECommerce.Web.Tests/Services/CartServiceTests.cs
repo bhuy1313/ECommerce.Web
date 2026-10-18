@@ -160,4 +160,26 @@ public class CartServiceTests : IDisposable
         var updatedCart = await _db.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.UserId == userId);
         Assert.Empty(updatedCart!.Items);
     }
+
+    [Fact]
+    public async Task GetCartAsync_ExposesProductImageUrl()
+    {
+        // Arrange
+        var userId = "user-image-url";
+        var service = CreateServiceForUser(userId);
+        var product = new Product { Name = "Imaged Item", Price = 30m, StockQuantity = 5, IsActive = true, ImageUrl = "/img/x.png", Category = new Category { Name = "General", IsActive = true } };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 30m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetCartAsync();
+
+        // Assert
+        Assert.Equal("/img/x.png", result.Items.Single().ImageUrl);
+    }
 }

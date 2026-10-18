@@ -3,44 +3,6 @@
     ViewData["Title"] = Model.Name;
 }
 
-@functions {
-    string GetProductImage(string? categoryName, int id)
-    {
-        var cat = categoryName?.ToLower() ?? "";
-        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80",
-                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80",
-                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80",
-                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80",
-                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("book"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=80",
-                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=800&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80";
-    }
-}
-
-@{
-    var mainImage = GetProductImage(Model.Category?.Name, Model.Id);
-}
-
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-8 items-center">
@@ -60,15 +22,15 @@
         <!-- Ảnh sản phẩm -->
         <div class="w-full lg:w-1/2">
             <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 mb-4 relative aspect-square flex items-center justify-center border border-gray-100 dark:border-gray-800">
-                <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+                <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
             </div>
             <!-- Thumbnails mô phỏng -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border-2 border-primary aspect-square flex items-center justify-center">
-                    <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+                    <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border border-gray-200 dark:border-gray-700 aspect-square flex items-center justify-center opacity-60">
-                    <img src="@mainImage" alt="@Model.Name" class="w-full h-full object-contain">
+                    <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
                 </div>
             </div>
         </div>

@@ -3,40 +3,6 @@
     ViewData["Title"] = "Giỏ hàng";
 }
 
-@functions {
-    string GetProductImage(string? categoryName, int id)
-    {
-        var cat = categoryName?.ToLower() ?? "";
-        if (cat.Contains("electron") || cat.Contains("laptop") || cat.Contains("gear"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=200&q=80",
-                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=200&q=80",
-                "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=200&q=80",
-                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=200&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("cloth") || cat.Contains("shirt") || cat.Contains("fashion"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200&q=80",
-                "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        if (cat.Contains("book"))
-        {
-            var images = new[] {
-                "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80",
-                "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=200&q=80"
-            };
-            return images[Math.Abs(id) % images.Length];
-        }
-        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80";
-    }
-}
-
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
@@ -96,12 +62,11 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach (var item in Model.Items)
                             {
-                                var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
                                 <tr class="hover:bg-gray-50/50 transition-colors @(item.HasStockIssue ? "bg-rose-50/40" : "")">
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-4">
                                             <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-gray-800 p-2">
-                                                <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                                <img src="@ProductImage.Resolve(item.ImageUrl)" alt="@item.ProductName" class="w-full h-full object-contain">
                                             </div>
                                             <div>
                                                 <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="font-semibold text-gray-800 dark:text-gray-200 hover:text-primary dark:hover:text-indigo-300 transition-colors text-sm line-clamp-1">
@@ -156,10 +121,9 @@
                     <div class="sm:hidden p-4 space-y-4 divide-y divide-gray-100">
                         @foreach (var item in Model.Items)
                         {
-                            var imgUrl = GetProductImage(item.CategoryName, item.ProductId);
                             <div class="pt-4 first:pt-0 flex gap-4">
                                 <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-xl p-2 flex-shrink-0 border border-gray-100 dark:border-gray-800">
-                                    <img src="@imgUrl" alt="@item.ProductName" class="w-full h-full object-contain">
+                                    <img src="@ProductImage.Resolve(item.ImageUrl)" alt="@item.ProductName" class="w-full h-full object-contain">
                                 </div>
                                 <div class="flex-1 flex flex-col">
                                     <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="font-semibold text-gray-800 dark:text-gray-200 text-sm line-clamp-1 mb-1">

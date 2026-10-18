@@ -68,7 +68,8 @@ public class CartService : ICartService
                             UnitPrice = item.Product.Price,
                             Quantity = item.Quantity,
                             AvailableStock = item.Product.StockQuantity,
-                            IsActive = item.Product.IsActive && (item.Product.Category?.IsActive ?? false)
+                            IsActive = item.Product.IsActive && (item.Product.Category?.IsActive ?? false),
+                            ImageUrl = item.Product.ImageUrl
                         });
                     }
                 }
@@ -98,7 +99,8 @@ public class CartService : ICartService
                             UnitPrice = product.Price,
                             Quantity = guestItem.Quantity,
                             AvailableStock = product.StockQuantity,
-                            IsActive = product.IsActive && (product.Category?.IsActive ?? false)
+                            IsActive = product.IsActive && (product.Category?.IsActive ?? false),
+                            ImageUrl = product.ImageUrl
                         });
                     }
                 }
