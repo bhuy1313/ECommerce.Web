@@ -147,6 +147,41 @@ public class CheckoutControllerTests
         Assert.Equal(77, redirect.RouteValues?["id"]);
     }
 
+    [Fact]
+    public async Task Checkout_WhenStartPaymentThrows_StillRedirectsToOrderDetails()
+    {
+        // Đơn đã tạo (tồn kho đã trừ). Lỗi ở bước khởi tạo thanh toán KHÔNG được biến
+        // thành 500 — đơn vẫn phải nằm trong lịch sử ở trạng thái chưa thanh toán.
+        // Arrange
+        var orderService = new Mock<IOrderService>();
+        orderService
+            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()))
+            .ReturnsAsync((true, "Đặt hàng thành công!", 88));
+
+        var paymentService = new Mock<IPaymentService>();
+        paymentService
+            .Setup(s => s.StartPaymentAsync(It.IsAny<int>(), It.IsAny<PaymentMethod>(), It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var controller = CreateController(orderService, new Mock<ICartService>(), paymentService);
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi",
+            PaymentMethod = PaymentMethod.Cod,
+            Cart = new CartViewModel()
+        };
+
+        // Act
+        var result = await controller.Checkout(model);
+
+        // Assert
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
+        Assert.Equal(88, redirect.RouteValues?["id"]);
+    }
+
     private static string ResolveAppRelativePath(string viewName)
     {
         Assert.StartsWith("~/", viewName);

@@ -286,6 +286,25 @@ public class PaymentServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task StartPaymentAsync_WhenSameTransactionRefExists_ReusesInsteadOfInserting()
+    {
+        // COD dùng ref tất định "COD-{orderId}". Gọi lần hai (double-click, hoặc nút
+        // "thanh toán lại" ở Phase B) không được nổ unique index trên (Provider, TransactionRef).
+        // Arrange
+        var order = await SeedOrderAsync();
+
+        // Act
+        var first = await _service.StartPaymentAsync(order.Id, PaymentMethod.Cod, "127.0.0.1");
+        var second = await _service.StartPaymentAsync(order.Id, PaymentMethod.Cod, "127.0.0.1");
+
+        // Assert
+        Assert.True(first.Success);
+        Assert.True(second.Success);
+        Assert.Equal(first.TransactionRef, second.TransactionRef);
+        Assert.Equal(1, await _db.PaymentTransactions.CountAsync());
+    }
+
+    [Fact]
     public async Task StartPaymentAsync_WhenOrderAlreadyPaid_Rejects()
     {
         // Arrange

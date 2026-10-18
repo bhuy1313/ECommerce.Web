@@ -58,12 +58,27 @@ public class PaymentService : IPaymentService
             return result;
         }
 
+        // Dedup theo (Provider, TransactionRef): COD sinh ref tất định "COD-{orderId}" nên lần gọi
+        // thứ hai (double-click, hoặc nút "thanh toán lại") sẽ đụng unique index. VNPay mỗi lượt
+        // sinh ref mới (kèm timestamp) nên vẫn tạo giao dịch + URL mới, đúng ngữ nghĩa.
+        var transactionRef = result.TransactionRef ?? string.Empty;
+        if (transactionRef.Length > 0
+            && await _db.PaymentTransactions.AnyAsync(
+                t => t.Provider == gateway.Provider && t.TransactionRef == transactionRef))
+        {
+            _logger.LogInformation(
+                "Tái sử dụng lượt thanh toán {Provider} đã có cho đơn hàng #{OrderId} (ref {TransactionRef})",
+                gateway.Provider, order.Id, transactionRef);
+
+            return result;
+        }
+
         var now = DateTime.UtcNow;
         _db.PaymentTransactions.Add(new PaymentTransaction
         {
             OrderId = order.Id,
             Provider = gateway.Provider,
-            TransactionRef = result.TransactionRef ?? string.Empty,
+            TransactionRef = transactionRef,
             Amount = order.TotalAmount,
             Status = PaymentTransactionStatus.Pending,
             CreatedAt = now,

@@ -105,19 +105,30 @@ public class OrdersController : Controller
         // PaymentTransaction và (với VNPay) trả URL cổng thanh toán; thất bại ở bước này
         // KHÔNG huỷ đơn — đơn vẫn nằm trong lịch sử ở trạng thái chưa thanh toán.
         // (Chưa có nút "thanh toán lại" trên trang chi tiết đơn: xem ghi chú trong report A10.)
-        var payment = await _paymentService.StartPaymentAsync(
-            orderId.Value,
-            model.PaymentMethod,
-            HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+        PaymentInitResult payment;
+        try
+        {
+            payment = await _paymentService.StartPaymentAsync(
+                orderId.Value,
+                model.PaymentMethod,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+
+            if (!payment.Success)
+            {
+                _logger.LogWarning("Không khởi tạo được thanh toán cho đơn {OrderId}: {Error}", orderId.Value, payment.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Lỗi bất ngờ ở bước này (ví dụ đụng unique index của PaymentTransaction) không được
+            // biến thành 500: đơn đã tạo và tồn kho đã trừ, khách vẫn phải thấy đơn trong lịch sử.
+            _logger.LogError(ex, "Không khởi tạo được thanh toán cho đơn {OrderId}.", orderId.Value);
+            payment = new PaymentInitResult { Success = false, Error = ex.Message };
+        }
 
         if (payment.Success && !string.IsNullOrWhiteSpace(payment.RedirectUrl))
         {
             return Redirect(payment.RedirectUrl);
-        }
-
-        if (!payment.Success)
-        {
-            _logger.LogWarning("Không khởi tạo được thanh toán cho đơn {OrderId}: {Error}", orderId.Value, payment.Error);
         }
 
         _notyf.Success(message);
