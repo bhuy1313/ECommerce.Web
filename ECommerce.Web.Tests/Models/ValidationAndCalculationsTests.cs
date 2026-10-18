@@ -15,6 +15,24 @@ public class ValidationAndCalculationsTests
     }
 
     [Fact]
+    public void Order_StoresShippingInfo()
+    {
+        var order = new Order
+        {
+            UserId = "u1",
+            RecipientName = "Nguyen Van A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi, Q1, TP.HCM",
+            Note = "Giao sau 18h",
+            TotalAmount = 100m
+        };
+        Assert.Equal("Nguyen Van A", order.RecipientName);
+        Assert.Equal("0901234567", order.RecipientPhone);
+        Assert.Equal("12 Le Loi, Q1, TP.HCM", order.ShippingAddress);
+        Assert.Equal("Giao sau 18h", order.Note);
+    }
+
+    [Fact]
     public void OrderTotal_CalculatesSumOfAllItemsAccurately()
     {
         // Arrange
