@@ -28,6 +28,30 @@
                 </div>
             </div>
 
+            <!-- Thông tin nhận hàng -->
+            <h2 class="text-sm font-bold text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-4">Thông tin nhận hàng</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm border border-slate-100 dark:border-gray-800 rounded-2xl mb-6 p-5 bg-slate-50/50">
+                <div>
+                    <span class="block text-xs text-slate-400 mb-1">Người nhận</span>
+                    <span class="font-bold text-slate-800 dark:text-gray-200">@Model.RecipientName</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 mb-1">Số điện thoại</span>
+                    <span class="font-bold text-slate-800 dark:text-gray-200">@Model.RecipientPhone</span>
+                </div>
+                <div class="sm:col-span-2">
+                    <span class="block text-xs text-slate-400 mb-1">Địa chỉ giao hàng</span>
+                    <span class="font-bold text-slate-800 dark:text-gray-200 whitespace-pre-line">@Model.ShippingAddress</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Note))
+                {
+                    <div class="sm:col-span-2">
+                        <span class="block text-xs text-slate-400 mb-1">Ghi chú</span>
+                        <span class="text-slate-700 dark:text-gray-300 whitespace-pre-line">@Model.Note</span>
+                    </div>
+                }
+            </div>
+
             <!-- Bảng chi tiết sản phẩm -->
             <h2 class="text-sm font-bold text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-4">Các mặt hàng trong đơn</h2>
             <div class="overflow-x-auto border border-slate-100 dark:border-gray-800 rounded-2xl mb-6">
