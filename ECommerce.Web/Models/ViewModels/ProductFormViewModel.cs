@@ -12,6 +12,11 @@ public class ProductFormViewModel
     [Display(Name = "Tên sản phẩm")]
     public string Name { get; set; } = string.Empty;
 
+    [RegularExpression(@"^(https?://\S+|/\S*)$", ErrorMessage = "Ảnh đại diện phải là đường dẫn URL (http/https) hoặc đường dẫn tương đối bắt đầu bằng '/'.")]
+    [StringLength(1000, ErrorMessage = "Đường dẫn ảnh không được vượt quá 1000 ký tự.")]
+    [Display(Name = "Ảnh sản phẩm (URL)")]
+    public string? ImageUrl { get; set; }
+
     [StringLength(1000, ErrorMessage = "Mô tả không được vượt quá 1000 ký tự.")]
     [Display(Name = "Mô tả chi tiết")]
     public string? Description { get; set; }

@@ -14,6 +14,22 @@ public class ValidationAndCalculationsTests
         return validationResults;
     }
 
+    [Theory]
+    [InlineData("https://cdn.example.com/a.jpg", true)]
+    [InlineData("/img/local.png", true)]
+    [InlineData("", true)]              // optional
+    [InlineData("not a url", false)]
+    public void ProductFormViewModel_ImageUrl_ValidatesUrlOrRelativePath(string url, bool expected)
+    {
+        var vm = new ProductFormViewModel
+        {
+            Name = "P", Price = 1m, StockQuantity = 1, CategoryId = 1, ImageUrl = url
+        };
+        var results = new List<ValidationResult>();
+        var ok = Validator.TryValidateObject(vm, new ValidationContext(vm), results, validateAllProperties: true);
+        Assert.Equal(expected, ok);
+    }
+
     [Fact]
     public void Order_StoresShippingInfo()
     {

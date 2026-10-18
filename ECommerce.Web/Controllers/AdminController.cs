@@ -272,6 +272,7 @@ public class AdminController : Controller
         var product = new Product
         {
             Name = model.Name.Trim(),
+            ImageUrl = string.IsNullOrWhiteSpace(model.ImageUrl) ? null : model.ImageUrl.Trim(),
             Description = model.Description?.Trim(),
             Price = model.Price,
             StockQuantity = model.StockQuantity,
@@ -300,6 +301,7 @@ public class AdminController : Controller
         {
             Id = product.Id,
             Name = product.Name,
+            ImageUrl = product.ImageUrl,
             Description = product.Description,
             Price = product.Price,
             StockQuantity = product.StockQuantity,
@@ -336,6 +338,7 @@ public class AdminController : Controller
         }
 
         product.Name = model.Name.Trim();
+        product.ImageUrl = string.IsNullOrWhiteSpace(model.ImageUrl) ? null : model.ImageUrl.Trim();
         product.Description = model.Description?.Trim();
         product.Price = model.Price;
         product.StockQuantity = model.StockQuantity;
