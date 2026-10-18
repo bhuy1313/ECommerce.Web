@@ -24,20 +24,6 @@ public class PaymentController : Controller
     private const string RspInvalidAmount = "04";
     private const string RspUnknown = "99";
 
-    /// <summary>
-    /// Ánh xạ thông điệp của PaymentService sang mã RspCode.
-    /// LƯU Ý: IPaymentService.HandleCallbackAsync chỉ trả về (Success, Message, OrderId),
-    /// không trả về lý do thất bại dạng cấu trúc, nên phải dò chuỗi con trong Message.
-    /// Các chuỗi dưới đây là những thông điệp ổn định đang được PaymentServiceTests khẳng định;
-    /// nếu đổi câu chữ trong PaymentService phải cập nhật bảng này.
-    /// </summary>
-    private static readonly (string Fragment, string Code)[] RspCodeByMessage =
-    {
-        ("chữ ký", RspInvalidChecksum),
-        ("không khớp", RspInvalidAmount),
-        ("không tìm thấy", RspOrderNotFound),
-    };
-
     private readonly IPaymentService _paymentService;
     private readonly INotyfService _notyf;
     private readonly ILogger<PaymentController> _logger;
@@ -55,21 +41,21 @@ public class PaymentController : Controller
     [HttpGet]
     public async Task<IActionResult> Return()
     {
-        var (success, message, orderId) = await _paymentService.HandleCallbackAsync("VnPay", Request.Query);
+        var result = await _paymentService.HandleCallbackAsync("VnPay", Request.Query);
 
-        if (success && orderId.HasValue)
+        if (result.Success && result.OrderId.HasValue && result.Outcome != PaymentCallbackOutcome.PaidButCancelled)
         {
-            _notyf.Success(message);
-            return RedirectToAction(nameof(OrdersController.Details), "Orders", new { id = orderId.Value });
+            _notyf.Success(result.Message);
+            return RedirectToAction(nameof(OrdersController.Details), "Orders", new { id = result.OrderId.Value });
         }
 
-        _logger.LogWarning("VNPay return thất bại cho đơn {OrderId}: {Message}", orderId, message);
-        _notyf.Error(message);
+        _logger.LogWarning("VNPay return thất bại cho đơn {OrderId}: {Message}", result.OrderId, result.Message);
+        _notyf.Error(result.Message);
         return View("Result", new PaymentResultViewModel
         {
-            Success = success,
-            Message = message,
-            OrderId = orderId
+            Success = result.Success,
+            Message = result.Message,
+            OrderId = result.OrderId
         });
     }
 
@@ -80,16 +66,16 @@ public class PaymentController : Controller
     [AcceptVerbs("GET", "POST")]
     public async Task<IActionResult> Ipn()
     {
-        var (success, message, orderId) = await _paymentService.HandleCallbackAsync("VnPay", Request.Query);
+        var result = await _paymentService.HandleCallbackAsync("VnPay", Request.Query);
 
-        var rspCode = success ? RspSuccess : ResolveRspCode(message);
+        var rspCode = ResolveRspCode(result.Outcome);
 
-        if (!success)
+        if (!result.Success)
         {
-            _logger.LogWarning("VNPay IPN thất bại ({RspCode}) cho đơn {OrderId}: {Message}", rspCode, orderId, message);
+            _logger.LogWarning("VNPay IPN thất bại ({RspCode}) cho đơn {OrderId}: {Message}", rspCode, result.OrderId, result.Message);
         }
 
-        return Json(new IpnResponse { RspCode = rspCode, Message = message });
+        return Json(new IpnResponse { RspCode = rspCode, Message = result.Message });
     }
 
     /// <summary>
@@ -106,16 +92,29 @@ public class PaymentController : Controller
         public string Message { get; init; } = string.Empty;
     }
 
-    private static string ResolveRspCode(string message)
+    /// <summary>
+    /// Ánh xạ kết quả xử lý callback sang mã RspCode của VNPay. Ánh xạ này là cấu trúc
+    /// (enum) chứ không dò câu chữ, nên đổi thông báo tiếng Việt trong PaymentService
+    /// không thể âm thầm đổi mã trả về cho cổng thanh toán.
+    /// </summary>
+    private static string ResolveRspCode(PaymentCallbackOutcome outcome) => outcome switch
     {
-        foreach (var (fragment, code) in RspCodeByMessage)
-        {
-            if (message.Contains(fragment, StringComparison.OrdinalIgnoreCase))
-            {
-                return code;
-            }
-        }
+        PaymentCallbackOutcome.Confirmed
+            or PaymentCallbackOutcome.AlreadyProcessed
+            or PaymentCallbackOutcome.PaidButCancelled => RspSuccess,
 
-        return RspUnknown;
-    }
+        PaymentCallbackOutcome.OrderNotFound
+            or PaymentCallbackOutcome.TransactionNotFound => RspOrderNotFound,
+
+        PaymentCallbackOutcome.InvalidSignature => RspInvalidChecksum,
+
+        PaymentCallbackOutcome.AmountMismatch => RspInvalidAmount,
+
+        PaymentCallbackOutcome.ProviderUnsupported
+            or PaymentCallbackOutcome.GatewayHasNoCallback
+            or PaymentCallbackOutcome.PaymentFailed
+            or PaymentCallbackOutcome.GatewayError => RspUnknown,
+
+        _ => RspUnknown,
+    };
 }

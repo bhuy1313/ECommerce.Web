@@ -33,12 +33,20 @@ public class PaymentControllerTests
         };
     }
 
-    private static Mock<IPaymentService> ServiceReturning(bool success, string message, int? orderId)
+    private static Mock<IPaymentService> ServiceReturning(PaymentCallbackOutcome outcome, string message, int? orderId)
     {
         var paymentService = new Mock<IPaymentService>();
         paymentService
             .Setup(s => s.HandleCallbackAsync(It.IsAny<string>(), It.IsAny<IQueryCollection>()))
-            .ReturnsAsync((success, message, orderId));
+            .ReturnsAsync(new PaymentCallbackHandlingResult
+            {
+                Success = outcome is PaymentCallbackOutcome.Confirmed
+                    or PaymentCallbackOutcome.AlreadyProcessed
+                    or PaymentCallbackOutcome.PaidButCancelled,
+                Outcome = outcome,
+                Message = message,
+                OrderId = orderId
+            });
         return paymentService;
     }
 
@@ -65,7 +73,7 @@ public class PaymentControllerTests
     [Fact]
     public async Task Ipn_WhenCallbackSucceeds_ReturnsRspCode00()
     {
-        var paymentService = ServiceReturning(success: true, message: "Xác nhận thanh toán thành công.", orderId: 42);
+        var paymentService = ServiceReturning(PaymentCallbackOutcome.Confirmed, "Xác nhận thanh toán thành công.", 42);
         var controller = CreateController(paymentService);
 
         var result = await controller.Ipn();
@@ -76,13 +84,28 @@ public class PaymentControllerTests
             Times.Once);
     }
 
+    [Theory]
+    [InlineData(PaymentCallbackOutcome.Confirmed)]
+    [InlineData(PaymentCallbackOutcome.AlreadyProcessed)]
+    [InlineData(PaymentCallbackOutcome.PaidButCancelled)]
+    public async Task Ipn_WhenHandledOutcome_ReturnsRspCode00(PaymentCallbackOutcome outcome)
+    {
+        // VNPay phải ngừng retry khi callback đã được xử lý trọn vẹn — kể cả trường hợp
+        // PaidButCancelled, vì tiền đã thu được và hệ thống đã ghi nhận để hoàn tiền thủ công.
+        var controller = CreateController(ServiceReturning(outcome, "Đã xử lý.", 42));
+
+        var result = await controller.Ipn();
+
+        Assert.Equal("00", RspCodeOf(result));
+    }
+
     [Fact]
     public async Task Ipn_WhenSignatureInvalid_ReturnsRspCode97()
     {
         var controller = CreateController(ServiceReturning(
-            success: false,
-            message: "Chữ ký không hợp lệ.",
-            orderId: null));
+            PaymentCallbackOutcome.InvalidSignature,
+            "Chữ ký không hợp lệ.",
+            null));
 
         var result = await controller.Ipn();
 
@@ -90,12 +113,25 @@ public class PaymentControllerTests
     }
 
     [Fact]
+    public async Task Ipn_WhenTransactionsNotFound_ReturnsRspCode01()
+    {
+        var controller = CreateController(ServiceReturning(
+            PaymentCallbackOutcome.TransactionNotFound,
+            "Không tìm thấy giao dịch tương ứng với đơn hàng.",
+            null));
+
+        var result = await controller.Ipn();
+
+        Assert.Equal("01", RspCodeOf(result));
+    }
+
+    [Fact]
     public async Task Ipn_WhenOrderNotFound_ReturnsRspCode01()
     {
         var controller = CreateController(ServiceReturning(
-            success: false,
-            message: "Không tìm thấy giao dịch tương ứng với đơn hàng.",
-            orderId: null));
+            PaymentCallbackOutcome.OrderNotFound,
+            "Không tìm thấy đơn hàng của giao dịch.",
+            7));
 
         var result = await controller.Ipn();
 
@@ -106,22 +142,26 @@ public class PaymentControllerTests
     public async Task Ipn_WhenAmountMismatch_ReturnsRspCode04()
     {
         var controller = CreateController(ServiceReturning(
-            success: false,
-            message: "Số tiền thanh toán không khớp với giá trị đơn hàng.",
-            orderId: 7));
+            PaymentCallbackOutcome.AmountMismatch,
+            "Số tiền thanh toán không khớp với giá trị đơn hàng.",
+            7));
 
         var result = await controller.Ipn();
 
         Assert.Equal("04", RspCodeOf(result));
     }
 
-    [Fact]
-    public async Task Ipn_WhenOutcomeIsUnrecognised_ReturnsRspCode99()
+    [Theory]
+    [InlineData(PaymentCallbackOutcome.PaymentFailed)]
+    [InlineData(PaymentCallbackOutcome.ProviderUnsupported)]
+    [InlineData(PaymentCallbackOutcome.GatewayHasNoCallback)]
+    [InlineData(PaymentCallbackOutcome.GatewayError)]
+    public async Task Ipn_WhenOutcomeIsUnrecognised_ReturnsRspCode99(PaymentCallbackOutcome outcome)
     {
         var controller = CreateController(ServiceReturning(
-            success: false,
-            message: "Cổng thanh toán báo lỗi không xác định.",
-            orderId: 7));
+            outcome,
+            "Cổng thanh toán báo lỗi không xác định.",
+            7));
 
         var result = await controller.Ipn();
 
@@ -134,7 +174,7 @@ public class PaymentControllerTests
         // Spec IPN của VNPay dùng đúng hai khóa "RspCode" và "Message". Chính sách JSON mặc định
         // của ASP.NET Core là camelCase, nên nếu không ghim tên thì response thành "rspCode"
         // — khác hợp đồng với cổng thanh toán.
-        var controller = CreateController(ServiceReturning(success: true, message: "ok", orderId: 1));
+        var controller = CreateController(ServiceReturning(PaymentCallbackOutcome.Confirmed, "ok", 1));
 
         var result = await controller.Ipn();
 
@@ -152,9 +192,9 @@ public class PaymentControllerTests
     public async Task Return_WhenCallbackSucceeds_RedirectsToOrderDetails()
     {
         var controller = CreateController(ServiceReturning(
-            success: true,
-            message: "Thanh toán thành công.",
-            orderId: 42));
+            PaymentCallbackOutcome.Confirmed,
+            "Thanh toán thành công.",
+            42));
 
         var result = await controller.Return();
 
@@ -168,9 +208,9 @@ public class PaymentControllerTests
     public async Task Return_WhenCallbackFails_RendersResultViewWithFailure()
     {
         var controller = CreateController(ServiceReturning(
-            success: false,
-            message: "Chữ ký không hợp lệ.",
-            orderId: null));
+            PaymentCallbackOutcome.InvalidSignature,
+            "Chữ ký không hợp lệ.",
+            null));
 
         var result = await controller.Return();
 

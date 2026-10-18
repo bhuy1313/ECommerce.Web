@@ -8,5 +8,5 @@ public interface IPaymentService
 {
     Task<PaymentInitResult> StartPaymentAsync(int orderId, PaymentMethod method, string ipAddress);
 
-    Task<(bool Success, string Message, int? OrderId)> HandleCallbackAsync(string provider, IQueryCollection query);
+    Task<PaymentCallbackHandlingResult> HandleCallbackAsync(string provider, IQueryCollection query);
 }

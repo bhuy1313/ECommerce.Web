@@ -77,12 +77,12 @@ public class PaymentService : IPaymentService
         return result;
     }
 
-    public async Task<(bool Success, string Message, int? OrderId)> HandleCallbackAsync(string provider, IQueryCollection query)
+    public async Task<PaymentCallbackHandlingResult> HandleCallbackAsync(string provider, IQueryCollection query)
     {
         var gateway = FindGateway(provider);
         if (gateway == null)
         {
-            return (false, $"Cổng thanh toán '{provider}' không được hỗ trợ.", null);
+            return Failed(PaymentCallbackOutcome.ProviderUnsupported, $"Cổng thanh toán '{provider}' không được hỗ trợ.");
         }
 
         PaymentCallbackResult callback;
@@ -92,14 +92,14 @@ public class PaymentService : IPaymentService
         }
         catch (NotSupportedException)
         {
-            return (false, $"Cổng thanh toán '{provider}' không hỗ trợ callback.", null);
+            return Failed(PaymentCallbackOutcome.GatewayHasNoCallback, $"Cổng thanh toán '{provider}' không hỗ trợ callback.");
         }
 
         if (!callback.IsValidSignature)
         {
             _logger.LogWarning("Callback {Provider} có chữ ký không hợp lệ (ref {TransactionRef})",
                 provider, callback.TransactionRef);
-            return (false, "Chữ ký callback không hợp lệ.", null);
+            return Failed(PaymentCallbackOutcome.InvalidSignature, "Chữ ký callback không hợp lệ.");
         }
 
         var transaction = await _db.PaymentTransactions
@@ -107,13 +107,13 @@ public class PaymentService : IPaymentService
 
         if (transaction == null)
         {
-            return (false, "Không tìm thấy giao dịch tương ứng.", null);
+            return Failed(PaymentCallbackOutcome.TransactionNotFound, "Không tìm thấy giao dịch tương ứng.");
         }
 
         // Idempotent: callback lặp lại (IPN retry / user refresh ReturnUrl) không xử lý lần hai.
         if (transaction.Status == PaymentTransactionStatus.Succeeded)
         {
-            return (true, "Giao dịch đã được xử lý trước đó.", transaction.OrderId);
+            return Handled(PaymentCallbackOutcome.AlreadyProcessed, "Giao dịch đã được xử lý trước đó.", transaction.OrderId);
         }
 
         if (!callback.Success)
@@ -123,13 +123,13 @@ public class PaymentService : IPaymentService
             transaction.RawResponse = BuildRawResponse(query);
             await _db.SaveChangesAsync();
 
-            return (false, "Thanh toán không thành công theo phản hồi của cổng thanh toán.", transaction.OrderId);
+            return Failed(PaymentCallbackOutcome.PaymentFailed, "Thanh toán không thành công theo phản hồi của cổng thanh toán.", transaction.OrderId);
         }
 
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == transaction.OrderId);
         if (order == null)
         {
-            return (false, "Không tìm thấy đơn hàng của giao dịch.", transaction.OrderId);
+            return Failed(PaymentCallbackOutcome.OrderNotFound, "Không tìm thấy đơn hàng của giao dịch.", transaction.OrderId);
         }
 
         if (callback.Amount != order.TotalAmount)
@@ -137,7 +137,7 @@ public class PaymentService : IPaymentService
             _logger.LogWarning(
                 "Callback {Provider} sai số tiền: nhận {CallbackAmount}, đơn hàng #{OrderId} là {OrderAmount}",
                 provider, callback.Amount, order.Id, order.TotalAmount);
-            return (false, "Số tiền thanh toán không khớp với đơn hàng.", order.Id);
+            return Failed(PaymentCallbackOutcome.AmountMismatch, "Số tiền thanh toán không khớp với đơn hàng.", order.Id);
         }
 
         var executionStrategy = _db.Database.CreateExecutionStrategy();
@@ -159,13 +159,13 @@ public class PaymentService : IPaymentService
                 _logger.LogInformation("Đơn hàng #{OrderId} đã thanh toán qua {Provider} (ref {TransactionRef})",
                     order.Id, provider, transaction.TransactionRef);
 
-                return (true, $"Đã xác nhận thanh toán cho đơn hàng #{order.Id}.", (int?)order.Id);
+                return Handled(PaymentCallbackOutcome.Confirmed, $"Đã xác nhận thanh toán cho đơn hàng #{order.Id}.", order.Id);
             }
             catch (Exception ex)
             {
                 await dbTransaction.RollbackAsync();
                 _logger.LogError(ex, "Lỗi khi xử lý callback thanh toán cho đơn hàng #{OrderId}", order.Id);
-                return (false, "Đã xảy ra lỗi khi xử lý thanh toán.", (int?)null);
+                return Failed(PaymentCallbackOutcome.GatewayError, "Đã xảy ra lỗi khi xử lý thanh toán.");
             }
         });
     }
@@ -180,4 +180,10 @@ public class PaymentService : IPaymentService
             .Select(parameter => $"{parameter.Key}={parameter.Value}"));
 
     private static PaymentInitResult Failure(string error) => new() { Success = false, Error = error };
+
+    private static PaymentCallbackHandlingResult Handled(PaymentCallbackOutcome outcome, string message, int? orderId) =>
+        new() { Success = true, Outcome = outcome, Message = message, OrderId = orderId };
+
+    private static PaymentCallbackHandlingResult Failed(PaymentCallbackOutcome outcome, string message, int? orderId = null) =>
+        new() { Success = false, Outcome = outcome, Message = message, OrderId = orderId };
 }

@@ -53,12 +53,13 @@ public class PaymentServiceTests : IDisposable
         var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal);
 
         // Act
-        var (success, message, orderId) = await _service.HandleCallbackAsync("VnPay", query);
+        var result = await _service.HandleCallbackAsync("VnPay", query);
 
         // Assert
-        Assert.True(success);
-        Assert.False(string.IsNullOrWhiteSpace(message));
-        Assert.Equal(order.Id, orderId);
+        Assert.True(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.Confirmed, result.Outcome);
+        Assert.False(string.IsNullOrWhiteSpace(result.Message));
+        Assert.Equal(order.Id, result.OrderId);
 
         var updatedTransaction = await _db.PaymentTransactions.AsNoTracking().SingleAsync(t => t.Id == transaction.Id);
         Assert.Equal(PaymentTransactionStatus.Succeeded, updatedTransaction.Status);
@@ -83,6 +84,8 @@ public class PaymentServiceTests : IDisposable
         var afterSecond = await _db.PaymentTransactions.AsNoTracking().SingleAsync(t => t.Id == transaction.Id);
 
         // Assert
+        Assert.Equal(PaymentCallbackOutcome.Confirmed, first.Outcome);
+        Assert.Equal(PaymentCallbackOutcome.AlreadyProcessed, second.Outcome);
         Assert.True(first.Success);
         Assert.True(second.Success);
         Assert.True(afterFirst.UpdatedAt > SeedTimestamp, "lần gọi đầu phải ghi UpdatedAt");
@@ -107,11 +110,12 @@ public class PaymentServiceTests : IDisposable
             secureHash: VnPaySignatureHelper.WrongSignature);
 
         // Act
-        var (success, message, _) = await _service.HandleCallbackAsync("VnPay", query);
+        var result = await _service.HandleCallbackAsync("VnPay", query);
 
         // Assert
-        Assert.False(success);
-        Assert.Contains("Chữ ký", message);
+        Assert.False(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.InvalidSignature, result.Outcome);
+        Assert.False(string.IsNullOrWhiteSpace(result.Message));
 
         var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
         Assert.Equal(PaymentStatus.Pending, updatedOrder.PaymentStatus);
@@ -130,12 +134,12 @@ public class PaymentServiceTests : IDisposable
         var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal + 50000m);
 
         // Act
-        var (success, message, orderId) = await _service.HandleCallbackAsync("VnPay", query);
+        var result = await _service.HandleCallbackAsync("VnPay", query);
 
         // Assert
-        Assert.False(success);
-        Assert.Contains("không khớp", message);
-        Assert.Equal(order.Id, orderId);
+        Assert.False(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.AmountMismatch, result.Outcome);
+        Assert.Equal(order.Id, result.OrderId);
 
         var updatedOrder = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == order.Id);
         Assert.Equal(PaymentStatus.Pending, updatedOrder.PaymentStatus);
@@ -152,12 +156,12 @@ public class PaymentServiceTests : IDisposable
         var query = VnPaySignatureHelper.BuildCallbackQuery(_options, "999-1700000000000", OrderTotal);
 
         // Act
-        var (success, message, orderId) = await _service.HandleCallbackAsync("VnPay", query);
+        var result = await _service.HandleCallbackAsync("VnPay", query);
 
         // Assert
-        Assert.False(success);
-        Assert.Contains("Không tìm thấy giao dịch", message);
-        Assert.Null(orderId);
+        Assert.False(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.TransactionNotFound, result.Outcome);
+        Assert.Null(result.OrderId);
         Assert.Equal(0, await _db.PaymentTransactions.CountAsync());
     }
 
@@ -169,12 +173,12 @@ public class PaymentServiceTests : IDisposable
         var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal);
 
         // Act
-        var (success, message, orderId) = await _service.HandleCallbackAsync("Momo", query);
+        var result = await _service.HandleCallbackAsync("Momo", query);
 
         // Assert
-        Assert.False(success);
-        Assert.Contains("không được hỗ trợ", message);
-        Assert.Null(orderId);
+        Assert.False(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.ProviderUnsupported, result.Outcome);
+        Assert.Null(result.OrderId);
     }
 
     [Fact]
@@ -185,12 +189,13 @@ public class PaymentServiceTests : IDisposable
         var query = VnPaySignatureHelper.BuildCallbackQuery(_options, TxnRef, OrderTotal);
 
         // Act
-        var (success, message, orderId) = await _service.HandleCallbackAsync("Cod", query);
+        var result = await _service.HandleCallbackAsync("Cod", query);
 
         // Assert
-        Assert.False(success);
-        Assert.False(string.IsNullOrWhiteSpace(message));
-        Assert.Null(orderId);
+        Assert.False(result.Success);
+        Assert.Equal(PaymentCallbackOutcome.GatewayHasNoCallback, result.Outcome);
+        Assert.False(string.IsNullOrWhiteSpace(result.Message));
+        Assert.Null(result.OrderId);
     }
 
     [Fact]
