@@ -167,4 +167,39 @@ public class VnPayGatewayTests
 
         Assert.False(result.IsValidSignature);
     }
+
+    [Fact]
+    public void Canonical_PinsSortingEncodingAndEmptyValueRule()
+    {
+        // Vector vàng: ghim chuỗi ký của một bộ tham số cố định để ba quy tắc dễ sai của VNPay
+        // không thể lặng lẽ trôi — sort key ordinal (vnp_TmnCode trước vnp_TxnRef), encode
+        // khoảng trắng, và value rỗng bị loại khỏi chuỗi ký. Chuỗi kỳ vọng được đọc theo spec
+        // và kiểm bằng mắt, không suy ra từ code.
+        var parameters = CanonicalVector();
+
+        var canonical = VnPaySignatureHelper.Canonical(parameters);
+
+        Assert.Equal("vnp_OrderInfo=Thanh+toan+don+hang+5&vnp_TmnCode=T&vnp_TxnRef=5-1700000000000", canonical);
+    }
+
+    [Fact]
+    public void Canonical_SignatureForFixedInput_MatchesPinnedHex()
+    {
+        // Hex dưới đây được tính MỘT LẦN từ implementation hiện tại, nên nó ghim HỒI QUY (đổi
+        // thuật toán là đỏ ngay) chứ không chứng minh đúng spec VNPay. TmnCode/HashSecret ở đây
+        // là giá trị giả, không phải credentials thật.
+        var parameters = CanonicalVector();
+
+        var signature = VnPaySignatureHelper.Sign("secret", parameters);
+
+        Assert.Equal("c59aebd63b7bc88994ee488a536e5f0ae7392be2fe4946818ff1b28c731d7efaa6a6ccdd59a844bcd5ed2e175dbf7db500c9ead0ae851707af2644697a1c0e32", signature);
+    }
+
+    private static Dictionary<string, string> CanonicalVector() => new()
+    {
+        ["vnp_TxnRef"] = "5-1700000000000",
+        ["vnp_OrderInfo"] = "Thanh toan don hang 5",
+        ["vnp_Empty"] = string.Empty,
+        ["vnp_TmnCode"] = "T"
+    };
 }
