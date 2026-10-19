@@ -3,6 +3,7 @@ using ECommerce.Web.Middlewares;
 using ECommerce.Web.Models.Configuration;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Email;
 using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,7 @@ builder.Services.AddNotyf(config =>
     config.IsDismissable = true;
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IEmailSender, LogEmailSender>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
 {
