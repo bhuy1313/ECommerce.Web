@@ -31,6 +31,15 @@ public class CheckoutViewModel
 
     public int? SavedAddressId { get; set; }
 
+    [StringLength(50)]
+    public string? CouponCode { get; set; }
+
+    public decimal DiscountAmount { get; set; }
+
+    public string? CouponError { get; set; }
+
+    public string? CouponDescription { get; set; }
+
     public IReadOnlyList<SavedAddressOption> SavedAddresses { get; set; } = Array.Empty<SavedAddressOption>();
 
     public CartViewModel Cart { get; set; } = new();

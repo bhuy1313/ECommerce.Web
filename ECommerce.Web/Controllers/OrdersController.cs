@@ -19,6 +19,7 @@ public class OrdersController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly INotyfService _notyf;
     private readonly ICartService _cartService;
+    private readonly ICouponService _couponService;
     private readonly IPaymentService _paymentService;
     private readonly IEmailService _emailService;
     private readonly ILogger<OrdersController> _logger;
@@ -28,6 +29,7 @@ public class OrdersController : Controller
         UserManager<ApplicationUser> userManager,
         INotyfService notyf,
         ICartService cartService,
+        ICouponService couponService,
         IPaymentService paymentService,
         IEmailService emailService,
         ILogger<OrdersController> logger)
@@ -36,6 +38,7 @@ public class OrdersController : Controller
         _userManager = userManager;
         _notyf = notyf;
         _cartService = cartService;
+        _couponService = couponService;
         _paymentService = paymentService;
         _emailService = emailService;
         _logger = logger;
@@ -86,6 +89,10 @@ public class OrdersController : Controller
         if (!ModelState.IsValid)
         {
             model.Cart = await _cartService.GetCartAsync();
+            var coupon = await _couponService.ValidateAsync(model.CouponCode, model.Cart.TotalAmount);
+            model.DiscountAmount = coupon.DiscountAmount;
+            model.CouponError = coupon.Error;
+            model.CouponDescription = coupon.Description;
             _notyf.Error("Vui lòng kiểm tra thông tin nhận hàng.");
             return View("~/Views/Cart/CheckoutPreview.cshtml", model);
         }
@@ -98,10 +105,16 @@ public class OrdersController : Controller
             Note = model.Note
         };
 
-        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(userId, shipping, model.PaymentMethod);
+        var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(
+            userId, shipping, model.PaymentMethod, model.CouponCode);
         if (!success || !orderId.HasValue)
         {
             _notyf.Error(message);
+            if (!string.IsNullOrWhiteSpace(model.CouponCode))
+            {
+                return RedirectToAction("Checkout", "Cart", new { couponCode = model.CouponCode });
+            }
+
             return RedirectToAction("Index", "Cart");
         }
 

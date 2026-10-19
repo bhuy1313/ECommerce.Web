@@ -9,15 +9,17 @@ namespace ECommerce.Web.Services;
 public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _db;
+    private readonly ICouponService _couponService;
     private readonly ILogger<OrderService> _logger;
 
-    public OrderService(ApplicationDbContext db, ILogger<OrderService> logger)
+    public OrderService(ApplicationDbContext db, ICouponService couponService, ILogger<OrderService> logger)
     {
         _db = db;
+        _couponService = couponService;
         _logger = logger;
     }
 
-    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method)
+    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method, string? couponCode = null)
     {
         var cart = await _db.Carts
             .Include(c => c.Items)
@@ -56,7 +58,18 @@ public class OrderService : IOrderService
                     }
                 }
 
-                // 2. Trừ tồn kho và khởi tạo đơn hàng
+                // 2. Áp mã giảm giá (atomic, cùng transaction với đơn hàng)
+                var subtotal = cart.Items.Sum(i => i.Quantity * i.UnitPrice);
+                var coupon = string.IsNullOrWhiteSpace(couponCode)
+                    ? new CouponValidationResult(true, null, null, 0m, null)
+                    : await _couponService.RedeemAsync(couponCode, subtotal);
+                if (!coupon.IsValid)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, coupon.Error ?? "Mã giảm giá không hợp lệ.", (int?)null);
+                }
+
+                // 3. Trừ tồn kho và khởi tạo đơn hàng
                 var order = new Order
                 {
                     UserId = userId,
@@ -68,7 +81,9 @@ public class OrderService : IOrderService
                     Status = OrderStatus.Pending,
                     PaymentStatus = PaymentStatus.Pending,
                     Method = method,
-                    TotalAmount = cart.Items.Sum(i => i.Quantity * i.UnitPrice)
+                    DiscountAmount = coupon.DiscountAmount,
+                    CouponCode = coupon.Code,
+                    TotalAmount = subtotal - coupon.DiscountAmount
                 };
 
                 foreach (var item in cart.Items)
@@ -104,7 +119,7 @@ public class OrderService : IOrderService
 
                 _db.Orders.Add(order);
 
-                // 3. Làm trống giỏ hàng của người dùng
+                // 4. Làm trống giỏ hàng của người dùng
                 _db.CartItems.RemoveRange(cart.Items);
 
                 await _db.SaveChangesAsync();

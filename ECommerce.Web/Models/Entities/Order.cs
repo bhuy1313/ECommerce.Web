@@ -16,6 +16,8 @@ public class Order
     public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
     public PaymentMethod Method { get; set; } = PaymentMethod.Cod;
     public decimal TotalAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 }

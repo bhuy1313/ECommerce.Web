@@ -22,7 +22,7 @@ public class OrderServiceTests : IDisposable
     {
         (_db, _connection) = TestDbContextFactory.CreateInMemoryDbContext();
         _loggerMock = new Mock<ILogger<OrderService>>();
-        _orderService = new OrderService(_db, _loggerMock.Object);
+        _orderService = new OrderService(_db, new CouponService(_db), _loggerMock.Object);
     }
 
     public void Dispose()
@@ -191,6 +191,117 @@ public class OrderServiceTests : IDisposable
 
         var ordersCount = await _db.Orders.CountAsync();
         Assert.Equal(1, ordersCount);
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_WithValidCoupon_AppliesDiscountAndIncrementsUsage()
+    {
+        // Arrange
+        var userId = "user-coupon";
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var product = new Product { Name = "Laptop", Price = 100_000m, StockQuantity = 5, IsActive = true };
+        var coupon = new Coupon
+        {
+            Code = "SAVE10",
+            DiscountType = DiscountType.Percentage,
+            Value = 10m,
+            MinOrderAmount = 0m,
+            UsageLimit = 5,
+            StartsOn = today.AddDays(-1),
+            EndsOn = today.AddDays(1),
+            IsActive = true
+        };
+        _db.Products.Add(product);
+        _db.Coupons.Add(coupon);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 2, UnitPrice = 100_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "save10");
+
+        // Assert
+        Assert.True(result.Success);
+        var order = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == result.OrderId);
+        Assert.Equal(20_000m, order.DiscountAmount);
+        Assert.Equal("SAVE10", order.CouponCode);
+        Assert.Equal(180_000m, order.TotalAmount);
+
+        var updatedCoupon = await _db.Coupons.AsNoTracking().SingleAsync(c => c.Id == coupon.Id);
+        Assert.Equal(1, updatedCoupon.UsedCount);
+        var updatedCart = await _db.Carts.Include(c => c.Items).SingleAsync(c => c.UserId == userId);
+        Assert.Empty(updatedCart.Items);
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_WithInvalidCoupon_AbortsWithoutSideEffects()
+    {
+        // Arrange
+        var userId = "user-bad-coupon";
+        var product = new Product { Name = "Keyboard", Price = 50_000m, StockQuantity = 3, IsActive = true };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 50_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "NOPE");
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("không tồn tại", result.Message);
+        Assert.Null(result.OrderId);
+        Assert.Equal(0, await _db.Orders.CountAsync());
+
+        var freshProduct = await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id);
+        Assert.Equal(3, freshProduct.StockQuantity);
+        var freshCart = await _db.Carts.Include(c => c.Items).SingleAsync(c => c.UserId == userId);
+        Assert.Single(freshCart.Items);
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_WhenCouponExhausted_AbortsAndKeepsStock()
+    {
+        // Arrange
+        var userId = "user-exhausted-coupon";
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var product = new Product { Name = "Monitor", Price = 200_000m, StockQuantity = 2, IsActive = true };
+        var coupon = new Coupon
+        {
+            Code = "USEDUP",
+            DiscountType = DiscountType.FixedAmount,
+            Value = 50_000m,
+            MinOrderAmount = 0m,
+            UsageLimit = 1,
+            UsedCount = 1,
+            StartsOn = today.AddDays(-1),
+            EndsOn = today.AddDays(1),
+            IsActive = true
+        };
+        _db.Products.Add(product);
+        _db.Coupons.Add(coupon);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 200_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "USEDUP");
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("đã được sử dụng hết", result.Message);
+        Assert.Equal(0, await _db.Orders.CountAsync());
+        Assert.Equal(2, (await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id)).StockQuantity);
+        Assert.Single(await _db.Carts.Include(c => c.Items).Where(c => c.UserId == userId).SelectMany(c => c.Items).ToListAsync());
     }
 
     [Fact]
