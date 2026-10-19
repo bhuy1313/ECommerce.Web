@@ -42,6 +42,7 @@ builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("VnPay"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<VnPayOptions>>().Value);

@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<Address> Addresses => Set<Address>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,5 +39,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         paymentTransaction.Property(t => t.Provider).HasMaxLength(50);
         paymentTransaction.Property(t => t.TransactionRef).HasMaxLength(100);
         paymentTransaction.HasIndex(t => new { t.Provider, t.TransactionRef }).IsUnique();
+
+        var address = builder.Entity<Address>();
+        address.Property(a => a.RecipientName).HasMaxLength(100);
+        address.Property(a => a.RecipientPhone).HasMaxLength(15);
+        address.Property(a => a.AddressLine).HasMaxLength(300);
+        address.HasOne(a => a.User)
+            .WithMany(u => u.Addresses)
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        address.HasIndex(a => a.UserId);
     }
 }
