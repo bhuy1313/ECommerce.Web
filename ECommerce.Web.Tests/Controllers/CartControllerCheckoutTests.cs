@@ -13,7 +13,8 @@ namespace ECommerce.Web.Tests.Controllers;
 
 public class CartControllerCheckoutTests
 {
-    private static (CartController Controller, Mock<IAddressService> Addresses) CreateController()
+    private static (CartController Controller, Mock<IAddressService> Addresses) CreateController(
+        Mock<ICouponService>? coupons = null)
     {
         var cart = new Mock<ICartService>();
         cart.Setup(c => c.GetCartAsync()).ReturnsAsync(new CartViewModel
@@ -32,7 +33,16 @@ public class CartControllerCheckoutTests
         });
 
         var addresses = new Mock<IAddressService>();
-        var controller = new CartController(cart.Object, Mock.Of<INotyfService>(), addresses.Object);
+        if (coupons is null)
+        {
+            coupons = new Mock<ICouponService>();
+            coupons
+                .Setup(c => c.ValidateAsync(It.IsAny<string?>(), It.IsAny<decimal>()))
+                .ReturnsAsync(new CouponValidationResult(false, null, null, 0m, null));
+        }
+
+        var controller = new CartController(
+            cart.Object, Mock.Of<INotyfService>(), addresses.Object, coupons.Object);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -115,5 +125,43 @@ public class CartControllerCheckoutTests
         Assert.Equal(string.Empty, model.ShippingAddress);
         Assert.Null(model.SavedAddressId);
         Assert.Empty(model.SavedAddresses);
+    }
+
+    [Fact]
+    public async Task Checkout_WithValidCoupon_ShowsDiscountAndPayableTotal()
+    {
+        var coupons = new Mock<ICouponService>();
+        coupons.Setup(c => c.ValidateAsync("SAVE10", 10_000_000m))
+            .ReturnsAsync(new CouponValidationResult(true, null, "SAVE10", 1_000_000m, "Giảm 10%"));
+        var (controller, addresses) = CreateController(coupons);
+        addresses.Setup(a => a.GetAddressesAsync("u1")).ReturnsAsync(Array.Empty<Address>());
+
+        var result = await controller.Checkout("SAVE10");
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<CheckoutViewModel>(view.Model);
+        Assert.Equal("SAVE10", model.CouponCode);
+        Assert.Equal(1_000_000m, model.DiscountAmount);
+        Assert.Equal(9_000_000m, model.PayableTotal);
+        Assert.Null(model.CouponError);
+        Assert.Equal("Giảm 10%", model.CouponDescription);
+    }
+
+    [Fact]
+    public async Task Checkout_WithInvalidCoupon_ShowsErrorAndNoDiscount()
+    {
+        var coupons = new Mock<ICouponService>();
+        coupons.Setup(c => c.ValidateAsync("EXPIRED", 10_000_000m))
+            .ReturnsAsync(new CouponValidationResult(false, "Mã giảm giá đã hết hạn.", null, 0m, null));
+        var (controller, addresses) = CreateController(coupons);
+        addresses.Setup(a => a.GetAddressesAsync("u1")).ReturnsAsync(Array.Empty<Address>());
+
+        var result = await controller.Checkout("EXPIRED");
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<CheckoutViewModel>(view.Model);
+        Assert.Equal("Mã giảm giá đã hết hạn.", model.CouponError);
+        Assert.Equal(0m, model.DiscountAmount);
+        Assert.Equal(10_000_000m, model.PayableTotal);
     }
 }

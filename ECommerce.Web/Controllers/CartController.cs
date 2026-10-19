@@ -13,12 +13,18 @@ public class CartController : Controller
     private readonly ICartService _cartService;
     private readonly INotyfService _notyf;
     private readonly IAddressService _addressService;
+    private readonly ICouponService _couponService;
 
-    public CartController(ICartService cartService, INotyfService notyf, IAddressService addressService)
+    public CartController(
+        ICartService cartService,
+        INotyfService notyf,
+        IAddressService addressService,
+        ICouponService couponService)
     {
         _cartService = cartService;
         _notyf = notyf;
         _addressService = addressService;
+        _couponService = couponService;
     }
 
     [HttpGet]
@@ -90,7 +96,7 @@ public class CartController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Checkout()
+    public async Task<IActionResult> Checkout(string? couponCode = null)
     {
         var cart = await _cartService.GetCartAsync();
         if (!cart.Items.Any())
@@ -116,6 +122,7 @@ public class CartController : Controller
             ? Array.Empty<Address>()
             : (await _addressService.GetAddressesAsync(userId)).ToArray();
         var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault);
+        var coupon = await _couponService.ValidateAsync(couponCode, cart.TotalAmount);
 
         return View("CheckoutPreview", new CheckoutViewModel
         {
@@ -127,7 +134,11 @@ public class CartController : Controller
             SavedAddresses = addresses
                 .Select(a => new SavedAddressOption(
                     a.Id, $"{a.RecipientName} — {a.AddressLine}", a.RecipientName, a.RecipientPhone, a.AddressLine))
-                .ToList()
+                .ToList(),
+            CouponCode = string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim(),
+            DiscountAmount = coupon.DiscountAmount,
+            CouponError = coupon.Error,
+            CouponDescription = coupon.Description
         });
     }
 }

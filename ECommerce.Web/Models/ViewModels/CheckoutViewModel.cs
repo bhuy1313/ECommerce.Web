@@ -40,6 +40,8 @@ public class CheckoutViewModel
 
     public string? CouponDescription { get; set; }
 
+    public decimal PayableTotal => Math.Max(0m, Cart.TotalAmount - DiscountAmount);
+
     public IReadOnlyList<SavedAddressOption> SavedAddresses { get; set; } = Array.Empty<SavedAddressOption>();
 
     public CartViewModel Cart { get; set; } = new();
