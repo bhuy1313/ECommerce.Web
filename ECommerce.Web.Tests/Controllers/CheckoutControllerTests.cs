@@ -6,10 +6,12 @@ using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Email;
 using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -25,7 +27,8 @@ public class CheckoutControllerTests
         Mock<IOrderService> orderService,
         Mock<ICartService> cartService,
         Mock<IPaymentService>? paymentService = null,
-        string userId = "user-checkout")
+        string userId = "user-checkout",
+        Mock<IEmailService>? emailService = null)
     {
         var store = new Mock<IUserStore<ApplicationUser>>();
         var userManager = new Mock<UserManager<ApplicationUser>>(
@@ -40,6 +43,7 @@ public class CheckoutControllerTests
             notyf.Object,
             cartService.Object,
             (paymentService ?? new Mock<IPaymentService>()).Object,
+            (emailService ?? new Mock<IEmailService>()).Object,
             Mock.Of<ILogger<OrdersController>>())
         {
             ControllerContext = new ControllerContext
@@ -47,6 +51,10 @@ public class CheckoutControllerTests
                 HttpContext = new DefaultHttpContext()
             }
         };
+
+        var url = new Mock<IUrlHelper>();
+        url.Setup(u => u.Action(It.IsAny<UrlActionContext>())).Returns("https://shop.test/Orders/Details/1");
+        controller.Url = url.Object;
 
         return controller;
     }
@@ -177,6 +185,66 @@ public class CheckoutControllerTests
         var result = await controller.Checkout(model);
 
         // Assert
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
+        Assert.Equal(88, redirect.RouteValues?["id"]);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenOrderCreated_SendsOrderConfirmationEmailOnce()
+    {
+        var orderService = new Mock<IOrderService>();
+        orderService.Setup(s => s.CreateOrderFromCartAsync(
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()))
+            .ReturnsAsync((true, "ok", 77));
+        var paymentService = new Mock<IPaymentService>();
+        paymentService.Setup(s => s.StartPaymentAsync(
+                It.IsAny<int>(), It.IsAny<PaymentMethod>(), It.IsAny<string>()))
+            .ReturnsAsync(new PaymentInitResult { Success = true });
+        var email = new Mock<IEmailService>();
+
+        var controller = CreateController(orderService, new Mock<ICartService>(), paymentService, emailService: email);
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi",
+            PaymentMethod = PaymentMethod.VnPay,
+            Cart = new CartViewModel()
+        };
+
+        await controller.Checkout(model);
+
+        email.Verify(e => e.SendOrderConfirmationAsync(77, "https://shop.test/Orders/Details/1"), Times.Once);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenOrderEmailThrows_StillRedirectsToOrderDetails()
+    {
+        var orderService = new Mock<IOrderService>();
+        orderService.Setup(s => s.CreateOrderFromCartAsync(
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>()))
+            .ReturnsAsync((true, "ok", 88));
+        var paymentService = new Mock<IPaymentService>();
+        paymentService.Setup(s => s.StartPaymentAsync(
+                It.IsAny<int>(), It.IsAny<PaymentMethod>(), It.IsAny<string>()))
+            .ReturnsAsync(new PaymentInitResult { Success = true });
+        var email = new Mock<IEmailService>();
+        email.Setup(e => e.SendOrderConfirmationAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("smtp down"));
+
+        var controller = CreateController(orderService, new Mock<ICartService>(), paymentService, emailService: email);
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi",
+            PaymentMethod = PaymentMethod.Cod,
+            Cart = new CartViewModel()
+        };
+
+        var result = await controller.Checkout(model);
+
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
         Assert.Equal(88, redirect.RouteValues?["id"]);

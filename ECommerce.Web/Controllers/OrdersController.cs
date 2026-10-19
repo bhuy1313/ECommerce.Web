@@ -3,6 +3,7 @@ using ECommerce.Web.Models;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Email;
 using ECommerce.Web.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +20,7 @@ public class OrdersController : Controller
     private readonly INotyfService _notyf;
     private readonly ICartService _cartService;
     private readonly IPaymentService _paymentService;
+    private readonly IEmailService _emailService;
     private readonly ILogger<OrdersController> _logger;
 
     public OrdersController(
@@ -27,6 +29,7 @@ public class OrdersController : Controller
         INotyfService notyf,
         ICartService cartService,
         IPaymentService paymentService,
+        IEmailService emailService,
         ILogger<OrdersController> logger)
     {
         _orderService = orderService;
@@ -34,6 +37,7 @@ public class OrdersController : Controller
         _notyf = notyf;
         _cartService = cartService;
         _paymentService = paymentService;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -105,6 +109,18 @@ public class OrdersController : Controller
         // PaymentTransaction và (với VNPay) trả URL cổng thanh toán; thất bại ở bước này
         // KHÔNG huỷ đơn — đơn vẫn nằm trong lịch sử ở trạng thái chưa thanh toán.
         // (Chưa có nút "thanh toán lại" trên trang chi tiết đơn: xem ghi chú trong report A10.)
+        var orderUrl = Url.Action(nameof(Details), "Orders", new { id = orderId.Value }, Request.Scheme)
+            ?? string.Empty;
+        try
+        {
+            await _emailService.SendOrderConfirmationAsync(orderId.Value, orderUrl);
+        }
+        catch (Exception ex)
+        {
+            // Email xác nhận là phụ trợ: lỗi gửi mail không được làm hỏng đơn đã tạo.
+            _logger.LogError(ex, "Không gửi được email xác nhận cho đơn hàng {OrderId}.", orderId.Value);
+        }
+
         PaymentInitResult payment;
         try
         {
