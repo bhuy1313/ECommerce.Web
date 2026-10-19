@@ -228,6 +228,124 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user is not null && !string.IsNullOrWhiteSpace(user.Email))
+        {
+            try
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var code = IdentityTokenCodec.Encode(token);
+                var link = Url.Action(
+                    nameof(ResetPassword),
+                    "Account",
+                    new { userId = user.Id, code },
+                    Request.Scheme);
+
+                if (!string.IsNullOrEmpty(link))
+                {
+                    await _emailService.SendPasswordResetAsync(user.Email, link);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gửi email đặt lại mật khẩu thất bại cho {Email}.", user.Email);
+            }
+        }
+        else
+        {
+            _logger.LogInformation("Bỏ qua gửi email đặt lại mật khẩu cho {Email}.", model.Email);
+        }
+
+        return RedirectToAction(nameof(ForgotPasswordConfirmation));
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPasswordConfirmation()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string? userId, string? code)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(code))
+        {
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        return View(new ResetPasswordViewModel
+        {
+            UserId = userId,
+            Code = code
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        const string invalidLink = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+
+        if (!IdentityTokenCodec.TryDecode(model.Code, out var token))
+        {
+            ModelState.AddModelError(string.Empty, invalidLink);
+            return View(model);
+        }
+
+        var user = await _userManager.FindByIdAsync(model.UserId);
+        if (user is null)
+        {
+            _logger.LogWarning("Đặt lại mật khẩu cho user không tồn tại: {UserId}", model.UserId);
+            ModelState.AddModelError(string.Empty, invalidLink);
+            return View(model);
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, token, model.Password);
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning("Đặt lại mật khẩu thất bại cho {Email}: {Errors}", user.Email,
+                string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
+
+        _logger.LogInformation("Đã đặt lại mật khẩu cho {Email}", user.Email);
+        return RedirectToAction(nameof(ResetPasswordConfirmation));
+    }
+
+    [HttpGet]
+    public IActionResult ResetPasswordConfirmation()
+    {
+        return View();
+    }
+
+    [HttpGet]
     public IActionResult AccessDenied()
     {
         return View();

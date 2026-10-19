@@ -182,4 +182,91 @@ public class AccountEmailFlowTests
         h.Email.Verify(e => e.SendEmailConfirmationAsync(
             It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
+
+    [Fact]
+    public async Task ForgotPassword_UnknownEmail_SendsNothingAndShowsConfirmation()
+    {
+        var h = CreateController();
+        h.Users.Setup(u => u.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser?)null);
+
+        var result = await h.Controller.ForgotPassword(new ForgotPasswordViewModel { Email = "nobody@test.local" });
+
+        Assert.Equal("ForgotPasswordConfirmation", Assert.IsType<RedirectToActionResult>(result).ActionName);
+        h.Email.Verify(e => e.SendPasswordResetAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_KnownEmail_SendsResetLinkAndShowsConfirmation()
+    {
+        var h = CreateController();
+        var user = NewUser();
+        h.Users.Setup(u => u.FindByEmailAsync(user.Email!)).ReturnsAsync(user);
+        h.Users.Setup(u => u.GeneratePasswordResetTokenAsync(user)).ReturnsAsync("raw+token/==");
+        h.Email.Setup(e => e.SendPasswordResetAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await h.Controller.ForgotPassword(new ForgotPasswordViewModel { Email = user.Email! });
+
+        Assert.Equal("ForgotPasswordConfirmation", Assert.IsType<RedirectToActionResult>(result).ActionName);
+        h.Email.Verify(e => e.SendPasswordResetAsync(user.Email!, "https://shop.test/link"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ValidEncodedCode_ResetsWithRawToken()
+    {
+        var h = CreateController();
+        var user = NewUser();
+        h.Users.Setup(u => u.FindByIdAsync("u1")).ReturnsAsync(user);
+        h.Users.Setup(u => u.ResetPasswordAsync(user, "raw+token/==", "New@1234"))
+            .ReturnsAsync(IdentityResult.Success);
+
+        var result = await h.Controller.ResetPassword(new ResetPasswordViewModel
+        {
+            UserId = "u1",
+            Code = IdentityTokenCodec.Encode("raw+token/=="),
+            Password = "New@1234",
+            ConfirmPassword = "New@1234"
+        });
+
+        Assert.Equal("ResetPasswordConfirmation", Assert.IsType<RedirectToActionResult>(result).ActionName);
+    }
+
+    [Fact]
+    public async Task ResetPassword_MalformedCode_DoesNotThrowAndReRenders()
+    {
+        var h = CreateController();
+
+        var result = await h.Controller.ResetPassword(new ResetPasswordViewModel
+        {
+            UserId = "u1",
+            Code = "%%%",
+            Password = "New@1234",
+            ConfirmPassword = "New@1234"
+        });
+
+        Assert.IsType<ViewResult>(result);
+        h.Users.Verify(u => u.ResetPasswordAsync(
+            It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPassword_TokenRejected_ReRendersWithError()
+    {
+        var h = CreateController();
+        var user = NewUser();
+        h.Users.Setup(u => u.FindByIdAsync("u1")).ReturnsAsync(user);
+        h.Users.Setup(u => u.ResetPasswordAsync(user, "stale", "New@1234"))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "expired" }));
+
+        var result = await h.Controller.ResetPassword(new ResetPasswordViewModel
+        {
+            UserId = "u1",
+            Code = IdentityTokenCodec.Encode("stale"),
+            Password = "New@1234",
+            ConfirmPassword = "New@1234"
+        });
+
+        Assert.IsType<ViewResult>(result);
+        Assert.True(h.Controller.ModelState.ContainsKey(string.Empty));
+    }
 }
