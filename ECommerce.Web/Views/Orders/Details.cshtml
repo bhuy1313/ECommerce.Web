@@ -144,6 +144,13 @@
                     }
                 </tbody>
                 <tfoot class="bg-gray-50/75 border-t border-gray-100 dark:border-gray-800">
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="py-3 px-5 text-right font-medium text-emerald-600">Giảm giá (@Model.CouponCode):</td>
+                            <td class="py-3 px-5 text-right font-semibold text-emerald-600">-<vc:money amount="@Model.DiscountAmount" /></td>
+                        </tr>
+                    }
                     <tr>
                         <td colspan="3" class="py-4 px-5 text-right font-bold text-gray-700 dark:text-gray-300">Tổng thanh toán:</td>
                         <td class="py-4 px-5 text-right font-extrabold text-primary dark:text-indigo-300 text-xl"><vc:money amount="@Model.TotalAmount" /></td>

@@ -38,7 +38,13 @@
                 }
             </tbody>
         </table>
-        <p style="font-size:15px;margin:16px 0 0;text-align:right;">
+        @if (order.DiscountAmount > 0)
+        {
+            <p style="font-size:14px;margin:16px 0 0;text-align:right;color:#059669;">
+                Giảm giá (@order.CouponCode): <strong>-@order.DiscountAmount.ToString("N0") ₫</strong>
+            </p>
+        }
+        <p style="font-size:15px;margin:@(order.DiscountAmount > 0 ? "6px" : "16px") 0 0;text-align:right;">
             Tổng cộng: <strong>@order.TotalAmount.ToString("N0") ₫</strong>
         </p>
         <p style="font-size:14px;line-height:1.6;margin:16px 0 0;">
