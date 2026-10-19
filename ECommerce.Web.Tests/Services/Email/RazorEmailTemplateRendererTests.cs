@@ -1,3 +1,4 @@
+using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services.Email;
 using Microsoft.AspNetCore.Hosting;
@@ -65,5 +66,38 @@ public class RazorEmailTemplateRendererTests
             new EmailLinkViewModel("https://shop.test/Account/ConfirmEmail?userId=u1&code=abc"));
 
         Assert.Contains("https://shop.test/Account/ConfirmEmail?userId=u1&amp;code=abc", html);
+    }
+
+    [Fact]
+    public async Task RenderAsync_ResetPassword_ContainsEscapedUrl()
+    {
+        var html = await RenderAsync(
+            "~/Views/Emails/ResetPassword.cshtml",
+            new EmailLinkViewModel("https://shop.test/Account/ResetPassword?userId=u1&code=xyz"));
+
+        Assert.Contains("https://shop.test/Account/ResetPassword?userId=u1&amp;code=xyz", html);
+    }
+
+    [Fact]
+    public async Task RenderAsync_OrderConfirmation_ContainsOrderSummary()
+    {
+        var order = new Order
+        {
+            Id = 42,
+            RecipientName = "Nguyen Van A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi",
+            TotalAmount = 200000
+        };
+        order.Items.Add(new OrderItem { ProductName = "Áo thun", Quantity = 2, UnitPrice = 100000 });
+
+        var html = await RenderAsync(
+            "~/Views/Emails/OrderConfirmation.cshtml",
+            new OrderConfirmationEmailViewModel(order, "https://shop.test/Orders/Details/42"));
+
+        Assert.Contains("#42", html);
+        Assert.Contains("Áo thun", System.Net.WebUtility.HtmlDecode(html));
+        Assert.Contains(order.TotalAmount.ToString("N0"), html);
+        Assert.Contains("https://shop.test/Orders/Details/42", html);
     }
 }
