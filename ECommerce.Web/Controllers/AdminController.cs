@@ -19,6 +19,7 @@ public class AdminController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IOrderService _orderService;
+    private readonly ICouponService _couponService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ILogger<AdminController> _logger;
@@ -27,6 +28,7 @@ public class AdminController : Controller
     public AdminController(
         ApplicationDbContext db,
         IOrderService orderService,
+        ICouponService couponService,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ILogger<AdminController> logger,
@@ -34,6 +36,7 @@ public class AdminController : Controller
     {
         _db = db;
         _orderService = orderService;
+        _couponService = couponService;
         _userManager = userManager;
         _roleManager = roleManager;
         _logger = logger;
@@ -207,6 +210,134 @@ public class AdminController : Controller
 
         _notyf.Success($"Đã {(category.IsActive ? "kích hoạt" : "vô hiệu hóa")} danh mục '{category.Name}'.");
         return RedirectToAction(nameof(Categories));
+    }
+
+    // ==========================================
+    // QUẢN LÝ MÃ GIẢM GIÁ (COUPON CRUD)
+    // ==========================================
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> Coupons()
+    {
+        var coupons = await _couponService.GetAllAsync();
+        return View(coupons);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public IActionResult CreateCoupon()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return View("CouponForm", new CouponFormViewModel
+        {
+            StartsOn = today,
+            EndsOn = today.AddDays(30),
+            UsageLimit = 100,
+            IsActive = true
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> CreateCoupon(CouponFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("CouponForm", model);
+        }
+
+        var (success, message) = await _couponService.CreateAsync(model);
+        if (!success)
+        {
+            _notyf.Error(message);
+            return View("CouponForm", model);
+        }
+
+        _notyf.Success(message);
+        return RedirectToAction(nameof(Coupons));
+    }
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> EditCoupon(int id)
+    {
+        var coupon = await _couponService.GetByIdAsync(id);
+        if (coupon == null)
+        {
+            return NotFound();
+        }
+
+        return View("CouponForm", new CouponFormViewModel
+        {
+            Id = coupon.Id,
+            Code = coupon.Code,
+            DiscountType = coupon.DiscountType,
+            Value = coupon.Value,
+            MinOrderAmount = coupon.MinOrderAmount,
+            UsageLimit = coupon.UsageLimit,
+            StartsOn = coupon.StartsOn,
+            EndsOn = coupon.EndsOn,
+            IsActive = coupon.IsActive
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> EditCoupon(CouponFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("CouponForm", model);
+        }
+
+        var (success, message) = await _couponService.UpdateAsync(model);
+        if (!success)
+        {
+            _notyf.Error(message);
+            return View("CouponForm", model);
+        }
+
+        _notyf.Success(message);
+        return RedirectToAction(nameof(Coupons));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> ToggleCouponStatus(int id)
+    {
+        var (success, message) = await _couponService.ToggleActiveAsync(id);
+        if (success)
+        {
+            _notyf.Success(message);
+        }
+        else
+        {
+            _notyf.Error(message);
+        }
+
+        return RedirectToAction(nameof(Coupons));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> DeleteCoupon(int id)
+    {
+        var (success, message) = await _couponService.DeleteAsync(id);
+        if (success)
+        {
+            _notyf.Success(message);
+        }
+        else
+        {
+            _notyf.Error(message);
+        }
+
+        return RedirectToAction(nameof(Coupons));
     }
 
     // ==========================================

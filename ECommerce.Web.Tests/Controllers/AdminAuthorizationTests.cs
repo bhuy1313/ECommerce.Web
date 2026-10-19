@@ -17,6 +17,11 @@ public class AdminAuthorizationTests
         nameof(AdminController.Users),
         nameof(AdminController.EditUserRoles),
         nameof(AdminController.UpdatePaymentStatus),
+        nameof(AdminController.Coupons),
+        nameof(AdminController.CreateCoupon),
+        nameof(AdminController.EditCoupon),
+        nameof(AdminController.ToggleCouponStatus),
+        nameof(AdminController.DeleteCoupon),
     ];
 
     private static readonly string[] OperatorAllowedActions =
@@ -48,6 +53,11 @@ public class AdminAuthorizationTests
     [InlineData(nameof(AdminController.Users))]
     [InlineData(nameof(AdminController.EditUserRoles))]
     [InlineData(nameof(AdminController.UpdatePaymentStatus))]
+    [InlineData(nameof(AdminController.Coupons))]
+    [InlineData(nameof(AdminController.CreateCoupon))]
+    [InlineData(nameof(AdminController.EditCoupon))]
+    [InlineData(nameof(AdminController.ToggleCouponStatus))]
+    [InlineData(nameof(AdminController.DeleteCoupon))]
     public void AdminOnlyActions_RequireAdminRole(string actionName)
     {
         var methods = typeof(AdminController).GetMethods()

@@ -1,0 +1,110 @@
+@model IReadOnlyList<ECommerce.Web.Models.Entities.Coupon>
+@using ECommerce.Web.Models.Entities.Enums
+@{
+    ViewData["Title"] = "Quản lý mã giảm giá";
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
+            <i class="fas fa-ticket-alt text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Mã giảm giá
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Tạo và quản lý mã ưu đãi áp dụng tại bước thanh toán</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i> Dashboard
+        </a>
+        <a asp-action="CreateCoupon" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-colors">
+            <i class="fas fa-plus mr-1.5"></i> Thêm mã
+        </a>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+    @if (Model.Any())
+    {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                    <tr>
+                        <th class="py-3 px-5 font-semibold">Mã</th>
+                        <th class="py-3 px-5 font-semibold">Loại</th>
+                        <th class="py-3 px-5 font-semibold text-right">Giá trị</th>
+                        <th class="py-3 px-5 font-semibold text-right">Đơn tối thiểu</th>
+                        <th class="py-3 px-5 font-semibold text-center">Đã dùng</th>
+                        <th class="py-3 px-5 font-semibold">Hiệu lực</th>
+                        <th class="py-3 px-5 font-semibold text-center">Trạng thái</th>
+                        <th class="py-3 px-5 font-semibold text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                    @foreach (var coupon in Model)
+                    {
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="py-3.5 px-5 font-bold text-slate-800 dark:text-gray-200 text-xs">@coupon.Code</td>
+                            <td class="py-3.5 px-5 text-xs text-slate-600 dark:text-gray-400">
+                                @(coupon.DiscountType == DiscountType.Percentage ? "Phần trăm" : "Số tiền")
+                            </td>
+                            <td class="py-3.5 px-5 text-right font-semibold text-slate-900 dark:text-gray-100 text-xs">
+                                @(coupon.DiscountType == DiscountType.Percentage
+                                    ? $"{coupon.Value:N0}%"
+                                    : $"{coupon.Value:N0} đ")
+                            </td>
+                            <td class="py-3.5 px-5 text-right text-xs text-slate-600 dark:text-gray-400">@coupon.MinOrderAmount.ToString("N0") đ</td>
+                            <td class="py-3.5 px-5 text-center text-xs text-slate-600 dark:text-gray-400">@coupon.UsedCount / @coupon.UsageLimit</td>
+                            <td class="py-3.5 px-5 text-xs text-slate-600 dark:text-gray-400">
+                                @coupon.StartsOn.ToString("dd/MM/yyyy") – @coupon.EndsOn.ToString("dd/MM/yyyy")
+                            </td>
+                            <td class="py-3.5 px-5 text-center">
+                                @if (!coupon.IsActive)
+                                {
+                                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400 text-[11px] font-bold rounded-full border border-slate-200 dark:border-gray-700">Tắt</span>
+                                }
+                                else if (coupon.EndsOn < today || coupon.UsedCount >= coupon.UsageLimit)
+                                {
+                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 text-[11px] font-bold rounded-full border border-rose-200">Không dùng được</span>
+                                }
+                                else if (coupon.StartsOn > today)
+                                {
+                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full border border-amber-200">Sắp hiệu lực</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-200">Đang chạy</span>
+                                }
+                            </td>
+                            <td class="py-3.5 px-5">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a asp-action="EditCoupon" asp-route-id="@coupon.Id" class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 hover:bg-indigo-50 hover:text-primary dark:hover:text-indigo-300 text-slate-600 dark:text-gray-400 rounded-lg text-xs font-semibold transition-colors">
+                                        Sửa
+                                    </a>
+                                    <form asp-action="ToggleCouponStatus" asp-route-id="@coupon.Id" method="post" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 hover:bg-amber-50 hover:text-amber-700 text-slate-600 dark:text-gray-400 rounded-lg text-xs font-semibold transition-colors">
+                                            @(coupon.IsActive ? "Tắt" : "Bật")
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteCoupon" asp-route-id="@coupon.Id" method="post" class="inline" onsubmit="return confirm('Xóa mã giảm giá này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="inline-flex items-center px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors">
+                                            Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="p-10 text-center text-slate-400 text-sm">
+            <i class="fas fa-ticket-alt text-3xl mb-3 block text-slate-300"></i>
+            Chưa có mã giảm giá nào.
+        </div>
+    }
+</div>
