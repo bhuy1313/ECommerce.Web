@@ -1,0 +1,43 @@
+@model ECommerce.Web.Models.ViewModels.AddressFormViewModel
+
+<form asp-controller="Profile" asp-action="Add" method="post" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+        <i class="fas fa-plus-circle text-primary dark:text-indigo-300 mr-2"></i>Thêm địa chỉ mới
+    </h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-sm text-red-600 mb-3"></div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+            <label asp-for="RecipientName" class="block font-medium text-gray-700 dark:text-gray-300 mb-1 text-sm"></label>
+            <input asp-for="RecipientName" autocomplete="name" placeholder="Nguyễn Văn A"
+                   class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
+            <span asp-validation-for="RecipientName" class="block mt-1 text-xs text-red-600"></span>
+        </div>
+
+        <div>
+            <label asp-for="RecipientPhone" class="block font-medium text-gray-700 dark:text-gray-300 mb-1 text-sm"></label>
+            <input asp-for="RecipientPhone" type="tel" autocomplete="tel" placeholder="09xx xxx xxx"
+                   class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
+            <span asp-validation-for="RecipientPhone" class="block mt-1 text-xs text-red-600"></span>
+        </div>
+
+        <div class="sm:col-span-2">
+            <label asp-for="AddressLine" class="block font-medium text-gray-700 dark:text-gray-300 mb-1 text-sm"></label>
+            <textarea asp-for="AddressLine" rows="2" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                      class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary"></textarea>
+            <span asp-validation-for="AddressLine" class="block mt-1 text-xs text-red-600"></span>
+        </div>
+    </div>
+
+    <label class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <input asp-for="MakeDefault" class="h-4 w-4 text-primary focus:ring-primary rounded" />
+        @Html.DisplayNameFor(m => m.MakeDefault)
+    </label>
+
+    <div class="mt-5">
+        <button type="submit" class="bg-primary hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors shadow-sm">
+            Lưu địa chỉ
+        </button>
+    </div>
+</form>

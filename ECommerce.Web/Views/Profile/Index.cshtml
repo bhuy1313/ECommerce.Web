@@ -1,0 +1,76 @@
+@model ECommerce.Web.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ & địa chỉ";
+}
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-6 items-center">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium">Hồ sơ &amp; địa chỉ</span>
+    </nav>
+
+    <div class="mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Hồ sơ &amp; địa chỉ</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Quản lý địa chỉ giao hàng để thanh toán nhanh hơn.</p>
+    </div>
+
+    <section class="mb-8">
+        <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+            <i class="fas fa-map-marked-alt text-primary dark:text-indigo-300 mr-2"></i>Địa chỉ đã lưu
+        </h2>
+
+        @if (Model.Addresses.Count == 0)
+        {
+            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-location-dot text-2xl text-gray-300 mb-3 block"></i>
+                Bạn chưa lưu địa chỉ nào.
+            </div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var address in Model.Addresses)
+                {
+                    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    @address.RecipientName
+                                    @if (address.IsDefault)
+                                    {
+                                        <span class="text-[11px] font-bold uppercase tracking-wide bg-indigo-100 text-primary dark:text-indigo-300 px-2 py-0.5 rounded-full">Mặc định</span>
+                                    }
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    <i class="fas fa-phone text-xs mr-1"></i>@address.RecipientPhone
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">@address.AddressLine</p>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                @if (!address.IsDefault)
+                                {
+                                    <form asp-action="SetDefault" method="post">
+                                        <input type="hidden" name="id" value="@address.Id" />
+                                        <button type="submit" class="text-sm font-medium text-primary dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors">
+                                            Đặt mặc định
+                                        </button>
+                                    </form>
+                                }
+                                <form asp-action="Delete" method="post" onsubmit="return confirm('Xóa địa chỉ này?');">
+                                    <input type="hidden" name="id" value="@address.Id" />
+                                    <button type="submit" class="text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <partial name="_AddressForm" model="Model.NewAddress" />
+</div>
