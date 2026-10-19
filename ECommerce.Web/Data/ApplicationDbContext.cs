@@ -19,6 +19,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
     public DbSet<Address> Addresses => Set<Address>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -49,5 +50,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
         address.HasIndex(a => a.UserId);
+
+        var coupon = builder.Entity<Coupon>();
+        coupon.Property(c => c.Code).HasMaxLength(50);
+        coupon.Property(c => c.Value).HasPrecision(18, 2);
+        coupon.Property(c => c.MinOrderAmount).HasPrecision(18, 2);
+        coupon.HasIndex(c => c.Code).IsUnique();
     }
 }
