@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +12,13 @@ public class CartController : Controller
 {
     private readonly ICartService _cartService;
     private readonly INotyfService _notyf;
+    private readonly IAddressService _addressService;
 
-    public CartController(ICartService cartService, INotyfService notyf)
+    public CartController(ICartService cartService, INotyfService notyf, IAddressService addressService)
     {
         _cartService = cartService;
         _notyf = notyf;
+        _addressService = addressService;
     }
 
     [HttpGet]
@@ -107,7 +111,23 @@ public class CartController : Controller
             return RedirectToAction("Login", "Account", new { returnUrl = "/Cart/Checkout" });
         }
 
-        // Đã thỏa mãn tất cả điều kiện stock và login (sẵn sàng chuyển giao cho Phase 5)
-        return View("CheckoutPreview", new CheckoutViewModel { Cart = cart });
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var addresses = userId is null
+            ? Array.Empty<Address>()
+            : (await _addressService.GetAddressesAsync(userId)).ToArray();
+        var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault);
+
+        return View("CheckoutPreview", new CheckoutViewModel
+        {
+            Cart = cart,
+            RecipientName = defaultAddress?.RecipientName ?? string.Empty,
+            RecipientPhone = defaultAddress?.RecipientPhone ?? string.Empty,
+            ShippingAddress = defaultAddress?.AddressLine ?? string.Empty,
+            SavedAddressId = defaultAddress?.Id,
+            SavedAddresses = addresses
+                .Select(a => new SavedAddressOption(
+                    a.Id, $"{a.RecipientName} — {a.AddressLine}", a.RecipientName, a.RecipientPhone, a.AddressLine))
+                .ToList()
+        });
     }
 }

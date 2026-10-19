@@ -29,5 +29,9 @@ public class CheckoutViewModel
     [Display(Name = "Phương thức thanh toán")]
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;
 
+    public int? SavedAddressId { get; set; }
+
+    public IReadOnlyList<SavedAddressOption> SavedAddresses { get; set; } = Array.Empty<SavedAddressOption>();
+
     public CartViewModel Cart { get; set; } = new();
 }

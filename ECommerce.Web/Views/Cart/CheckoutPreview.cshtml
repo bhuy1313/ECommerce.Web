@@ -36,6 +36,23 @@
                         </div>
                     </div>
 
+                    @if (Model.SavedAddresses.Any())
+                    {
+                        <div>
+                            <label asp-for="SavedAddressId" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ đã lưu</label>
+                            <select asp-for="SavedAddressId" id="savedAddressSelect"
+                                    class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary">
+                                <option value="">— Nhập địa chỉ mới —</option>
+                                @foreach (var option in Model.SavedAddresses)
+                                {
+                                    <option value="@option.Id" data-name="@option.RecipientName"
+                                            data-phone="@option.RecipientPhone" data-address="@option.AddressLine"
+                                            selected="@(Model.SavedAddressId == option.Id)">@option.Display</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
                     <div>
                         <label asp-for="RecipientName" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
                         <input asp-for="RecipientName" autocomplete="name" placeholder="Nguyễn Văn A"
@@ -180,5 +197,23 @@
         });
 
         sync();
+    })();
+</script>
+
+<script>
+    (function () {
+        var select = document.getElementById('savedAddressSelect');
+        if (!select) return;
+        var name = document.getElementById('RecipientName');
+        var phone = document.getElementById('RecipientPhone');
+        var address = document.getElementById('ShippingAddress');
+
+        select.addEventListener('change', function () {
+            var option = select.options[select.selectedIndex];
+            if (!select.value || !option) return;
+            name.value = option.dataset.name;
+            phone.value = option.dataset.phone;
+            address.value = option.dataset.address;
+        });
     })();
 </script>
