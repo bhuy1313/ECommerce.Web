@@ -1,7 +1,9 @@
+using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Models.Constants;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
+using ECommerce.Web.Services.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,17 +16,23 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ICartService _cartService;
+    private readonly IEmailService _emailService;
+    private readonly INotyfService _notyf;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ICartService cartService,
+        IEmailService emailService,
+        INotyfService notyf,
         ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _cartService = cartService;
+        _emailService = emailService;
+        _notyf = notyf;
         _logger = logger;
     }
 
@@ -72,6 +80,7 @@ public class AccountController : Controller
         {
             _logger.LogInformation("Người dùng tạo tài khoản mới thành công: {Email}", model.Email);
             await _userManager.AddToRoleAsync(user, AppRoles.Customer);
+            await TrySendConfirmationEmailAsync(user);
             await _signInManager.SignInAsync(user, isPersistent: false);
             await _cartService.MergeGuestCartAsync(user.Id);
 
@@ -162,8 +171,99 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> ConfirmEmail(string? userId, string? code)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || !IdentityTokenCodec.TryDecode(code, out var token))
+        {
+            return View(InvalidConfirmation());
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            _logger.LogWarning("Xác thực email cho user không tồn tại: {UserId}", userId);
+            return View(InvalidConfirmation());
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning("Xác thực email thất bại cho {Email}: {Errors}", user.Email,
+                string.Join(", ", result.Errors.Select(e => e.Description)));
+            return View(InvalidConfirmation());
+        }
+
+        _logger.LogInformation("Đã xác thực email cho {Email}", user.Email);
+        return View(new ConfirmEmailViewModel(true, "Email của bạn đã được xác thực thành công."));
+    }
+
+    [HttpGet]
+    public IActionResult ResendEmailConfirmation()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResendEmailConfirmation(ResendConfirmationViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user is not null && !await _userManager.IsEmailConfirmedAsync(user))
+        {
+            await TrySendConfirmationEmailAsync(user);
+        }
+        else
+        {
+            _logger.LogInformation("Bỏ qua gửi lại email xác thực cho {Email}.", model.Email);
+        }
+
+        _notyf.Information("Nếu email tồn tại và chưa xác thực, chúng tôi đã gửi lại liên kết xác thực.");
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
     public IActionResult AccessDenied()
     {
         return View();
     }
+
+    private async Task TrySendConfirmationEmailAsync(ApplicationUser user)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(user.Email))
+            {
+                return;
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var code = IdentityTokenCodec.Encode(token);
+            var link = Url.Action(
+                nameof(ConfirmEmail),
+                "Account",
+                new { userId = user.Id, code },
+                Request.Scheme);
+
+            if (string.IsNullOrEmpty(link))
+            {
+                _logger.LogWarning("Không tạo được liên kết xác thực email cho {Email}.", user.Email);
+                return;
+            }
+
+            await _emailService.SendEmailConfirmationAsync(user.Email, link);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Gửi email xác thực thất bại cho {Email}.", user.Email);
+        }
+    }
+
+    private static ConfirmEmailViewModel InvalidConfirmation() =>
+        new(false, "Liên kết xác thực không hợp lệ hoặc đã hết hạn.");
 }
