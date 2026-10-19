@@ -32,6 +32,7 @@ builder.Services.AddNotyf(config =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IEmailSender, LogEmailSender>();
+builder.Services.AddSingleton<IEmailTemplateRenderer, RazorEmailTemplateRenderer>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
 {
