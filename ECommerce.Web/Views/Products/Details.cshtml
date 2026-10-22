@@ -1,6 +1,6 @@
-﻿@model ECommerce.Web.Models.Entities.Product
+﻿@model ECommerce.Web.Models.ViewModels.ProductDetailsViewModel
 @{
-    ViewData["Title"] = Model.Name;
+    ViewData["Title"] = Model.Product.Name;
 }
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -9,28 +9,28 @@
         <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
         <span class="mx-2 text-gray-400">/</span>
         <a asp-controller="Products" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Sản phẩm</a>
-        @if (Model.Category != null)
+        @if (Model.Product.Category != null)
         {
             <span class="mx-2 text-gray-400">/</span>
-            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">@Model.Category.Name</a>
+            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.Product.CategoryId" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">@Model.Product.Category.Name</a>
         }
         <span class="mx-2 text-gray-400">/</span>
-        <span class="text-gray-900 dark:text-gray-100 font-medium truncate max-w-xs">@Model.Name</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium truncate max-w-xs">@Model.Product.Name</span>
     </nav>
 
     <div class="flex flex-col lg:flex-row gap-12 bg-white dark:bg-gray-900 p-6 sm:p-10 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
         <!-- Ảnh sản phẩm -->
         <div class="w-full lg:w-1/2">
             <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 mb-4 relative aspect-square flex items-center justify-center border border-gray-100 dark:border-gray-800">
-                <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
+                <img src="@ProductImage.Resolve(Model.Product.ImageUrl)" alt="@Model.Product.Name" class="w-full h-full object-contain">
             </div>
             <!-- Thumbnails mô phỏng -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border-2 border-primary aspect-square flex items-center justify-center">
-                    <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
+                    <img src="@ProductImage.Resolve(Model.Product.ImageUrl)" alt="@Model.Product.Name" class="w-full h-full object-contain">
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-2 border border-gray-200 dark:border-gray-700 aspect-square flex items-center justify-center opacity-60">
-                    <img src="@ProductImage.Resolve(Model.ImageUrl)" alt="@Model.Name" class="w-full h-full object-contain">
+                    <img src="@ProductImage.Resolve(Model.Product.ImageUrl)" alt="@Model.Product.Name" class="w-full h-full object-contain">
                 </div>
             </div>
         </div>
@@ -38,10 +38,10 @@
         <!-- Thông tin sản phẩm -->
         <div class="w-full lg:w-1/2 flex flex-col">
             <div class="mb-6">
-                @if (Model.StockQuantity > 0)
+                @if (Model.Product.StockQuantity > 0)
                 {
                     <span class="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full mb-3 border border-emerald-200">
-                        <i class="fas fa-check-circle mr-1.5 text-emerald-500"></i> Còn hàng (@Model.StockQuantity sản phẩm khả dụng)
+                        <i class="fas fa-check-circle mr-1.5 text-emerald-500"></i> Còn hàng (@Model.Product.StockQuantity sản phẩm khả dụng)
                     </span>
                 }
                 else
@@ -51,17 +51,33 @@
                     </span>
                 }
 
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">@Model.Name</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">@Model.Product.Name</h1>
+                <div class="flex items-center gap-3 text-sm mb-2">
+                    @if (Model.ReviewCount > 0)
+                    {
+                        <span class="flex items-center gap-1 text-amber-400" aria-label="Điểm đánh giá @Model.AverageRating.ToString("0.0") trên 5">
+                            @for (var star = 1; star <= 5; star++)
+                            {
+                                <i class="fas fa-star @(star <= Math.Round(Model.AverageRating) ? "" : "text-gray-300 dark:text-gray-600")"></i>
+                            }
+                        </span>
+                        <span class="text-gray-600 dark:text-gray-400 font-medium">@Model.AverageRating.ToString("0.0") (@Model.ReviewCount đánh giá)</span>
+                    }
+                    else
+                    {
+                        <span class="text-gray-400">Chưa có đánh giá</span>
+                    }
+                </div>
                 <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span class="text-primary dark:text-indigo-300 font-medium">@Model.Category?.Name</span>
+                    <span class="text-primary dark:text-indigo-300 font-medium">@Model.Product.Category?.Name</span>
                     <span class="text-gray-300">|</span>
-                    <span>Mã SP: #PRD-@Model.Id.ToString("D4")</span>
+                    <span>Mã SP: #PRD-@Model.Product.Id.ToString("D4")</span>
                 </div>
             </div>
 
             <div class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
                 <div class="flex items-baseline gap-4 mb-2">
-                    <span class="text-3xl font-bold text-gray-900 dark:text-gray-100"><vc:money amount="@Model.Price" /></span>
+                    <span class="text-3xl font-bold text-gray-900 dark:text-gray-100"><vc:money amount="@Model.Product.Price" /></span>
                 </div>
                 <p class="text-gray-500 dark:text-gray-400 text-xs">Giá đã bao gồm thuế VAT và bảo hành chính hãng</p>
             </div>
@@ -70,15 +86,15 @@
             <div class="mb-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2">Giới thiệu ngắn:</h3>
                 <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                    @(string.IsNullOrWhiteSpace(Model.Description) ? "Sản phẩm chất lượng cao được phân phối trực tiếp bởi TechNova." : Model.Description)
+                    @(string.IsNullOrWhiteSpace(Model.Product.Description) ? "Sản phẩm chất lượng cao được phân phối trực tiếp bởi TechNova." : Model.Product.Description)
                 </p>
             </div>
 
-            @if (Model.StockQuantity > 0)
+            @if (Model.Product.StockQuantity > 0)
             {
                 <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mt-auto">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <input type="hidden" name="productId" value="@Model.Product.Id" />
 
                     <div class="mb-6">
                         <label for="quantity-input" class="block font-medium text-gray-900 dark:text-gray-100 text-sm mb-2">Số lượng:</label>
@@ -87,8 +103,8 @@
                                 <button type="button" onclick="decrementQty()" class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none">
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
-                                <input type="number" id="quantity-input" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="w-full text-center font-bold text-gray-800 dark:text-gray-200 focus:outline-none text-sm" />
-                                <button type="button" onclick="incrementQty(@Model.StockQuantity)" class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none">
+                                <input type="number" id="quantity-input" name="quantity" value="1" min="1" max="@Model.Product.StockQuantity" class="w-full text-center font-bold text-gray-800 dark:text-gray-200 focus:outline-none text-sm" />
+                                <button type="button" onclick="incrementQty(@Model.Product.StockQuantity)" class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-indigo-300 transition focus:outline-none">
                                     <i class="fas fa-plus text-xs"></i>
                                 </button>
                             </div>
@@ -126,9 +142,9 @@
             <button class="py-4 px-8 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors">Chính sách bảo hành & Đổi trả</button>
         </div>
         <div class="p-8 text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Chi tiết về @Model.Name</h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Chi tiết về @Model.Product.Name</h3>
             <p class="mb-4">
-                @(string.IsNullOrWhiteSpace(Model.Description) ? "Thông tin chi tiết đang được cập nhật." : Model.Description)
+                @(string.IsNullOrWhiteSpace(Model.Product.Description) ? "Thông tin chi tiết đang được cập nhật." : Model.Product.Description)
             </p>
             <ul class="list-disc pl-5 space-y-2 text-gray-600 dark:text-gray-400">
                 <li>Cam kết 100% hàng chính hãng, nguồn gốc xuất xứ rõ ràng.</li>
@@ -137,7 +153,131 @@
             </ul>
         </div>
     </div>
+
+    <!-- Đánh giá sản phẩm -->
+    <section id="reviews" class="mt-8 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div class="p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Đánh giá sản phẩm</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        @if (Model.ReviewCount > 0)
+                        {
+                            <span>@Model.AverageRating.ToString("0.0")/5 từ @Model.ReviewCount đánh giá đã kiểm duyệt</span>
+                        }
+                        else
+                        {
+                            <span>Chưa có đánh giá nào cho sản phẩm này.</span>
+                        }
+                    </p>
+                </div>
+                @if (Model.ReviewCount > 0)
+                {
+                    <div class="flex items-center gap-1 text-amber-400">
+                        @for (var star = 1; star <= 5; star++)
+                        {
+                            <i class="fas fa-star @(star <= Math.Round(Model.AverageRating) ? "" : "text-gray-300 dark:text-gray-600")"></i>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (Model.CanReview)
+            {
+                <form asp-action="AddReview" method="post" class="mb-8 p-5 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Product.Id" />
+                    <fieldset class="mb-4">
+                        <legend class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2">Chấm điểm của bạn</legend>
+                        <div class="flex items-center gap-2">
+                            @for (var star = 1; star <= 5; star++)
+                            {
+                                <label class="cursor-pointer" title="@star sao">
+                                    <input type="radio" name="Rating" value="@star" class="sr-only peer" checked="@(star == 5)" />
+                                    <i class="far fa-star text-2xl text-gray-300 dark:text-gray-600 peer-checked:text-amber-400 transition-colors"></i>
+                                    <span class="sr-only">@star sao</span>
+                                </label>
+                            }
+                        </div>
+                        <span asp-validation-for="NewReview.Rating" class="block mt-1 text-xs text-red-600"></span>
+                    </fieldset>
+                    <label for="review-comment" class="block font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2">Nhận xét (không bắt buộc)</label>
+                    <textarea id="review-comment" name="Comment" rows="4" maxlength="1000" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..." class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-sm focus:ring-primary focus:border-primary"></textarea>
+                    <div class="mt-3 flex items-center gap-3">
+                        <button type="submit" class="bg-primary hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors text-sm">
+                            <i class="fas fa-paper-plane mr-1.5"></i> Gửi đánh giá
+                        </button>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Đánh giá sẽ hiển thị sau khi được kiểm duyệt.</span>
+                    </div>
+                </form>
+            }
+            else if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-sm text-blue-800 dark:text-blue-200">
+                    @if (Model.HasReviewed)
+                    {
+                        <span><i class="fas fa-check-circle mr-1.5"></i>Bạn đã đánh giá sản phẩm này. Cảm ơn phản hồi của bạn!</span>
+                    }
+                    else
+                    {
+                        <span><i class="fas fa-info-circle mr-1.5"></i>Chỉ khách đã mua và nhận hàng thành công mới có thể đánh giá sản phẩm này.</span>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-400">
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="text-primary dark:text-indigo-300 font-semibold hover:underline">Đăng nhập</a>
+                    để đánh giá sản phẩm sau khi bạn đã mua hàng.
+                </div>
+            }
+
+            @if (Model.Reviews.Count > 0)
+            {
+                <div class="space-y-4">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <article class="p-5 border border-gray-100 dark:border-gray-800 rounded-2xl">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">@DisplayName(review.User?.Email)</span>
+                                    <span class="flex items-center gap-0.5 text-amber-400 text-xs">
+                                        @for (var star = 1; star <= 5; star++)
+                                        {
+                                            <i class="fas fa-star @(star <= review.Rating ? "" : "text-gray-200 dark:text-gray-700")"></i>
+                                        }
+                                    </span>
+                                </div>
+                                <time class="text-xs text-gray-400" datetime="@review.CreatedAt.ToString("O")">@review.CreatedAt.ToString("dd/MM/yyyy")</time>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(review.Comment))
+                            {
+                                <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">@review.Comment</p>
+                            }
+                            else
+                            {
+                                <p class="text-sm text-gray-400 italic">Không có nhận xét.</p>
+                            }
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
 </div>
+
+@functions {
+    private static string DisplayName(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "Khách hàng";
+        }
+
+        var local = email.Split('@')[0];
+        return (local.Length <= 3 ? local : local[..3]) + "***";
+    }
+}
 
 <script>
     function decrementQty() {
