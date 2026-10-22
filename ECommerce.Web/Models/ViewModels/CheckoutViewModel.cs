@@ -40,7 +40,19 @@ public class CheckoutViewModel
 
     public string? CouponDescription { get; set; }
 
-    public decimal PayableTotal => Math.Max(0m, Cart.TotalAmount - DiscountAmount);
+    public int? ShippingMethodId { get; set; }
+
+    public IReadOnlyList<ShippingMethodOption> ShippingMethods { get; set; } = Array.Empty<ShippingMethodOption>();
+
+    public decimal ShippingFee { get; set; }
+
+    public decimal TaxRate { get; set; }
+
+    public decimal TaxAmount { get; set; }
+
+    public string? ShippingError { get; set; }
+
+    public decimal PayableTotal => Math.Max(0m, Cart.TotalAmount - DiscountAmount + ShippingFee + TaxAmount);
 
     public IReadOnlyList<SavedAddressOption> SavedAddresses { get; set; } = Array.Empty<SavedAddressOption>();
 

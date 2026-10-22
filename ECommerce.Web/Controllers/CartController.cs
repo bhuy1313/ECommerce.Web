@@ -14,17 +14,20 @@ public class CartController : Controller
     private readonly INotyfService _notyf;
     private readonly IAddressService _addressService;
     private readonly ICouponService _couponService;
+    private readonly IShippingCalculator _shippingCalculator;
 
     public CartController(
         ICartService cartService,
         INotyfService notyf,
         IAddressService addressService,
-        ICouponService couponService)
+        ICouponService couponService,
+        IShippingCalculator shippingCalculator)
     {
         _cartService = cartService;
         _notyf = notyf;
         _addressService = addressService;
         _couponService = couponService;
+        _shippingCalculator = shippingCalculator;
     }
 
     [HttpGet]
@@ -124,7 +127,7 @@ public class CartController : Controller
         var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault);
         var coupon = await _couponService.ValidateAsync(couponCode, cart.TotalAmount);
 
-        return View("CheckoutPreview", new CheckoutViewModel
+        var model = new CheckoutViewModel
         {
             Cart = cart,
             RecipientName = defaultAddress?.RecipientName ?? string.Empty,
@@ -139,6 +142,38 @@ public class CartController : Controller
             DiscountAmount = coupon.DiscountAmount,
             CouponError = coupon.Error,
             CouponDescription = coupon.Description
-        });
+        };
+
+        await PopulateShippingAsync(model, cart.TotalAmount - coupon.DiscountAmount);
+        return View("CheckoutPreview", model);
+    }
+
+    private async Task PopulateShippingAsync(CheckoutViewModel model, decimal discountedSubtotal)
+    {
+        var methods = await _shippingCalculator.GetActiveMethodsAsync();
+        model.ShippingMethods = methods
+            .Select(m => new ShippingMethodOption(m.Id, m.Name, m.Fee, m.Description))
+            .ToList();
+
+        var selectedId = model.ShippingMethodId ?? methods.FirstOrDefault()?.Id;
+        var quote = selectedId.HasValue
+            ? await _shippingCalculator.QuoteAsync(selectedId.Value, discountedSubtotal)
+            : null;
+
+        if (quote is null)
+        {
+            model.ShippingMethodId = null;
+            model.ShippingFee = 0m;
+            model.TaxRate = _shippingCalculator.TaxRate;
+            model.TaxAmount = 0m;
+            model.ShippingError = "Hiện chưa có phương thức vận chuyển khả dụng.";
+            return;
+        }
+
+        model.ShippingMethodId = quote.ShippingMethodId;
+        model.ShippingFee = quote.ShippingFee;
+        model.TaxRate = quote.TaxRate;
+        model.TaxAmount = quote.TaxAmount;
+        model.ShippingError = null;
     }
 }

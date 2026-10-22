@@ -113,6 +113,42 @@
 
                     <div>
                         <fieldset>
+                            <legend class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức vận chuyển</legend>
+                            @if (Model.ShippingMethods.Count == 0)
+                            {
+                                <p class="text-sm text-red-600 dark:text-red-400" role="alert">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>@Model.ShippingError
+                                </p>
+                            }
+                            else
+                            {
+                                <div class="space-y-3">
+                                    @foreach (var option in Model.ShippingMethods)
+                                    {
+                                        <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                            <input type="radio" name="ShippingMethodId" value="@option.Id"
+                                                   class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary"
+                                                   checked="@(Model.ShippingMethodId == option.Id)" />
+                                            <span class="ml-3">
+                                                <span class="block font-medium text-gray-900 dark:text-gray-100">@option.Name</span>
+                                                @if (!string.IsNullOrWhiteSpace(option.Description))
+                                                {
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400">@option.Description</span>
+                                                }
+                                            </span>
+                                            <span class="ml-auto font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                                                <vc:money amount="@option.Fee" />
+                                            </span>
+                                        </label>
+                                    }
+                                </div>
+                                <span asp-validation-for="ShippingMethodId" class="block mt-1 text-xs text-red-600"></span>
+                            }
+                        </fieldset>
+                    </div>
+
+                    <div>
+                        <fieldset>
                             <legend class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức thanh toán</legend>
                             <div class="space-y-3" id="paymentOptions">
                                 <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
@@ -178,13 +214,27 @@
                         </div>
                         <div class="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Phí vận chuyển</span>
-                            <span class="font-medium text-emerald-600">Miễn phí</span>
+                            @if (Model.ShippingMethodId.HasValue)
+                            {
+                                <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.ShippingFee" /></span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">Chưa chọn</span>
+                            }
                         </div>
                         @if (Model.DiscountAmount > 0)
                         {
                             <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
                                 <span>Giảm giá (@Model.CouponCode)</span>
                                 <span class="font-medium">-<vc:money amount="@Model.DiscountAmount" /></span>
+                            </div>
+                        }
+                        @if (Model.ShippingMethodId.HasValue)
+                        {
+                            <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Thuế VAT (@((Model.TaxRate * 100).ToString("0.#"))%)</span>
+                                <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.TaxAmount" /></span>
                             </div>
                         }
                         <div class="flex justify-between text-base font-bold text-gray-900 dark:text-gray-100 pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -196,7 +246,7 @@
                 </div>
 
                 <div class="space-y-3 pt-4">
-                    <button type="submit" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group">
+                    <button type="submit" disabled="@(Model.ShippingMethods.Count == 0)" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg">
                         Xác nhận Đặt Hàng <i class="fas fa-check-circle ml-2 group-hover:scale-110 transition-transform"></i>
                     </button>
                     <a asp-controller="Cart" asp-action="Index" class="block w-full text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 transition-colors">

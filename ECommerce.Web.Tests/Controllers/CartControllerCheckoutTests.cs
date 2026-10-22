@@ -14,7 +14,8 @@ namespace ECommerce.Web.Tests.Controllers;
 public class CartControllerCheckoutTests
 {
     private static (CartController Controller, Mock<IAddressService> Addresses) CreateController(
-        Mock<ICouponService>? coupons = null)
+        Mock<ICouponService>? coupons = null,
+        Mock<IShippingCalculator>? shipping = null)
     {
         var cart = new Mock<ICartService>();
         cart.Setup(c => c.GetCartAsync()).ReturnsAsync(new CartViewModel
@@ -41,8 +42,16 @@ public class CartControllerCheckoutTests
                 .ReturnsAsync(new CouponValidationResult(false, null, null, 0m, null));
         }
 
+        if (shipping is null)
+        {
+            shipping = new Mock<IShippingCalculator>();
+            shipping
+                .Setup(s => s.GetActiveMethodsAsync())
+                .ReturnsAsync(Array.Empty<ShippingMethod>());
+        }
+
         var controller = new CartController(
-            cart.Object, Mock.Of<INotyfService>(), addresses.Object, coupons.Object);
+            cart.Object, Mock.Of<INotyfService>(), addresses.Object, coupons.Object, shipping.Object);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -163,5 +172,71 @@ public class CartControllerCheckoutTests
         Assert.Equal("Mã giảm giá đã hết hạn.", model.CouponError);
         Assert.Equal(0m, model.DiscountAmount);
         Assert.Equal(10_000_000m, model.PayableTotal);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenActiveMethods_SelectsFirstAndComputesFees()
+    {
+        var shipping = new Mock<IShippingCalculator>();
+        shipping.Setup(s => s.GetActiveMethodsAsync()).ReturnsAsync(new[]
+        {
+            new ShippingMethod { Id = 2, Name = "Nhanh", Fee = 30_000m, IsActive = true, DisplayOrder = 1 },
+            new ShippingMethod { Id = 1, Name = "Tiêu chuẩn", Fee = 60_000m, IsActive = true, DisplayOrder = 2 }
+        });
+        shipping.Setup(s => s.QuoteAsync(2, 10_000_000m))
+            .ReturnsAsync(new ShippingQuote(2, "Nhanh", 30_000m, 0.1m, 1_000_000m, 11_030_000m));
+        var (controller, addresses) = CreateController(shipping: shipping);
+        addresses.Setup(a => a.GetAddressesAsync("u1")).ReturnsAsync(Array.Empty<Address>());
+
+        var result = await controller.Checkout();
+
+        var model = Assert.IsType<CheckoutViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(2, model.ShippingMethodId);
+        Assert.Equal(2, model.ShippingMethods.Count);
+        Assert.Equal(30_000m, model.ShippingFee);
+        Assert.Equal(0.1m, model.TaxRate);
+        Assert.Equal(1_000_000m, model.TaxAmount);
+        Assert.Equal(11_030_000m, model.PayableTotal);
+        Assert.Null(model.ShippingError);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenNoMethods_ShowsShippingErrorAndZeroFees()
+    {
+        var (controller, addresses) = CreateController();
+        addresses.Setup(a => a.GetAddressesAsync("u1")).ReturnsAsync(Array.Empty<Address>());
+
+        var result = await controller.Checkout();
+
+        var model = Assert.IsType<CheckoutViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Empty(model.ShippingMethods);
+        Assert.Null(model.ShippingMethodId);
+        Assert.Equal(0m, model.ShippingFee);
+        Assert.Equal(0m, model.TaxAmount);
+        Assert.Equal("Hiện chưa có phương thức vận chuyển khả dụng.", model.ShippingError);
+        Assert.Equal(10_000_000m, model.PayableTotal);
+    }
+
+    [Fact]
+    public async Task Checkout_WithCouponAndShipping_QuotesDiscountedSubtotal()
+    {
+        var coupons = new Mock<ICouponService>();
+        coupons.Setup(c => c.ValidateAsync("SAVE10", 10_000_000m))
+            .ReturnsAsync(new CouponValidationResult(true, null, "SAVE10", 1_000_000m, "Giảm 10%"));
+        var shipping = new Mock<IShippingCalculator>();
+        shipping.Setup(s => s.GetActiveMethodsAsync()).ReturnsAsync(new[]
+        {
+            new ShippingMethod { Id = 1, Name = "Tiêu chuẩn", Fee = 30_000m, IsActive = true, DisplayOrder = 1 }
+        });
+        shipping.Setup(s => s.QuoteAsync(1, 9_000_000m))
+            .ReturnsAsync(new ShippingQuote(1, "Tiêu chuẩn", 30_000m, 0.1m, 900_000m, 9_930_000m));
+        var (controller, addresses) = CreateController(coupons, shipping);
+        addresses.Setup(a => a.GetAddressesAsync("u1")).ReturnsAsync(Array.Empty<Address>());
+
+        var result = await controller.Checkout("SAVE10");
+
+        var model = Assert.IsType<CheckoutViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(9_930_000m, model.PayableTotal);
+        shipping.Verify(s => s.QuoteAsync(1, 9_000_000m), Times.Once);
     }
 }
