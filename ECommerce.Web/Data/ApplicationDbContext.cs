@@ -20,6 +20,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
     public DbSet<Address> Addresses => Set<Address>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Review> Reviews => Set<Review>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -58,5 +59,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         coupon.Property(c => c.Value).HasPrecision(18, 2);
         coupon.Property(c => c.MinOrderAmount).HasPrecision(18, 2);
         coupon.HasIndex(c => c.Code).IsUnique();
+
+        var review = builder.Entity<Review>();
+        review.Property(r => r.UserId).HasMaxLength(450);
+        review.Property(r => r.Comment).HasMaxLength(1000);
+        review.HasOne(r => r.Product)
+            .WithMany()
+            .HasForeignKey(r => r.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+        review.HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        review.HasIndex(r => new { r.ProductId, r.UserId }).IsUnique();
+        review.HasIndex(r => r.IsApproved);
     }
 }
