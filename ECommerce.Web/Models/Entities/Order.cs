@@ -17,6 +17,8 @@ public class Order
     public PaymentMethod Method { get; set; } = PaymentMethod.Cod;
     public decimal TotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }
+    public decimal ShippingFee { get; set; }
+    public decimal TaxAmount { get; set; }
     public string? CouponCode { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

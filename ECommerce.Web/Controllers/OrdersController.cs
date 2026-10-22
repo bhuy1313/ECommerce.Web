@@ -20,6 +20,7 @@ public class OrdersController : Controller
     private readonly INotyfService _notyf;
     private readonly ICartService _cartService;
     private readonly ICouponService _couponService;
+    private readonly IShippingCalculator _shippingCalculator;
     private readonly IPaymentService _paymentService;
     private readonly IEmailService _emailService;
     private readonly ILogger<OrdersController> _logger;
@@ -30,6 +31,7 @@ public class OrdersController : Controller
         INotyfService notyf,
         ICartService cartService,
         ICouponService couponService,
+        IShippingCalculator shippingCalculator,
         IPaymentService paymentService,
         IEmailService emailService,
         ILogger<OrdersController> logger)
@@ -39,6 +41,7 @@ public class OrdersController : Controller
         _notyf = notyf;
         _cartService = cartService;
         _couponService = couponService;
+        _shippingCalculator = shippingCalculator;
         _paymentService = paymentService;
         _emailService = emailService;
         _logger = logger;
@@ -88,12 +91,25 @@ public class OrdersController : Controller
 
         if (!ModelState.IsValid)
         {
-            model.Cart = await _cartService.GetCartAsync();
-            var coupon = await _couponService.ValidateAsync(model.CouponCode, model.Cart.TotalAmount);
-            model.DiscountAmount = coupon.DiscountAmount;
-            model.CouponError = coupon.Error;
-            model.CouponDescription = coupon.Description;
             _notyf.Error("Vui lòng kiểm tra thông tin nhận hàng.");
+            await PopulateCheckoutAsync(model);
+            return View("~/Views/Cart/CheckoutPreview.cshtml", model);
+        }
+
+        var methods = await _shippingCalculator.GetActiveMethodsAsync();
+        if (methods.Count == 0)
+        {
+            ModelState.AddModelError(nameof(model.ShippingMethodId), "Hiện chưa có phương thức vận chuyển khả dụng.");
+            _notyf.Error("Hiện chưa có phương thức vận chuyển khả dụng.");
+            await PopulateCheckoutAsync(model);
+            return View("~/Views/Cart/CheckoutPreview.cshtml", model);
+        }
+
+        if (!model.ShippingMethodId.HasValue || methods.All(m => m.Id != model.ShippingMethodId.Value))
+        {
+            ModelState.AddModelError(nameof(model.ShippingMethodId), "Vui lòng chọn phương thức vận chuyển hợp lệ.");
+            _notyf.Error("Vui lòng chọn phương thức vận chuyển hợp lệ.");
+            await PopulateCheckoutAsync(model);
             return View("~/Views/Cart/CheckoutPreview.cshtml", model);
         }
 
@@ -106,7 +122,7 @@ public class OrdersController : Controller
         };
 
         var (success, message, orderId) = await _orderService.CreateOrderFromCartAsync(
-            userId, shipping, model.PaymentMethod, model.CouponCode);
+            userId, shipping, model.PaymentMethod, model.CouponCode, model.ShippingMethodId);
         if (!success || !orderId.HasValue)
         {
             _notyf.Error(message);
@@ -186,5 +202,44 @@ public class OrdersController : Controller
         }
 
         return RedirectToAction(nameof(Details), new { id });
+    }
+
+    private async Task PopulateCheckoutAsync(CheckoutViewModel model)
+    {
+        model.Cart = await _cartService.GetCartAsync();
+        var coupon = await _couponService.ValidateAsync(model.CouponCode, model.Cart.TotalAmount);
+        model.DiscountAmount = coupon.DiscountAmount;
+        model.CouponError = coupon.Error;
+        model.CouponDescription = coupon.Description;
+
+        var methods = await _shippingCalculator.GetActiveMethodsAsync();
+        model.ShippingMethods = methods
+            .Select(m => new ShippingMethodOption(m.Id, m.Name, m.Fee, m.Description))
+            .ToList();
+
+        var selectedId = methods.Any(m => m.Id == model.ShippingMethodId)
+            ? model.ShippingMethodId
+            : methods.FirstOrDefault()?.Id;
+        var quote = selectedId.HasValue
+            ? await _shippingCalculator.QuoteAsync(selectedId, model.Cart.TotalAmount - coupon.DiscountAmount)
+            : null;
+
+        if (quote is null)
+        {
+            model.ShippingMethodId = null;
+            model.ShippingFee = 0m;
+            model.TaxRate = _shippingCalculator.TaxRate;
+            model.TaxAmount = 0m;
+            model.ShippingError = methods.Count == 0
+                ? "Hiện chưa có phương thức vận chuyển khả dụng."
+                : null;
+            return;
+        }
+
+        model.ShippingMethodId = quote.ShippingMethodId;
+        model.ShippingFee = quote.ShippingFee;
+        model.TaxRate = quote.TaxRate;
+        model.TaxAmount = quote.TaxAmount;
+        model.ShippingError = null;
     }
 }

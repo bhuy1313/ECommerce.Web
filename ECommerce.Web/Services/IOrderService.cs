@@ -6,7 +6,7 @@ namespace ECommerce.Web.Services;
 
 public interface IOrderService
 {
-    Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method, string? couponCode = null);
+    Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method, string? couponCode = null, int? shippingMethodId = null);
     Task<IEnumerable<Order>> GetCustomerOrdersAsync(string userId);
     Task<Order?> GetOrderDetailsAsync(int orderId, string? userId = null);
     Task<(bool Success, string Message)> CancelOrderAsync(int orderId, string? userId = null);

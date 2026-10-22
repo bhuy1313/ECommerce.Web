@@ -35,6 +35,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<CartItem>().Property(c => c.UnitPrice).HasPrecision(18, 2);
         builder.Entity<Order>().Property(o => o.TotalAmount).HasPrecision(18, 2);
         builder.Entity<Order>().Property(o => o.DiscountAmount).HasPrecision(18, 2);
+        builder.Entity<Order>().Property(o => o.ShippingFee).HasPrecision(18, 2);
+        builder.Entity<Order>().Property(o => o.TaxAmount).HasPrecision(18, 2);
         builder.Entity<Order>().Property(o => o.CouponCode).HasMaxLength(50);
         builder.Entity<OrderItem>().Property(o => o.UnitPrice).HasPrecision(18, 2);
 

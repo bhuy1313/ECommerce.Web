@@ -144,11 +144,25 @@
                     }
                 </tbody>
                 <tfoot class="bg-gray-50/75 border-t border-gray-100 dark:border-gray-800">
+                    @if (Model.ShippingFee > 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="py-3 px-5 text-right font-medium text-gray-600 dark:text-gray-400">Phí vận chuyển:</td>
+                            <td class="py-3 px-5 text-right font-semibold text-gray-700 dark:text-gray-300"><vc:money amount="@Model.ShippingFee" /></td>
+                        </tr>
+                    }
                     @if (Model.DiscountAmount > 0)
                     {
                         <tr>
                             <td colspan="3" class="py-3 px-5 text-right font-medium text-emerald-600">Giảm giá (@Model.CouponCode):</td>
                             <td class="py-3 px-5 text-right font-semibold text-emerald-600">-<vc:money amount="@Model.DiscountAmount" /></td>
+                        </tr>
+                    }
+                    @if (Model.TaxAmount > 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="py-3 px-5 text-right font-medium text-gray-600 dark:text-gray-400">Thuế VAT:</td>
+                            <td class="py-3 px-5 text-right font-semibold text-gray-700 dark:text-gray-300"><vc:money amount="@Model.TaxAmount" /></td>
                         </tr>
                     }
                     <tr>

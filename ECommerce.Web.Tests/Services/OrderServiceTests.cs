@@ -16,13 +16,18 @@ public class OrderServiceTests : IDisposable
     private readonly ApplicationDbContext _db;
     private readonly SqliteConnection _connection;
     private readonly Mock<ILogger<OrderService>> _loggerMock;
+    private readonly Mock<IShippingCalculator> _shipping;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
     {
         (_db, _connection) = TestDbContextFactory.CreateInMemoryDbContext();
         _loggerMock = new Mock<ILogger<OrderService>>();
-        _orderService = new OrderService(_db, new CouponService(_db), _loggerMock.Object);
+        _shipping = new Mock<IShippingCalculator>();
+        _shipping
+            .Setup(s => s.QuoteAsync(It.IsAny<int?>(), It.IsAny<decimal>()))
+            .ReturnsAsync((int? id, decimal subtotal) => new ShippingQuote(id ?? 0, "Test", 0m, 0m, 0m, subtotal));
+        _orderService = new OrderService(_db, new CouponService(_db), _shipping.Object, _loggerMock.Object);
     }
 
     public void Dispose()
@@ -40,7 +45,7 @@ public class OrderServiceTests : IDisposable
         var userId = "user-empty-cart";
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, shippingMethodId: 1);
 
         // Assert
         Assert.False(result.Success);
@@ -70,7 +75,7 @@ public class OrderServiceTests : IDisposable
         };
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, shipping, PaymentMethod.VnPay);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, shipping, PaymentMethod.VnPay, shippingMethodId: 1);
 
         // Assert
         Assert.True(result.Success);
@@ -102,7 +107,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, shippingMethodId: 1);
 
         // Assert
         Assert.True(result.Success);
@@ -145,7 +150,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod);
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, shippingMethodId: 1);
 
         // Assert
         Assert.False(result.Success);
@@ -177,8 +182,8 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var first = await _orderService.CreateOrderFromCartAsync("user-race-a", Ship(), PaymentMethod.Cod);
-        var second = await _orderService.CreateOrderFromCartAsync("user-race-b", Ship(), PaymentMethod.Cod);
+        var first = await _orderService.CreateOrderFromCartAsync("user-race-a", Ship(), PaymentMethod.Cod, shippingMethodId: 1);
+        var second = await _orderService.CreateOrderFromCartAsync("user-race-b", Ship(), PaymentMethod.Cod, shippingMethodId: 1);
 
         // Assert: đúng 1 đơn thắng, stock về 0 và không bao giờ âm, đơn thua báo hết hàng
         Assert.True(first.Success);
@@ -221,7 +226,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "save10");
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "save10", shippingMethodId: 1);
 
         // Assert
         Assert.True(result.Success);
@@ -251,7 +256,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "NOPE");
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "NOPE", shippingMethodId: 1);
 
         // Assert
         Assert.False(result.Success);
@@ -294,7 +299,7 @@ public class OrderServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         // Act
-        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "USEDUP");
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, "USEDUP", shippingMethodId: 1);
 
         // Assert
         Assert.False(result.Success);
@@ -302,6 +307,97 @@ public class OrderServiceTests : IDisposable
         Assert.Equal(0, await _db.Orders.CountAsync());
         Assert.Equal(2, (await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id)).StockQuantity);
         Assert.Single(await _db.Carts.Include(c => c.Items).Where(c => c.UserId == userId).SelectMany(c => c.Items).ToListAsync());
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_StoresShippingFeeAndTax()
+    {
+        var userId = "user-shipping";
+        var product = new Product { Name = "Shipping Item", Price = 100_000m, StockQuantity = 5, IsActive = true };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 100_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        _shipping.Setup(s => s.QuoteAsync(1, 100_000m))
+            .ReturnsAsync(new ShippingQuote(1, "Test", 30_000m, 0.1m, 10_000m, 140_000m));
+
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, shippingMethodId: 1);
+
+        Assert.True(result.Success);
+        var order = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == result.OrderId);
+        Assert.Equal(30_000m, order.ShippingFee);
+        Assert.Equal(10_000m, order.TaxAmount);
+        Assert.Equal(140_000m, order.TotalAmount);
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_WhenShippingMethodInvalid_RollsBackAndKeepsStock()
+    {
+        var userId = "user-bad-shipping";
+        var product = new Product { Name = "No Ship", Price = 50_000m, StockQuantity = 2, IsActive = true };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 1, UnitPrice = 50_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        _shipping.Setup(s => s.QuoteAsync(99, 50_000m)).ReturnsAsync((ShippingQuote?)null);
+
+        var result = await _orderService.CreateOrderFromCartAsync(userId, Ship(), PaymentMethod.Cod, shippingMethodId: 99);
+
+        Assert.False(result.Success);
+        Assert.Contains("phương thức vận chuyển", result.Message);
+        Assert.Null(result.OrderId);
+        Assert.Equal(0, await _db.Orders.CountAsync());
+        Assert.Equal(2, (await _db.Products.AsNoTracking().SingleAsync(p => p.Id == product.Id)).StockQuantity);
+        Assert.Single(await _db.Carts.Include(c => c.Items).Where(c => c.UserId == userId).SelectMany(c => c.Items).ToListAsync());
+    }
+
+    [Fact]
+    public async Task CreateOrderFromCartAsync_WithCouponAndShipping_TaxesDiscountedSubtotal()
+    {
+        var userId = "user-coupon-shipping";
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var product = new Product { Name = "Laptop", Price = 100_000m, StockQuantity = 5, IsActive = true };
+        var coupon = new Coupon
+        {
+            Code = "SAVE10",
+            DiscountType = DiscountType.Percentage,
+            Value = 10m,
+            MinOrderAmount = 0m,
+            UsageLimit = 5,
+            StartsOn = today.AddDays(-1),
+            EndsOn = today.AddDays(1),
+            IsActive = true
+        };
+        _db.Products.Add(product);
+        _db.Coupons.Add(coupon);
+        await _db.SaveChangesAsync();
+
+        var cart = new Cart { UserId = userId };
+        cart.Items.Add(new CartItem { ProductId = product.Id, Quantity = 2, UnitPrice = 100_000m });
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+
+        _shipping.Setup(s => s.QuoteAsync(1, 180_000m))
+            .ReturnsAsync(new ShippingQuote(1, "Test", 30_000m, 0.1m, 18_000m, 228_000m));
+
+        var result = await _orderService.CreateOrderFromCartAsync(
+            userId, Ship(), PaymentMethod.Cod, "save10", shippingMethodId: 1);
+
+        Assert.True(result.Success);
+        var order = await _db.Orders.AsNoTracking().SingleAsync(o => o.Id == result.OrderId);
+        Assert.Equal(20_000m, order.DiscountAmount);
+        Assert.Equal(30_000m, order.ShippingFee);
+        Assert.Equal(18_000m, order.TaxAmount);
+        Assert.Equal(228_000m, order.TotalAmount);
+        _shipping.Verify(s => s.QuoteAsync(1, 180_000m), Times.Once);
     }
 
     [Fact]

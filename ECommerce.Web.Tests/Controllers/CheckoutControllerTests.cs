@@ -29,7 +29,8 @@ public class CheckoutControllerTests
         Mock<IPaymentService>? paymentService = null,
         string userId = "user-checkout",
         Mock<IEmailService>? emailService = null,
-        Mock<ICouponService>? couponService = null)
+        Mock<ICouponService>? couponService = null,
+        Mock<IShippingCalculator>? shippingService = null)
     {
         var store = new Mock<IUserStore<ApplicationUser>>();
         var userManager = new Mock<UserManager<ApplicationUser>>(
@@ -43,12 +44,24 @@ public class CheckoutControllerTests
             .Setup(c => c.ValidateAsync(It.IsAny<string?>(), It.IsAny<decimal>()))
             .ReturnsAsync(new CouponValidationResult(false, null, null, 0m, null));
 
+        shippingService ??= new Mock<IShippingCalculator>();
+        shippingService
+            .Setup(s => s.GetActiveMethodsAsync())
+            .ReturnsAsync(new[]
+            {
+                new ShippingMethod { Id = 1, Name = "Test", Fee = 0m, IsActive = true, DisplayOrder = 1 }
+            });
+        shippingService
+            .Setup(s => s.QuoteAsync(It.IsAny<int?>(), It.IsAny<decimal>()))
+            .ReturnsAsync((int? id, decimal subtotal) => new ShippingQuote(id ?? 1, "Test", 0m, 0m, 0m, subtotal));
+
         var controller = new OrdersController(
             orderService.Object,
             userManager.Object,
             notyf.Object,
             cartService.Object,
             couponService.Object,
+            shippingService.Object,
             (paymentService ?? new Mock<IPaymentService>()).Object,
             (emailService ?? new Mock<IEmailService>()).Object,
             Mock.Of<ILogger<OrdersController>>())
@@ -91,7 +104,7 @@ public class CheckoutControllerTests
             "searched under /Views/Orders/ and /Views/Shared/ and throw at runtime, because the " +
             "checkout view lives in /Views/Cart/.");
         orderService.Verify(
-            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()),
+            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()),
             Times.Never);
     }
 
@@ -119,7 +132,37 @@ public class CheckoutControllerTests
         Assert.Equal("~/Views/Cart/CheckoutPreview.cshtml", Assert.IsType<ViewResult>(result).ViewName);
         Assert.True(controller.ModelState.ContainsKey(nameof(CheckoutViewModel.PaymentMethod)));
         orderService.Verify(
-            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()),
+            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenShippingMethodInvalid_ReRendersFormAndDoesNotCreateOrder()
+    {
+        var orderService = new Mock<IOrderService>();
+        var cartService = new Mock<ICartService>();
+        cartService.Setup(s => s.GetCartAsync()).ReturnsAsync(new CartViewModel());
+        var controller = CreateController(orderService, cartService);
+
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi",
+            PaymentMethod = PaymentMethod.Cod,
+            ShippingMethodId = 999,
+            Cart = new CartViewModel()
+        };
+
+        var result = await controller.Checkout(model);
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("~/Views/Cart/CheckoutPreview.cshtml", view.ViewName);
+        Assert.True(controller.ModelState.ContainsKey(nameof(CheckoutViewModel.ShippingMethodId)));
+        orderService.Verify(
+            s => s.CreateOrderFromCartAsync(
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(),
+                It.IsAny<string?>(), It.IsAny<int?>()),
             Times.Never);
     }
 
@@ -130,7 +173,7 @@ public class CheckoutControllerTests
         // OrderService — không bị rơi về mặc định Cod trên đường đi.
         var orderService = new Mock<IOrderService>();
         orderService
-            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((true, "Đặt hàng thành công!", 77));
 
         var paymentService = new Mock<IPaymentService>();
@@ -147,6 +190,7 @@ public class CheckoutControllerTests
             RecipientPhone = "0901234567",
             ShippingAddress = "12 Le Loi, Q1",
             PaymentMethod = PaymentMethod.VnPay,
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 
@@ -155,7 +199,7 @@ public class CheckoutControllerTests
 
         // Assert
         orderService.Verify(
-            s => s.CreateOrderFromCartAsync("user-checkout", It.IsAny<ShippingDetails>(), PaymentMethod.VnPay, It.IsAny<string?>()),
+            s => s.CreateOrderFromCartAsync("user-checkout", It.IsAny<ShippingDetails>(), PaymentMethod.VnPay, It.IsAny<string?>(), 1),
             Times.Once);
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
@@ -170,7 +214,7 @@ public class CheckoutControllerTests
         // Arrange
         var orderService = new Mock<IOrderService>();
         orderService
-            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+            .Setup(s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((true, "Đặt hàng thành công!", 88));
 
         var paymentService = new Mock<IPaymentService>();
@@ -185,6 +229,7 @@ public class CheckoutControllerTests
             RecipientPhone = "0901234567",
             ShippingAddress = "12 Le Loi",
             PaymentMethod = PaymentMethod.Cod,
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 
@@ -202,7 +247,7 @@ public class CheckoutControllerTests
     {
         var orderService = new Mock<IOrderService>();
         orderService.Setup(s => s.CreateOrderFromCartAsync(
-                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((true, "ok", 77));
         var paymentService = new Mock<IPaymentService>();
         paymentService.Setup(s => s.StartPaymentAsync(
@@ -217,6 +262,7 @@ public class CheckoutControllerTests
             RecipientPhone = "0901234567",
             ShippingAddress = "12 Le Loi",
             PaymentMethod = PaymentMethod.VnPay,
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 
@@ -230,7 +276,7 @@ public class CheckoutControllerTests
     {
         var orderService = new Mock<IOrderService>();
         orderService.Setup(s => s.CreateOrderFromCartAsync(
-                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((true, "ok", 88));
         var paymentService = new Mock<IPaymentService>();
         paymentService.Setup(s => s.StartPaymentAsync(
@@ -247,6 +293,7 @@ public class CheckoutControllerTests
             RecipientPhone = "0901234567",
             ShippingAddress = "12 Le Loi",
             PaymentMethod = PaymentMethod.Cod,
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 
@@ -263,7 +310,7 @@ public class CheckoutControllerTests
         var orderService = new Mock<IOrderService>();
         orderService
             .Setup(s => s.CreateOrderFromCartAsync(
-                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((true, "ok", 77));
 
         var controller = CreateController(orderService, new Mock<ICartService>());
@@ -274,6 +321,7 @@ public class CheckoutControllerTests
             ShippingAddress = "12 Le Loi",
             PaymentMethod = PaymentMethod.Cod,
             CouponCode = "SAVE10",
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 
@@ -281,7 +329,7 @@ public class CheckoutControllerTests
 
         orderService.Verify(
             s => s.CreateOrderFromCartAsync(
-                "user-checkout", It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), "SAVE10"),
+                "user-checkout", It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), "SAVE10", 1),
             Times.Once);
     }
 
@@ -291,7 +339,7 @@ public class CheckoutControllerTests
         var orderService = new Mock<IOrderService>();
         orderService
             .Setup(s => s.CreateOrderFromCartAsync(
-                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>()))
+                It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()))
             .ReturnsAsync((false, "Mã giảm giá đã hết hạn.", (int?)null));
 
         var controller = CreateController(orderService, new Mock<ICartService>());
@@ -302,6 +350,7 @@ public class CheckoutControllerTests
             ShippingAddress = "12 Le Loi",
             PaymentMethod = PaymentMethod.Cod,
             CouponCode = "SAVE10",
+            ShippingMethodId = 1,
             Cart = new CartViewModel()
         };
 

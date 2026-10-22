@@ -86,11 +86,25 @@
                         }
                     </tbody>
                     <tfoot class="bg-slate-50 dark:bg-gray-800 border-t border-slate-100 dark:border-gray-800">
+                        @if (Model.ShippingFee > 0)
+                        {
+                            <tr>
+                                <td colspan="3" class="py-3 px-5 text-right font-medium text-slate-600 dark:text-gray-400">Phí vận chuyển:</td>
+                                <td class="py-3 px-5 text-right font-semibold text-slate-700 dark:text-gray-300">@Model.ShippingFee.ToString("N0") đ</td>
+                            </tr>
+                        }
                         @if (Model.DiscountAmount > 0)
                         {
                             <tr>
                                 <td colspan="3" class="py-3 px-5 text-right font-medium text-emerald-600">Giảm giá (@Model.CouponCode):</td>
                                 <td class="py-3 px-5 text-right font-semibold text-emerald-600">-@Model.DiscountAmount.ToString("N0") đ</td>
+                            </tr>
+                        }
+                        @if (Model.TaxAmount > 0)
+                        {
+                            <tr>
+                                <td colspan="3" class="py-3 px-5 text-right font-medium text-slate-600 dark:text-gray-400">Thuế VAT:</td>
+                                <td class="py-3 px-5 text-right font-semibold text-slate-700 dark:text-gray-300">@Model.TaxAmount.ToString("N0") đ</td>
                             </tr>
                         }
                         <tr>

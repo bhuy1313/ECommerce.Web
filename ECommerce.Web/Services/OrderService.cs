@@ -10,16 +10,27 @@ public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _db;
     private readonly ICouponService _couponService;
+    private readonly IShippingCalculator _shippingCalculator;
     private readonly ILogger<OrderService> _logger;
 
-    public OrderService(ApplicationDbContext db, ICouponService couponService, ILogger<OrderService> logger)
+    public OrderService(
+        ApplicationDbContext db,
+        ICouponService couponService,
+        IShippingCalculator shippingCalculator,
+        ILogger<OrderService> logger)
     {
         _db = db;
         _couponService = couponService;
+        _shippingCalculator = shippingCalculator;
         _logger = logger;
     }
 
-    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method, string? couponCode = null)
+    public async Task<(bool Success, string Message, int? OrderId)> CreateOrderFromCartAsync(
+        string userId,
+        ShippingDetails shipping,
+        PaymentMethod method,
+        string? couponCode = null,
+        int? shippingMethodId = null)
     {
         var cart = await _db.Carts
             .Include(c => c.Items)
@@ -69,7 +80,16 @@ public class OrderService : IOrderService
                     return (false, coupon.Error ?? "Mã giảm giá không hợp lệ.", (int?)null);
                 }
 
-                // 3. Trừ tồn kho và khởi tạo đơn hàng
+                // 3. Tính phí vận chuyển + thuế trên subtotal sau giảm giá (server là nguồn chân lý)
+                var discountedSubtotal = subtotal - coupon.DiscountAmount;
+                var shippingQuote = await _shippingCalculator.QuoteAsync(shippingMethodId, discountedSubtotal);
+                if (shippingQuote is null)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "Vui lòng chọn phương thức vận chuyển hợp lệ.", (int?)null);
+                }
+
+                // 4. Trừ tồn kho và khởi tạo đơn hàng
                 var order = new Order
                 {
                     UserId = userId,
@@ -83,7 +103,9 @@ public class OrderService : IOrderService
                     Method = method,
                     DiscountAmount = coupon.DiscountAmount,
                     CouponCode = coupon.Code,
-                    TotalAmount = subtotal - coupon.DiscountAmount
+                    ShippingFee = shippingQuote.ShippingFee,
+                    TaxAmount = shippingQuote.TaxAmount,
+                    TotalAmount = shippingQuote.Total
                 };
 
                 foreach (var item in cart.Items)

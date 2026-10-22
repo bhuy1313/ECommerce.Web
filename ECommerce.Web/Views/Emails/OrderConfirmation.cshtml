@@ -38,13 +38,25 @@
                 }
             </tbody>
         </table>
+        @if (order.ShippingFee > 0)
+        {
+            <p style="font-size:14px;margin:16px 0 0;text-align:right;">
+                Phí vận chuyển: <strong>@order.ShippingFee.ToString("N0") ₫</strong>
+            </p>
+        }
         @if (order.DiscountAmount > 0)
         {
-            <p style="font-size:14px;margin:16px 0 0;text-align:right;color:#059669;">
+            <p style="font-size:14px;margin:@(order.ShippingFee > 0 ? "6px" : "16px") 0 0;text-align:right;color:#059669;">
                 Giảm giá (@order.CouponCode): <strong>-@order.DiscountAmount.ToString("N0") ₫</strong>
             </p>
         }
-        <p style="font-size:15px;margin:@(order.DiscountAmount > 0 ? "6px" : "16px") 0 0;text-align:right;">
+        @if (order.TaxAmount > 0)
+        {
+            <p style="font-size:14px;margin:@(order.DiscountAmount > 0 || order.ShippingFee > 0 ? "6px" : "16px") 0 0;text-align:right;">
+                Thuế VAT: <strong>@order.TaxAmount.ToString("N0") ₫</strong>
+            </p>
+        }
+        <p style="font-size:15px;margin:@(order.DiscountAmount > 0 || order.ShippingFee > 0 || order.TaxAmount > 0 ? "6px" : "16px") 0 0;text-align:right;">
             Tổng cộng: <strong>@order.TotalAmount.ToString("N0") ₫</strong>
         </p>
         <p style="font-size:14px;line-height:1.6;margin:16px 0 0;">
