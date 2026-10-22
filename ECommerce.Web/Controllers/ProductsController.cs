@@ -50,13 +50,15 @@ public class ProductsController : Controller
 
         var products = await query.OrderByDescending(p => p.CreatedAt).AsNoTracking().ToListAsync();
         var categories = await _db.Categories.Where(c => c.IsActive).OrderBy(c => c.Name).AsNoTracking().ToListAsync();
+        var ratings = await _reviewService.GetSummariesAsync(products.Select(p => p.Id));
 
         var viewModel = new ProductListViewModel
         {
             Products = products,
             Categories = categories,
             SelectedCategoryId = categoryId,
-            SearchQuery = search
+            SearchQuery = search,
+            Ratings = ratings
         };
 
         return View(viewModel);
