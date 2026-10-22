@@ -8,6 +8,7 @@ using ECommerce.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 using Microsoft.AspNetCore.Identity;
@@ -121,6 +122,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> CreateCategory(CategoryFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -171,6 +173,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> EditCategory(CategoryFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -203,6 +206,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> ToggleCategoryStatus(int id)
     {
         var category = await _db.Categories.FindAsync(id);
@@ -246,6 +250,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> CreateCoupon(CouponFormViewModel model)
     {
@@ -291,6 +296,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> EditCoupon(CouponFormViewModel model)
     {
@@ -312,6 +318,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> ToggleCouponStatus(int id)
     {
@@ -330,6 +337,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> DeleteCoupon(int id)
     {
@@ -369,6 +377,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> ApproveReview(int id)
     {
@@ -387,6 +396,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> DeleteReview(int id)
     {
@@ -435,6 +445,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> CreateShippingMethod(ShippingMethodFormViewModel model)
     {
@@ -480,6 +491,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> EditShippingMethod(ShippingMethodFormViewModel model)
     {
@@ -507,6 +519,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> ToggleShippingMethodStatus(int id)
     {
@@ -525,6 +538,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> DeleteShippingMethod(int id)
     {
@@ -585,6 +599,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> CreateProduct(ProductFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -647,6 +662,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> EditProduct(ProductFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -685,6 +701,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> ToggleProductStatus(int id)
     {
         var product = await _db.Products.FindAsync(id);
@@ -741,6 +758,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     public async Task<IActionResult> UpdateOrderStatus(int orderId, OrderStatus status)
     {
         var (success, message) = await _orderService.UpdateOrderStatusAsync(orderId, status);
@@ -758,6 +776,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> UpdatePaymentStatus(int orderId, PaymentStatus status)
     {
@@ -837,6 +856,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("mutating")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> EditUserRoles(EditUserRolesViewModel model)
     {
