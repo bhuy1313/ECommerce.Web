@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Address> Addresses => Set<Address>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ShippingMethod> ShippingMethods => Set<ShippingMethod>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -73,5 +74,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade);
         review.HasIndex(r => new { r.ProductId, r.UserId }).IsUnique();
         review.HasIndex(r => r.IsApproved);
+
+        var shippingMethod = builder.Entity<ShippingMethod>();
+        shippingMethod.Property(m => m.Name).HasMaxLength(100);
+        shippingMethod.Property(m => m.Description).HasMaxLength(300);
+        shippingMethod.Property(m => m.Fee).HasPrecision(18, 2);
     }
 }

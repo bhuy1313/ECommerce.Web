@@ -45,6 +45,8 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IShippingCalculator, ShippingCalculator>();
+builder.Services.Configure<TaxOptions>(builder.Configuration.GetSection(TaxOptions.SectionName));
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("VnPay"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<VnPayOptions>>().Value);
