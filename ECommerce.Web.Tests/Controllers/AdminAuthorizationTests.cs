@@ -22,6 +22,9 @@ public class AdminAuthorizationTests
         nameof(AdminController.EditCoupon),
         nameof(AdminController.ToggleCouponStatus),
         nameof(AdminController.DeleteCoupon),
+        nameof(AdminController.Reviews),
+        nameof(AdminController.ApproveReview),
+        nameof(AdminController.DeleteReview),
     ];
 
     private static readonly string[] OperatorAllowedActions =
@@ -58,6 +61,9 @@ public class AdminAuthorizationTests
     [InlineData(nameof(AdminController.EditCoupon))]
     [InlineData(nameof(AdminController.ToggleCouponStatus))]
     [InlineData(nameof(AdminController.DeleteCoupon))]
+    [InlineData(nameof(AdminController.Reviews))]
+    [InlineData(nameof(AdminController.ApproveReview))]
+    [InlineData(nameof(AdminController.DeleteReview))]
     public void AdminOnlyActions_RequireAdminRole(string actionName)
     {
         var methods = typeof(AdminController).GetMethods()

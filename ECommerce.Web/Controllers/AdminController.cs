@@ -20,6 +20,7 @@ public class AdminController : Controller
     private readonly ApplicationDbContext _db;
     private readonly IOrderService _orderService;
     private readonly ICouponService _couponService;
+    private readonly IReviewService _reviewService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ILogger<AdminController> _logger;
@@ -29,6 +30,7 @@ public class AdminController : Controller
         ApplicationDbContext db,
         IOrderService orderService,
         ICouponService couponService,
+        IReviewService reviewService,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ILogger<AdminController> logger,
@@ -37,6 +39,7 @@ public class AdminController : Controller
         _db = db;
         _orderService = orderService;
         _couponService = couponService;
+        _reviewService = reviewService;
         _userManager = userManager;
         _roleManager = roleManager;
         _logger = logger;
@@ -338,6 +341,63 @@ public class AdminController : Controller
         }
 
         return RedirectToAction(nameof(Coupons));
+    }
+
+    // ==========================================
+    // KIỂM DUYỆT ĐÁNH GIÁ (REVIEW MODERATION)
+    // ==========================================
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> Reviews(string? status = null)
+    {
+        var filter = status?.Trim().ToLowerInvariant();
+        var approved = filter switch
+        {
+            "approved" => (bool?)true,
+            "all" => null,
+            _ => false
+        };
+
+        ViewBag.Status = filter is "approved" or "all" ? filter : "pending";
+        var reviews = await _reviewService.GetAllAsync(approved);
+        return View(reviews);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> ApproveReview(int id)
+    {
+        var (success, message) = await _reviewService.ApproveAsync(id);
+        if (success)
+        {
+            _notyf.Success(message);
+        }
+        else
+        {
+            _notyf.Error(message);
+        }
+
+        return RedirectToAction(nameof(Reviews));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> DeleteReview(int id)
+    {
+        var (success, message) = await _reviewService.DeleteAsync(id);
+        if (success)
+        {
+            _notyf.Success(message);
+        }
+        else
+        {
+            _notyf.Error(message);
+        }
+
+        return RedirectToAction(nameof(Reviews));
     }
 
     // ==========================================

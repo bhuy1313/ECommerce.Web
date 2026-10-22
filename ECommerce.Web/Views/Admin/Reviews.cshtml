@@ -1,0 +1,124 @@
+@model IReadOnlyList<ECommerce.Web.Models.Entities.Review>
+@{
+    ViewData["Title"] = "Kiểm duyệt đánh giá";
+    var status = ViewBag.Status as string ?? "pending";
+}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
+            <i class="fas fa-star text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Kiểm duyệt đánh giá
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Duyệt đánh giá trước khi hiển thị công khai trên trang sản phẩm</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a asp-action="Reviews" asp-route-status="pending" class="px-4 py-2.5 rounded-xl text-xs font-semibold border transition-colors @(status == "pending" ? "bg-primary text-white border-primary" : "bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800")">
+            Chờ duyệt
+        </a>
+        <a asp-action="Reviews" asp-route-status="approved" class="px-4 py-2.5 rounded-xl text-xs font-semibold border transition-colors @(status == "approved" ? "bg-primary text-white border-primary" : "bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800")">
+            Đã duyệt
+        </a>
+        <a asp-action="Reviews" asp-route-status="all" class="px-4 py-2.5 rounded-xl text-xs font-semibold border transition-colors @(status == "all" ? "bg-primary text-white border-primary" : "bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800")">
+            Tất cả
+        </a>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-800 p-12 text-center text-slate-500 dark:text-gray-400">
+        <i class="fas fa-inbox text-4xl mb-3 text-slate-300 dark:text-gray-700"></i>
+        <p class="font-medium">Không có đánh giá nào trong mục này.</p>
+    </div>
+}
+else
+{
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-800 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 dark:bg-gray-800/60 text-slate-500 dark:text-gray-400">
+                    <tr>
+                        <th class="text-left font-semibold px-5 py-3">Sản phẩm</th>
+                        <th class="text-left font-semibold px-5 py-3">Người đánh giá</th>
+                        <th class="text-left font-semibold px-5 py-3">Điểm</th>
+                        <th class="text-left font-semibold px-5 py-3">Nội dung</th>
+                        <th class="text-left font-semibold px-5 py-3">Ngày</th>
+                        <th class="text-right font-semibold px-5 py-3">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                    @foreach (var review in Model)
+                    {
+                        <tr class="align-top">
+                            <td class="px-5 py-4">
+                                <a asp-action="ProductForm" asp-route-id="@review.ProductId" class="font-semibold text-slate-800 dark:text-gray-200 hover:text-primary dark:hover:text-indigo-300">
+                                    @(review.Product?.Name ?? $"#{review.ProductId}")
+                                </a>
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap text-slate-600 dark:text-gray-400">
+                                @DisplayName(review.User?.Email)
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap text-amber-400">
+                                @for (var star = 1; star <= 5; star++)
+                                {
+                                    <i class="fas fa-star @(star <= review.Rating ? "" : "text-gray-200 dark:text-gray-700")"></i>
+                                }
+                            </td>
+                            <td class="px-5 py-4 max-w-md">
+                                @if (string.IsNullOrWhiteSpace(review.Comment))
+                                {
+                                    <span class="text-slate-400 italic">Không có nhận xét.</span>
+                                }
+                                else
+                                {
+                                    <span class="text-slate-600 dark:text-gray-400 whitespace-pre-line">@review.Comment</span>
+                                }
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap text-slate-500 dark:text-gray-400">
+                                @review.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    @if (!review.IsApproved)
+                                    {
+                                        <form asp-action="ApproveReview" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@review.Id" />
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold transition-colors">
+                                                <i class="fas fa-check mr-1"></i>Duyệt
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">Đã duyệt</span>
+                                    }
+                                    <form asp-action="DeleteReview" method="post" onsubmit="return confirm('Xóa đánh giá này?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@review.Id" />
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 text-xs font-semibold transition-colors">
+                                            <i class="fas fa-trash mr-1"></i>Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@functions {
+    private static string DisplayName(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return "Khách hàng";
+        }
+
+        var local = email.Split('@')[0];
+        return (local.Length <= 3 ? local : local[..3]) + "***";
+    }
+}
