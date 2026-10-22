@@ -21,6 +21,7 @@ public class AdminController : Controller
     private readonly IOrderService _orderService;
     private readonly ICouponService _couponService;
     private readonly IReviewService _reviewService;
+    private readonly IShippingCalculator _shippingCalculator;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ILogger<AdminController> _logger;
@@ -31,6 +32,7 @@ public class AdminController : Controller
         IOrderService orderService,
         ICouponService couponService,
         IReviewService reviewService,
+        IShippingCalculator shippingCalculator,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ILogger<AdminController> logger,
@@ -40,6 +42,7 @@ public class AdminController : Controller
         _orderService = orderService;
         _couponService = couponService;
         _reviewService = reviewService;
+        _shippingCalculator = shippingCalculator;
         _userManager = userManager;
         _roleManager = roleManager;
         _logger = logger;
@@ -398,6 +401,144 @@ public class AdminController : Controller
         }
 
         return RedirectToAction(nameof(Reviews));
+    }
+
+    // ==========================================
+    // QUẢN LÝ PHƯƠNG THỨC VẬN CHUYỂN (SHIPPING METHODS)
+    // ==========================================
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> ShippingMethods()
+    {
+        ViewBag.TaxRate = _shippingCalculator.TaxRate;
+        var methods = await _db.ShippingMethods
+            .OrderBy(m => m.DisplayOrder)
+            .ThenBy(m => m.Fee)
+            .ThenBy(m => m.Id)
+            .AsNoTracking()
+            .ToListAsync();
+        return View(methods);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> CreateShippingMethod()
+    {
+        var nextOrder = (await _db.ShippingMethods.MaxAsync(m => (int?)m.DisplayOrder) ?? 0) + 1;
+        return View("ShippingMethodForm", new ShippingMethodFormViewModel
+        {
+            IsActive = true,
+            DisplayOrder = nextOrder
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> CreateShippingMethod(ShippingMethodFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("ShippingMethodForm", model);
+        }
+
+        _db.ShippingMethods.Add(new ShippingMethod
+        {
+            Name = model.Name.Trim(),
+            Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim(),
+            Fee = model.Fee,
+            DisplayOrder = model.DisplayOrder,
+            IsActive = model.IsActive
+        });
+        await _db.SaveChangesAsync();
+        _notyf.Success("Đã tạo phương thức vận chuyển.");
+        return RedirectToAction(nameof(ShippingMethods));
+    }
+
+    [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> EditShippingMethod(int id)
+    {
+        var method = await _db.ShippingMethods.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+        if (method is null)
+        {
+            _notyf.Error("Không tìm thấy phương thức vận chuyển.");
+            return RedirectToAction(nameof(ShippingMethods));
+        }
+
+        return View("ShippingMethodForm", new ShippingMethodFormViewModel
+        {
+            Id = method.Id,
+            Name = method.Name,
+            Description = method.Description,
+            Fee = method.Fee,
+            DisplayOrder = method.DisplayOrder,
+            IsActive = method.IsActive
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> EditShippingMethod(ShippingMethodFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("ShippingMethodForm", model);
+        }
+
+        var method = await _db.ShippingMethods.FirstOrDefaultAsync(m => m.Id == model.Id);
+        if (method is null)
+        {
+            _notyf.Error("Không tìm thấy phương thức vận chuyển.");
+            return RedirectToAction(nameof(ShippingMethods));
+        }
+
+        method.Name = model.Name.Trim();
+        method.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
+        method.Fee = model.Fee;
+        method.DisplayOrder = model.DisplayOrder;
+        method.IsActive = model.IsActive;
+        await _db.SaveChangesAsync();
+        _notyf.Success("Đã cập nhật phương thức vận chuyển.");
+        return RedirectToAction(nameof(ShippingMethods));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> ToggleShippingMethodStatus(int id)
+    {
+        var method = await _db.ShippingMethods.FirstOrDefaultAsync(m => m.Id == id);
+        if (method is null)
+        {
+            _notyf.Error("Không tìm thấy phương thức vận chuyển.");
+            return RedirectToAction(nameof(ShippingMethods));
+        }
+
+        method.IsActive = !method.IsActive;
+        await _db.SaveChangesAsync();
+        _notyf.Success("Đã cập nhật trạng thái phương thức vận chuyển.");
+        return RedirectToAction(nameof(ShippingMethods));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> DeleteShippingMethod(int id)
+    {
+        var method = await _db.ShippingMethods.FirstOrDefaultAsync(m => m.Id == id);
+        if (method is null)
+        {
+            _notyf.Error("Không tìm thấy phương thức vận chuyển.");
+            return RedirectToAction(nameof(ShippingMethods));
+        }
+
+        _db.ShippingMethods.Remove(method);
+        await _db.SaveChangesAsync();
+        _notyf.Success("Đã xóa phương thức vận chuyển.");
+        return RedirectToAction(nameof(ShippingMethods));
     }
 
     // ==========================================

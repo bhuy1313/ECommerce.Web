@@ -25,6 +25,11 @@ public class AdminAuthorizationTests
         nameof(AdminController.Reviews),
         nameof(AdminController.ApproveReview),
         nameof(AdminController.DeleteReview),
+        nameof(AdminController.ShippingMethods),
+        nameof(AdminController.CreateShippingMethod),
+        nameof(AdminController.EditShippingMethod),
+        nameof(AdminController.ToggleShippingMethodStatus),
+        nameof(AdminController.DeleteShippingMethod),
     ];
 
     private static readonly string[] OperatorAllowedActions =
@@ -64,6 +69,11 @@ public class AdminAuthorizationTests
     [InlineData(nameof(AdminController.Reviews))]
     [InlineData(nameof(AdminController.ApproveReview))]
     [InlineData(nameof(AdminController.DeleteReview))]
+    [InlineData(nameof(AdminController.ShippingMethods))]
+    [InlineData(nameof(AdminController.CreateShippingMethod))]
+    [InlineData(nameof(AdminController.EditShippingMethod))]
+    [InlineData(nameof(AdminController.ToggleShippingMethodStatus))]
+    [InlineData(nameof(AdminController.DeleteShippingMethod))]
     public void AdminOnlyActions_RequireAdminRole(string actionName)
     {
         var methods = typeof(AdminController).GetMethods()
