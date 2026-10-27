@@ -1,5 +1,7 @@
 # Phase A Review Fixes Implementation Plan
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-18 · commit `f6e991d..7e149a6` · **130 test** · báo cáo: [`docs/superpowers/reports/2026-10-18-phase-a-review-fixes.md`](../reports/2026-10-18-phase-a-review-fixes.md) · hộp kiểm được tick hồi tố ngày 2026-10-27.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Sửa toàn bộ phát hiện của self-review Phase A (1 HIGH, 1 MEDIUM, 6 LOW) trên nhánh `main` sau commit `8eb0ef3`, không thay đổi bất kỳ hành vi nào khác.
@@ -95,7 +97,7 @@ Các lớp đầu vào / chế độ lỗi mà bản review nêu ra nhưng **ch�
 | thành công (dòng 162) | `Confirmed` |
 | `catch` (dòng 164) | `GatewayError` |
 
-- [ ] **Step 1: Đổi sang kiểu mới, giữ nguyên hành vi**
+- [x] **Step 1: Đổi sang kiểu mới, giữ nguyên hành vi**
 
 Sửa theo thứ tự để `dotnet build` báo lỗi ở mọi call site cần sửa (RED biên dịch — đúng mẫu đã dùng ở task A10):
 
@@ -111,12 +113,12 @@ Sửa theo thứ tự để `dotnet build` báo lỗi ở mọi call site cần 
    Giữ nguyên comment giải thích nhóm RspCode (dòng 16-20) — nó vẫn đúng.
 5. `Return()` dòng 58: `var result = await _paymentService.HandleCallbackAsync(...)`; điều kiện vào nhánh thành công là `result.Success && result.OrderId.HasValue && result.Outcome != PaymentCallbackOutcome.PaidButCancelled` (nhánh `PaidButCancelled` sẽ được Task 3 hoàn thiện; ở task này chỉ cần biên dịch và **không** đổi hành vi vì outcome đó chưa xuất hiện).
 
-- [ ] **Step 2: Chạy build để xác nhận lỗi biên dịch ở các call site còn lại**
+- [x] **Step 2: Chạy build để xác nhận lỗi biên dịch ở các call site còn lại**
 
 Run: `dotnet build --no-incremental`
 Expected: FAIL, `CS0246`/`CS1061` ở `PaymentServiceTests.cs` (destructure tuple) và `PaymentControllerTests.cs` (`ServiceReturning`).
 
-- [ ] **Step 3: Cập nhật test — thay assert theo câu chữ bằng assert theo `Outcome`**
+- [x] **Step 3: Cập nhật test — thay assert theo câu chữ bằng assert theo `Outcome`**
 
 Trong `PaymentServiceTests.cs`:
 - Mọi `var (success, message, orderId) = await _service.HandleCallbackAsync(...)` → `var result = await _service.HandleCallbackAsync(...)`, rồi `result.Success` / `result.OrderId`.
@@ -140,16 +142,16 @@ Trong `PaymentControllerTests.cs`:
   - `Ipn_WhenOutcomeIsUnrecognised_ReturnsRspCode99` → đổi tên thành `Ipn_WhenPaymentFailed_ReturnsRspCode99` với `PaymentFailed` (giữ nguyên ý nghĩa: outcome không thuộc nhóm VNPay ngừng retry → `"99"`)
 - `Return_WhenCallbackFails_RendersResultViewWithFailure` → `InvalidSignature`.
 
-- [ ] **Step 4: Chạy test, xác nhận đúng 114 PASS**
+- [x] **Step 4: Chạy test, xác nhận đúng 114 PASS**
 
 Run: `dotnet test`
 Expected: PASS, tổng số test **không đổi** (114). Nếu số test giảm, nghĩa là một test đã bị xoá thay vì sửa — hoàn tác và làm lại.
 
-- [ ] **Step 5: Mutation check (bắt buộc với refactor không có test mới)**
+- [x] **Step 5: Mutation check (bắt buộc với refactor không có test mới)**
 
 Đổi tạm một ánh xạ, ví dụ `AmountMismatch` → `RspOrderNotFound`, chạy `dotnet test --filter "FullyQualifiedName~PaymentControllerTests"`, xác nhận test đỏ, rồi **restore** và chạy lại xanh.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Payments/PaymentModels.cs ECommerce.Web/Services/Payments/IPaymentService.cs ECommerce.Web/Services/Payments/PaymentService.cs ECommerce.Web/Controllers/PaymentController.cs ECommerce.Web.Tests/Services/PaymentServiceTests.cs ECommerce.Web.Tests/Controllers/PaymentControllerTests.cs
@@ -172,31 +174,31 @@ git commit -m "refactor: return structured callback outcome instead of message s
 - Consumes: `PaymentStatus.Paid` (đã có).
 - Produces: `PaymentStatus.RefundPending = 4`; `CancelOrderAsync` đặt `RefundPending` (thay vì `Refunded`) khi đơn đang ở `Paid`.
 
-- [ ] **Step 1: Sửa test hiện có thành thất bại (RED)**
+- [x] **Step 1: Sửa test hiện có thành thất bại (RED)**
 
 Trong `OrderServiceTests.cs`: đổi tên `CancelOrderAsync_WhenOrderPaid_SetsRefunded` (dòng 232) → `CancelOrderAsync_WhenOrderPaid_SetsRefundPending`, và dòng 260 `Assert.Equal(PaymentStatus.Refunded, updatedOrder.PaymentStatus)` → `Assert.Equal(PaymentStatus.RefundPending, updatedOrder.PaymentStatus)`.
 
-- [ ] **Step 2: Chạy test xác nhận đỏ vì enum chưa có member**
+- [x] **Step 2: Chạy test xác nhận đỏ vì enum chưa có member**
 
 Run: `dotnet test --filter "FullyQualifiedName~CancelOrderAsync_WhenOrderPaid"`
 Expected: FAIL biên dịch — `'PaymentStatus' does not contain a definition for 'RefundPending'`.
 
-- [ ] **Step 3: Thêm member enum**
+- [x] **Step 3: Thêm member enum**
 
 `PaymentStatus.cs` → thêm `RefundPending = 4,` sau `Refunded = 3,` kèm doc-comment một dòng: *"Đã thu tiền nhưng khoản hoàn chưa được thực hiện (đơn bị huỷ sau khi thanh toán). Chỉ chuyển sang `Refunded` khi admin xác nhận đã hoàn tiền."*
 
 Không cần migration: `PaymentStatus` là cột `int`.
 
-- [ ] **Step 4: Đổi `CancelOrderAsync` sang `RefundPending`**
+- [x] **Step 4: Đổi `CancelOrderAsync` sang `RefundPending`**
 
 `OrderService.cs:191-194`: giữ điều kiện `order.PaymentStatus == PaymentStatus.Paid`, đổi giá trị gán thành `PaymentStatus.RefundPending`.
 
-- [ ] **Step 5: Chạy test xác nhận xanh**
+- [x] **Step 5: Chạy test xác nhận xanh**
 
 Run: `dotnet test --filter "FullyQualifiedName~CancelOrderAsync"`
 Expected: PASS toàn bộ nhóm `CancelOrderAsync_*`.
 
-- [ ] **Step 6: Cập nhật badge ở cả ba view**
+- [x] **Step 6: Cập nhật badge ở cả ba view**
 
 Quan trọng: hai switch trong Admin **không có `default`** (member mới sẽ render ra *rỗng*), còn switch ở `Orders/Details.cshtml` **có `default`** (member mới sẽ rơi nhầm vào "Chưa thanh toán"). Cả ba đều phải thêm case tường minh:
 
@@ -208,16 +210,16 @@ Quan trọng: hai switch trong Admin **không có `default`** (member mới sẽ
 
 Không cần sửa `<select>` đổi trạng thái ở `Admin/OrderDetails.cshtml:189`: nó sinh từ `Enum.GetValues(typeof(PaymentStatus))` nên member mới tự xuất hiện và admin dùng chính form đó để đánh dấu `Refunded` sau khi hoàn tiền xong (D2).
 
-- [ ] **Step 7: Làm banner đơn đã huỷ nói đúng sự thật**
+- [x] **Step 7: Làm banner đơn đã huỷ nói đúng sự thật**
 
 `Views/Orders/Details.cshtml:95-103`: banner hiện chỉ nói "đã hoàn trả tồn kho". Thêm nhánh khi `Model.PaymentStatus == PaymentStatus.RefundPending` để nói rõ đang chờ hoàn tiền, ví dụ nội dung: *"Đơn hàng đã hủy sau khi thanh toán: tồn kho đã được hoàn lại, khoản thanh toán đang chờ được hoàn tiền thủ công."* (giữ nguyên cấu trúc `div`/class hiện có).
 
-- [ ] **Step 8: Chạy toàn bộ test + build**
+- [x] **Step 8: Chạy toàn bộ test + build**
 
 Run: `dotnet build --no-incremental` rồi `dotnet test`
 Expected: 0 warning, toàn bộ PASS (114).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add ECommerce.Web/Models/Entities/Enums/PaymentStatus.cs ECommerce.Web/Services/OrderService.cs ECommerce.Web/Views/Orders/Details.cshtml ECommerce.Web/Views/Admin/OrderDetails.cshtml ECommerce.Web/Views/Admin/Orders.cshtml ECommerce.Web.Tests/Services/OrderServiceTests.cs
@@ -238,7 +240,7 @@ git commit -m "fix: mark cancelled-and-paid orders as awaiting refund instead of
 - Consumes: `PaymentCallbackOutcome.PaidButCancelled` (Task 1), `PaymentStatus.RefundPending` (Task 2).
 - Produces: `HandleCallbackAsync` trả `Outcome = PaidButCancelled`, `Success = true`, `OrderId = order.Id` khi đơn đã huỷ; `PaymentController.Return` hiển thị thông báo trung tính cho outcome này.
 
-- [ ] **Step 1: Viết hai test thất bại**
+- [x] **Step 1: Viết hai test thất bại**
 
 Thêm vào `PaymentServiceTests.cs` (dùng lại `SeedOrderAsync` — helper đã nhận `(PaymentStatus paymentStatus, OrderStatus status)`):
 
@@ -301,12 +303,12 @@ public async Task Ipn_WhenPaidButCancelled_ReturnsRspCode00()
 }
 ```
 
-- [ ] **Step 2: Chạy xác nhận đỏ**
+- [x] **Step 2: Chạy xác nhận đỏ**
 
 Run: `dotnet test --filter "FullyQualifiedName~HandleCallback_WhenOrderCancelled"`
 Expected: FAIL — test 1 nhận `Confirmed`/`Processing` thay vì `PaidButCancelled`/`Cancelled` (đây là bug H1 tái hiện dưới dạng test).
 
-- [ ] **Step 3: Thêm guard vào `HandleCallbackAsync`**
+- [x] **Step 3: Thêm guard vào `HandleCallbackAsync`**
 
 Chèn **sau** khối kiểm tra số tiền (dòng 141) và **trước** `var executionStrategy = …` (dòng 143), với cùng cấu trúc execution-strategy + transaction như nhánh thành công:
 
@@ -317,7 +319,7 @@ Chèn **sau** khối kiểm tra số tiền (dòng 141) và **trước** `var ex
 
 Lưu ý double-đảm bảo idempotent: lần gọi thứ hai rơi vào guard `transaction.Status == Succeeded` (dòng 114) và trả `AlreadyProcessed` — **không** được di chuyển guard đó xuống dưới.
 
-- [ ] **Step 4: Xử lý `PaidButCancelled` ở `Return`**
+- [x] **Step 4: Xử lý `PaidButCancelled` ở `Return`**
 
 `PaymentController.Return`: `PaidButCancelled` không được rơi vào nhánh toast xanh. Điều kiện nhánh thành công giữ như Task 1 Step 1.5 (`Success && OrderId.HasValue && Outcome != PaidButCancelled`), và thêm nhánh riêng trước nhánh lỗi:
 
@@ -325,21 +327,21 @@ Lưu ý double-đảm bảo idempotent: lần gọi thứ hai rơi vào guard `t
 - Dùng `Information` (đã dùng ở `CartController.cs:106`), **không** dùng `Warning` — API chưa được chứng minh có trong `INotyfService` của repo này. Trạng thái `RefundPending` trên trang Details mới là chỗ nói rõ sự thật.
 - IPN đã đúng sẵn qua ánh xạ `Outcome → "00"` của Task 1; chỉ cần test Step 1 xác nhận.
 
-- [ ] **Step 5: Chạy test xác nhận xanh**
+- [x] **Step 5: Chạy test xác nhận xanh**
 
 Run: `dotnet test --filter "FullyQualifiedName~HandleCallback_WhenOrderCancelled|FullyQualifiedName~Ipn_WhenPaidButCancelled"`
 Expected: PASS.
 
-- [ ] **Step 6: Chạy toàn bộ test**
+- [x] **Step 6: Chạy toàn bộ test**
 
 Run: `dotnet test`
 Expected: PASS toàn bộ (114 + 3 test mới).
 
-- [ ] **Step 7: Mutation check**
+- [x] **Step 7: Mutation check**
 
 Bỏ dòng gán `order.PaymentStatus = PaymentStatus.RefundPending` trong nhánh mới, chạy lại 2 test Step 1, xác nhận đỏ, rồi restore.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Payments/PaymentService.cs ECommerce.Web/Controllers/PaymentController.cs ECommerce.Web.Tests/Services/PaymentServiceTests.cs ECommerce.Web.Tests/Controllers/PaymentControllerTests.cs
@@ -359,11 +361,11 @@ git commit -m "fix: refuse to resurrect a cancelled order when its payment callb
 - Consumes: `CheckoutViewModel` (đã có), `ICartService.GetCartAsync()`, `IOrderService.CreateOrderFromCartAsync` (đã có).
 - Produces: `CheckoutViewModel.PaymentMethod` mang `[EnumDataType(typeof(PaymentMethod), …)]`; view render `<span asp-validation-for="PaymentMethod">`; mỗi radio một `id` duy nhất.
 
-- [ ] **Step 1: Mở rộng helper `CreateController`**
+- [x] **Step 1: Mở rộng helper `CreateController`**
 
 Trong `CheckoutControllerTests.cs`, thêm tham số thứ ba `Mock<IPaymentService>? paymentService = null` (mặc định `new Mock<IPaymentService>()`) và truyền nó vào chỗ `new Mock<IPaymentService>().Object` ở dòng 41. Không thêm overload trùng; hai test hiện có vẫn gọi dạng 2 tham số.
 
-- [ ] **Step 2: Viết hai test ghim hợp đồng**
+- [x] **Step 2: Viết hai test ghim hợp đồng**
 
 Lưu ý trung thực: **cả hai test dưới đây PASS ngay khi viết** — controller hiện đã forward `model.PaymentMethod` (dòng 97) và đã re-render khi `ModelState` invalid (dòng 82-87). Chúng là test **ghim hồi quy** chứ không phải TDD đỏ-trước, và vì vậy Step 5 bắt buộc phải có mutation check để chứng minh chúng thực sự gánh tải. RED thật của task này là **HTML**, kiểm ở Step 6.
 
@@ -429,12 +431,12 @@ public async Task Checkout_WhenValid_ForwardsSelectedPaymentMethodToOrderService
 
 Cần mở rộng `CreateController` để nhận `Mock<IPaymentService>` (mặc định `new Mock<IPaymentService>()` khi không truyền) — sửa chữ ký helper, không thêm overload trùng.
 
-- [ ] **Step 3: Chạy test, xác nhận cả hai PASS**
+- [x] **Step 3: Chạy test, xác nhận cả hai PASS**
 
 Run: `dotnet test --filter "FullyQualifiedName~Checkout_When"`
 Expected: PASS cả hai. Nếu một test đỏ ở đây thì đó là bug thật mới phát hiện — dừng và báo, đừng sửa test cho khớp code.
 
-- [ ] **Step 4: Thêm validation attribute**
+- [x] **Step 4: Thêm validation attribute**
 
 `CheckoutViewModel.cs:28-29`:
 
@@ -444,7 +446,7 @@ Expected: PASS cả hai. Nếu một test đỏ ở đây thì đó là bug th�
 public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;
 ```
 
-- [ ] **Step 4: Sửa view — fieldset, `id` duy nhất, span lỗi**
+- [x] **Step 4: Sửa view — fieldset, `id` duy nhất, span lỗi**
 
 Trong `Views/Cart/CheckoutPreview.cshtml` khối dòng 66-84:
 
@@ -457,14 +459,14 @@ Trong `Views/Cart/CheckoutPreview.cshtml` khối dòng 66-84:
    `<span asp-validation-for="PaymentMethod" class="block mt-1 text-xs text-red-600"></span>`
 4. **Không** đổi selector trong `<script>` dòng 157/170: chúng dùng `input[name="PaymentMethod"]` và `input[value="VnPay"]` — vẫn khớp sau khi bỏ `asp-for`.
 
-- [ ] **Step 5: Chạy test + mutation check**
+- [x] **Step 5: Chạy test + mutation check**
 
 Run: `dotnet build --no-incremental` rồi `dotnet test`
 Expected: PASS toàn bộ.
 
 Mutation: đổi `PaymentMethod = PaymentMethod.VnPay` trong test 2 thành `PaymentMethod.Cod` → test phải đỏ (`Verify` với `VnPay`). Restore.
 
-- [ ] **Step 6: Kiểm tra thủ công bằng trình duyệt (bắt buộc — đây là thay đổi view)**
+- [x] **Step 6: Kiểm tra thủ công bằng trình duyệt (bắt buộc — đây là thay đổi view)**
 
 Khởi động dev server **trong một command duy nhất** (boot + drive + kill, như A10; nhớ `$pid` là biến read-only, dùng tên khác) và xác nhận:
 1. Trang `/Cart/CheckoutPreview` không còn `id="PaymentMethod"` trùng — đếm `id="paymentMethodCod"` = 1, `id="paymentMethodVnPay"` = 1.
@@ -472,7 +474,7 @@ Khởi động dev server **trong một command duy nhất** (boot + drive + kil
 3. POST `PaymentMethod=999` → 200 re-render và **có** dòng chữ "Vui lòng chọn phương thức thanh toán hợp lệ." trong HTML.
 Sau đó tắt server, xác nhận 0 listener ở cổng đã dùng.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ECommerce.Web/Models/ViewModels/CheckoutViewModel.cs ECommerce.Web/Views/Cart/CheckoutPreview.cshtml ECommerce.Web.Tests/Controllers/CheckoutControllerTests.cs
@@ -491,7 +493,7 @@ git commit -m "fix: surface payment-method validation error and give each radio 
 - Consumes: `ProductImage.Resolve(string?)` và `ProductImage.Placeholder` (namespace `ECommerce.Web.Models`, đã có trong `Views/_ViewImports.cshtml:2`).
 - Produces: không.
 
-- [ ] **Step 1: Thay ba chỗ hardcode**
+- [x] **Step 1: Thay ba chỗ hardcode**
 
 - `Views/Admin/Products.cshtml:96` — `src` → `@ProductImage.Resolve(product.ImageUrl)`; trong `onerror` thay literal bằng `this.src='@ProductImage.Placeholder'`.
 - `Views/Admin/ProductForm.cshtml:78` — `src` → `@ProductImage.Resolve(Model.ImageUrl)`; `onerror` → `this.src='@ProductImage.Placeholder'`.
@@ -499,17 +501,17 @@ git commit -m "fix: surface payment-method validation error and give each radio 
 
 Giữ nguyên `onerror="this.onerror=null;…"` (chống loop) và toàn bộ class.
 
-- [ ] **Step 2: Xác nhận không còn literal trong view**
+- [x] **Step 2: Xác nhận không còn literal trong view**
 
 Run: `Select-String -Path "ECommerce.Web/Views/**/*.cshtml" -Pattern "product-placeholder.svg"`
 Expected: **không** có kết quả. (Còn 1 kết quả duy nhất ở `ECommerce.Web/Models/ProductImage.cs:7` là đúng — đó là nguồn.)
 
-- [ ] **Step 3: Build + test**
+- [x] **Step 3: Build + test**
 
 Run: `dotnet build --no-incremental` rồi `dotnet test`
 Expected: PASS. (Razor lỗi cú pháp chỉ lộ khi build — bước này là kiểm chứng thật của task.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add ECommerce.Web/Views/Admin/Products.cshtml ECommerce.Web/Views/Admin/ProductForm.cshtml
@@ -528,7 +530,7 @@ git commit -m "refactor: use ProductImage.Placeholder in admin views"
 - Consumes: `VnPaySignatureHelper.Canonical`/`Sign`, `VnPayGateway.CreatePaymentAsync`.
 - Produces: không (test-only).
 
-- [ ] **Step 1: Viết test ghim canonical string**
+- [x] **Step 1: Viết test ghim canonical string**
 
 Thêm vào `VnPayGatewayTests.cs`. Bộ input cố định được chọn để chạm đúng các quy tắc dễ sai: khoá cần **sort** (`vnp_TxnRef` trước `vnp_TmnCode` theo ordinal? — pin chính xác chuỗi, đừng suy luận), một value chứa **khoảng trắng** (encode `+` hay `%20`), và một value **rỗng** (phải bị loại khỏi chuỗi ký):
 
@@ -550,22 +552,22 @@ public void Canonical_PinsSortingEncodingAndEmptyValueRule()
 }
 ```
 
-- [ ] **Step 2: In chuỗi thật rồi ghim**
+- [x] **Step 2: In chuỗi thật rồi ghim**
 
 Run test ở Step 1 → FAIL, output hiện chuỗi thực tế. **Đọc** chuỗi đó và kiểm tra bằng mắt ba quy tắc (thứ tự sort, encode khoảng trắng, value rỗng bị bỏ). Chỉ khi ba quy tắc đúng theo spec VNPay mới chép chuỗi đó vào `Assert.Equal`. Nếu một quy tắc **sai**, đây là phát hiện thật → dừng và báo, không sửa test cho khớp code.
 
-- [ ] **Step 3: Ghim hex của chữ ký**
+- [x] **Step 3: Ghim hex của chữ ký**
 
 Thêm `[Fact] Canonical_SignatureForFixedInput_MatchesPinnedHex`: ký đúng bộ tham số trên với `HashSecret = "secret"`, in `Sign(...)` ở lần chạy đầu, ghim hex nhận được, chạy lại xác nhận PASS.
 
 Ghi rõ trong comment của test rằng hex này được tính **một lần** từ implementation hiện tại nên nó ghim **hồi quy**, không chứng minh đúng spec; và rằng giá trị TmnCode/HashSecret ở đây là giả, không phải credentials thật.
 
-- [ ] **Step 4: Chạy test**
+- [x] **Step 4: Chạy test**
 
 Run: `dotnet test --filter "FullyQualifiedName~VnPayGatewayTests"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ECommerce.Web.Tests/Services/VnPayGatewayTests.cs
@@ -588,7 +590,7 @@ git commit -m "test: pin canonical VNPay signing string and signature hex"
 - Consumes: `PaymentTransaction` (đã có), `PaymentInitResult` (đã có).
 - Produces: `StartPaymentAsync` trả về kết quả **idempotent** (không exception, không chèn thêm) khi đã tồn tại transaction cùng `(Provider, TransactionRef)`.
 
-- [ ] **Step 1: Viết test thất bại (service)**
+- [x] **Step 1: Viết test thất bại (service)**
 
 ```csharp
 [Fact]
@@ -608,18 +610,18 @@ public async Task StartPaymentAsync_WhenSameTransactionRefExists_ReusesInsteadOf
 }
 ```
 
-- [ ] **Step 2: Chạy xác nhận đỏ**
+- [x] **Step 2: Chạy xác nhận đỏ**
 
 Run: `dotnet test --filter "FullyQualifiedName~StartPaymentAsync_WhenSameTransactionRefExists"`
 Expected: FAIL bằng `DbUpdateException` (hoặc `SqliteException` unique constraint) từ lần gọi thứ hai.
 
-- [ ] **Step 3: Làm `StartPaymentAsync` idempotent theo ref**
+- [x] **Step 3: Làm `StartPaymentAsync` idempotent theo ref**
 
 Trong `PaymentService.cs`, sau `if (!result.Success) return result;` (dòng 59) và **trước** `_db.PaymentTransactions.Add(...)` (dòng 62): nếu `result.TransactionRef` không rỗng và đã tồn tại transaction với `t.Provider == gateway.Provider && t.TransactionRef == result.TransactionRef`, thì `LogInformation` rằng đang tái dùng lượt thanh toán đã có và `return result;` (không chèn mới).
 
 Đây cố ý **chỉ** dedup theo ref: với VNPay mỗi lượt sinh ref mới nên vẫn tạo transaction mới + URL mới (đúng ngữ nghĩa), còn COD tái dùng.
 
-- [ ] **Step 4: Viết test thất bại (controller) rồi bọc try/catch**
+- [x] **Step 4: Viết test thất bại (controller) rồi bọc try/catch**
 
 ```csharp
 [Fact]
@@ -653,21 +655,21 @@ public async Task Checkout_WhenStartPaymentThrows_StillRedirectsToOrderDetails()
 
 `OrdersController.Checkout` dòng 108-121: bọc lời gọi `StartPaymentAsync` trong `try/catch (Exception ex)`; trong `catch` gọi `_logger.LogError(ex, "…")` rồi đi tiếp xuống luồng thành công hiện có (`_notyf.Success(message); return RedirectToAction(nameof(Details), …)`). Giữ nguyên comment dòng 104-107 — nó mô tả đúng ý định này.
 
-- [ ] **Step 5: Chạy test xác nhận xanh**
+- [x] **Step 5: Chạy test xác nhận xanh**
 
 Run: `dotnet test --filter "FullyQualifiedName~StartPaymentAsync_WhenSameTransactionRefExists|FullyQualifiedName~Checkout_WhenStartPaymentThrows"`
 Expected: PASS.
 
-- [ ] **Step 6: Mutation check**
+- [x] **Step 6: Mutation check**
 
 Bỏ khối dedup ở Step 3 → test service phải đỏ trở lại. Restore.
 
-- [ ] **Step 7: Chạy toàn bộ test + build**
+- [x] **Step 7: Chạy toàn bộ test + build**
 
 Run: `dotnet build --no-incremental` rồi `dotnet test`
 Expected: 0 warning, PASS toàn bộ.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Payments/PaymentService.cs ECommerce.Web/Controllers/OrdersController.cs ECommerce.Web.Tests/Services/PaymentServiceTests.cs ECommerce.Web.Tests/Controllers/CheckoutControllerTests.cs
@@ -678,6 +680,6 @@ git commit -m "fix: make payment initiation idempotent per transaction ref and n
 
 ## Sau khi xong tất cả task
 
-- [ ] Chạy `gitnexus detect-changes --scope all` (hoặc MCP `detect_changes`) trước khi kết luận; `partial: true`/`truncated: true` **không** phải là "sạch".
-- [ ] Cập nhật ledger `.superpowers/sdd/2026-10-18-ecommerce-v2-core-commerce/progress.md` và viết report cho đợt fix này (kể cả các residual: chưa round-trip sandbox VNPay; không có quy trình hoàn tiền tự động).
-- [ ] Chạy lại live-verify cho đúng 3 kịch bản review: (a) huỷ đơn VNPay trước IPN → sau IPN đơn vẫn `Cancelled` + badge "Chờ hoàn tiền"; (b) huỷ đơn đã thanh toán → "Chờ hoàn tiền" (không phải "Đã hoàn tiền") ở storefront và admin; (c) admin chuyển `RefundPending` → `Refunded` qua form có sẵn.
+- [x] Chạy `gitnexus detect-changes --scope all` (hoặc MCP `detect_changes`) trước khi kết luận; `partial: true`/`truncated: true` **không** phải là "sạch".
+- [x] Cập nhật ledger `.superpowers/sdd/2026-10-18-ecommerce-v2-core-commerce/progress.md` và viết report cho đợt fix này (kể cả các residual: chưa round-trip sandbox VNPay; không có quy trình hoàn tiền tự động).
+- [x] Chạy lại live-verify cho đúng 3 kịch bản review: (a) huỷ đơn VNPay trước IPN → sau IPN đơn vẫn `Cancelled` + badge "Chờ hoàn tiền"; (b) huỷ đơn đã thanh toán → "Chờ hoàn tiền" (không phải "Đã hoàn tiền") ở storefront và admin; (c) admin chuyển `RefundPending` → `Refunded` qua form có sẵn.

@@ -1,5 +1,7 @@
 # Verify Legacy Phases (Phase 0 – 8.6) Implementation Plan
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-14 · commit `9256977..a1251cb` · **24/24 test** · báo cáo: [`docs/superpowers/reports/2026-10-14-verify-legacy-phases.md`](../reports/2026-10-14-verify-legacy-phases.md) · hộp kiểm được tick hồi tố ngày 2026-10-27 từ commit + báo cáo.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Verify lại toàn bộ các phase cũ (Phase 0 → 8.6) trong `docs/roadmap.md` vẫn đúng với code hiện tại, phát hiện drift/regression trước khi mở Phase 9.
@@ -58,20 +60,20 @@ Mọi task (T1–T10) tuân cùng một khung 5 bước:
 - Consumes: Không có (task đầu tiên).
 - Produces: Bằng chứng Phase 0/1 PASS/FAIL (connection string, packages, migration list, seed 3 categories + 7 products) cho Task 11 tổng hợp.
 
-- [ ] **Step 1: Đối chiếu config Phase 0 với source**
+- [x] **Step 1: Đối chiếu config Phase 0 với source**
 
 Mở `appsettings.json` + `.csproj`, xác nhận `DefaultConnection` (LocalDB 2025 Express), `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Tools`, `Microsoft.AspNetCore.Identity.EntityFrameworkCore` tồn tại.
 
-- [ ] **Step 2: Chạy liệt kê migrations**
+- [x] **Step 2: Chạy liệt kê migrations**
 
 Run: `dotnet ef migrations list --project ECommerce.Web`
 Expected: PASS, liệt kê ít nhất migration `20260925125612_InitialCreate`.
 
-- [ ] **Step 3: Đối chiếu entities + enums + seed**
+- [x] **Step 3: Đối chiếu entities + enums + seed**
 
 Mở các file Entities/Enums + `DbInitializer.cs`, xác nhận đủ 6 entities, `OrderStatus` (Pending/Processing/Shipped/Completed/Cancelled), `PaymentStatus`, seed 3 categories + 7 products, `Database.Migrate()` trong `Program.cs:47`.
 
-- [ ] **Step 4: Ghi kết quả Task 1**
+- [x] **Step 4: Ghi kết quả Task 1**
 
 Ghi một dòng vào báo cáo: `Phase 0: PASS/FAIL + bằng chứng`, `Phase 1: PASS/FAIL + bằng chứng`. FAIL phải kèm tên file + dòng lệch roadmap.
 
@@ -85,21 +87,21 @@ Ghi một dòng vào báo cáo: `Phase 0: PASS/FAIL + bằng chứng`, `Phase 1:
 - Consumes: Vai trò `Admin`, `StoreOperator`, `Customer` từ `AppRoles.cs` (Task 1 xác nhận Identity đã wire).
 - Produces: Ma trận Auth PASS/FAIL (Register/Login/Logout/roles/seed admin/authorize) cho Task 11.
 
-- [ ] **Step 1: Đối chiếu Identity wiring**
+- [x] **Step 1: Đối chiếu Identity wiring**
 
 Xác nhận `AddIdentity<ApplicationUser, IdentityRole>` (password length 8, require digit, unique email), `AddEntityFrameworkStores`, cookie `LoginPath=/Account/Login`, `UseAuthentication/UseAuthorization`, seed role Admin trong `DbInitializer.cs`.
 
-- [ ] **Step 2: Đối chiếu `[Authorize(Roles=...)]` trên route admin**
+- [x] **Step 2: Đối chiếu `[Authorize(Roles=...)]` trên route admin**
 
 Run: `rg -n "Authorize.*Roles" ECommerce.Web/Controllers/AdminController.cs`
 Expected: PASS khi mọi action admin đều nằm sau authorize; ghi lại roles nào được phép.
 
-- [ ] **Step 3: Smoke Register → Login → Logout → phân quyền**
+- [x] **Step 3: Smoke Register → Login → Logout → phân quyền**
 
 Run: `dotnet run --project ECommerce.Web` rồi mở browser: Register user mới → Login → Logout → thử vào `/Admin` khi chưa login và khi là Customer.
 Expected: PASS khi Register/Login/Logout chạy, `/Admin` redirect Login hoặc 403 cho non-admin.
 
-- [ ] **Step 4: Ghi kết quả Task 2**
+- [x] **Step 4: Ghi kết quả Task 2**
 
 Ghi `Phase 2: PASS/FAIL + ma trận 5 mục (Register/Login/Logout/roles/authorize)`.
 
@@ -113,20 +115,20 @@ Ghi `Phase 2: PASS/FAIL + ma trận 5 mục (Register/Login/Logout/roles/authori
 - Consumes: Entities `Product`/`Category` từ Task 1.
 - Produces: Checklist Catalog PASS/FAIL (list/detail/search/filter/CRUD/archive/validation) cho Task 11.
 
-- [ ] **Step 1: Đối chiếu controller + filter/search**
+- [x] **Step 1: Đối chiếu controller + filter/search**
 
 Mở `ProductsController.cs`, xác nhận list + detail + search + filter theo category đều tồn tại và query đúng `CategoryId`/keyword.
 
-- [ ] **Step 2: Đối chiếu Admin CRUD + archive/deactivate**
+- [x] **Step 2: Đối chiếu Admin CRUD + archive/deactivate**
 
 Mở `AdminController.cs` (Products/Categories/ProductForm/CategoryForm), xác nhận CRUD Category, CRUD Product, có cờ archive/deactivate (kiểm tra field `IsActive` hoặc tương đương trong `Product.cs`).
 
-- [ ] **Step 3: Đối chiếu Data Annotations validation**
+- [x] **Step 3: Đối chiếu Data Annotations validation**
 
 Mở `Product.cs` + `ProductFormViewModel.cs` + `CategoryFormViewModel.cs`, xác nhận `[Required]`/`[Range]`/`[StringLength]` phía server; thử submit form rỗng trên UI.
 Expected: PASS khi `ModelState.IsValid == false` và UI hiện lỗi.
 
-- [ ] **Step 4: Ghi kết quả Task 3**
+- [x] **Step 4: Ghi kết quả Task 3**
 
 Ghi `Phase 3: PASS/FAIL` cho 5 mục: list/detail, search+filter, CRUD category, CRUD+archive product, validation.
 
@@ -140,22 +142,22 @@ Ghi `Phase 3: PASS/FAIL` cho 5 mục: list/detail, search+filter, CRUD category,
 - Consumes: `Product.Stock` từ Task 1/3.
 - Produces: Kết quả Cart (add/update/remove/stock-check/guest-vs-login) + output `dotnet test --filter CartServiceTests` cho Task 8/11.
 
-- [ ] **Step 1: Chạy test CartService**
+- [x] **Step 1: Chạy test CartService**
 
 Run: `dotnet test ECommerce.Web.Tests --filter "FullyQualifiedName~CartServiceTests"`
 Expected: PASS toàn bộ 5 methods; ghi số cases thực tế (Theory nở thành nhiều cases).
 
-- [ ] **Step 2: Đối chiếu add/update/remove + kiểm tra stock trước checkout**
+- [x] **Step 2: Đối chiếu add/update/remove + kiểm tra stock trước checkout**
 
 Mở `CartService.cs` + `CartController.cs`, xác nhận thêm vào cart, cập nhật số lượng, xóa item, và có check `Stock` trước checkout; thử trên UI thêm quá stock.
 Expected: PASS khi bị chặn hoặc clamp đúng stock.
 
-- [ ] **Step 3: Đối chiếu guest vs logged-in cart**
+- [x] **Step 3: Đối chiếu guest vs logged-in cart**
 
 Mở `CartService.cs` tìm phân nhánh session/cookie vs user-id claim; smoke: thêm cart khi chưa login → login → kiểm tra cart còn/gộp.
 Expected: PASS khi không mất item (ghi rõ behavior gộp hay giữ riêng đúng code).
 
-- [ ] **Step 4: Ghi kết quả Task 4**
+- [x] **Step 4: Ghi kết quả Task 4**
 
 Ghi `Phase 4: PASS/FAIL` cho 4 mục: add, update/remove, stock-check, guest/logged-in.
 
@@ -169,25 +171,25 @@ Ghi `Phase 4: PASS/FAIL` cho 4 mục: add, update/remove, stock-check, guest/log
 - Consumes: Cart đã verify (Task 4), `OrderStatus`/`PaymentStatus` (Task 1).
 - Produces: Kết quả transaction/cancel/stock-âm/concurrent + output test Order cho Task 8/11. Đây là task rủi ro cao nhất.
 
-- [ ] **Step 1: Chạy test OrderService + Validation**
+- [x] **Step 1: Chạy test OrderService + Validation**
 
 Run: `dotnet test ECommerce.Web.Tests --filter "FullyQualifiedName~OrderServiceTests|FullyQualifiedName~ValidationAndCalculationsTests"`
 Expected: PASS 16 methods; ghi số cases thực tế.
 
-- [ ] **Step 2: Đối chiếu transaction tạo Order (order + items + trừ stock)**
+- [x] **Step 2: Đối chiếu transaction tạo Order (order + items + trừ stock)**
 
 Mở `OrderService.cs`, xác nhận tạo Order nằm trong transaction (explicit `BeginTransaction` hoặc `SaveChanges` atomic + guard), trừ stock cùng lúc, tính total đúng. Ghi số dòng hàm tạo order.
 
-- [ ] **Step 3: Đối chiếu history customer + admin update status + cancel hoàn stock**
+- [x] **Step 3: Đối chiếu history customer + admin update status + cancel hoàn stock**
 
 Mở `OrdersController.cs` (history customer) + `AdminController.cs` (xem tất cả + update status: Orders/OrderDetails), xác nhận cancel theo business rule (chỉ Pending/Processing được hủy, hoàn stock đúng số lượng, chặn hủy lần 2).
 
-- [ ] **Step 4: Đối chiếu chặn stock âm + concurrent safeguard**
+- [x] **Step 4: Đối chiếu chặn stock âm + concurrent safeguard**
 
 Tìm guard `Stock < quantity` và cơ chế concurrent (row-version/concurrency-token hoặc re-check trong transaction) trong `OrderService.cs`; thử đặt 2 request cùng lúc vào stock = 1 (nếu môi trường cho phép).
 Expected: PASS khi stock không âm và đúng 1 request thắng; nếu không tái hiện được thì ghi `NOT-REPRODUCED + dòng guard`.
 
-- [ ] **Step 5: Ghi kết quả Task 5**
+- [x] **Step 5: Ghi kết quả Task 5**
 
 Ghi `Phase 5: PASS/FAIL` cho 5 mục: transaction, history, admin-update, cancel-hoàn-stock, anti-negative/concurrent.
 
@@ -201,20 +203,20 @@ Ghi `Phase 5: PASS/FAIL` cho 5 mục: transaction, history, admin-update, cancel
 - Consumes: Orders (Task 5), roles (Task 2).
 - Produces: Checklist Dashboard (revenue/orders/products/recent/low-stock/users-roles) cho Task 11.
 
-- [ ] **Step 1: Đối chiếu KPI + recent orders + low-stock**
+- [x] **Step 1: Đối chiếu KPI + recent orders + low-stock**
 
 Mở `AdminController.cs` + `Index.cshtml` + `AdminDashboardViewModel.cs`, xác nhận doanh thu, số đơn, số sản phẩm, bảng đơn gần đây, cảnh báo low-stock; ghi ngưỡng low-stock (so với Review Focus: có hard-code 2 nơi không).
 
-- [ ] **Step 2: Đối chiếu quản lý user + phân vai an toàn**
+- [x] **Step 2: Đối chiếu quản lý user + phân vai an toàn**
 
 Mở `Users.cshtml` + `EditUserRoles.cshtml` + action tương ứng, xác nhận list user + số đơn, form gán role có chống tự hạ quyền admin cuối cùng / chống leo thang (ghi cơ chế tìm thấy, nếu không có thì ghi MISSING).
 
-- [ ] **Step 3: Smoke Dashboard với seed data**
+- [x] **Step 3: Smoke Dashboard với seed data**
 
 Run app + login Admin, mở `/Admin`, chụp/screenshot số liệu, so với DB seed.
 Expected: PASS khi số liệu khớp query thực, không phải số cứng.
 
-- [ ] **Step 4: Ghi kết quả Task 6**
+- [x] **Step 4: Ghi kết quả Task 6**
 
 Ghi `Phase 6: PASS/FAIL` cho 4 mục: KPI, recent orders, low-stock, users-roles.
 
@@ -228,19 +230,19 @@ Ghi `Phase 6: PASS/FAIL` cho 4 mục: KPI, recent orders, low-stock, users-roles
 - Consumes: Pipeline trong `Program.cs` (Task 1).
 - Produces: Ma trận error-handling (UseExceptionHandler/Error page/middleware/ILogger) cho Task 11.
 
-- [ ] **Step 1: Đối chiếu pipeline lỗi**
+- [x] **Step 1: Đối chiếu pipeline lỗi**
 
 Xác nhận `UseGlobalExceptionHandling()`, `UseExceptionHandler("/Home/Error")` (non-dev), `UseStatusCodePagesWithReExecute("/Home/Error/{0}")`, `UseHsts`, trang `Error.cshtml` thân thiện.
 
-- [ ] **Step 2: Đối chiếu middleware tập trung + ILogger**
+- [x] **Step 2: Đối chiếu middleware tập trung + ILogger**
 
 Mở `GlobalExceptionMiddleware.cs`, xác nhận catch tập trung + log qua `ILogger` với level hợp lý; chạy `rg -n "ILogger" ECommerce.Web --glob "*.cs"` và ghi các nơi log.
 
-- [ ] **Step 3: Smoke 404 + 500**
+- [x] **Step 3: Smoke 404 + 500**
 
 Mở URL không tồn tại và action ném exception (nếu có route test), xác nhận về trang lỗi thân thiện, không lộ stack trace ở non-dev.
 
-- [ ] **Step 4: Ghi kết quả Task 7**
+- [x] **Step 4: Ghi kết quả Task 7**
 
 Ghi `Phase 7: PASS/FAIL` cho 3 mục: error page, middleware, logging.
 
@@ -254,21 +256,21 @@ Ghi `Phase 7: PASS/FAIL` cho 3 mục: error page, middleware, logging.
 - Consumes: Kết quả test lẻ từ Task 4 + Task 5 để đối chiếu.
 - Produces: Verdict `dotnet build` + `dotnet test` toàn suite + danh sách test đỏ (nếu có) cho Task 11.
 
-- [ ] **Step 1: Chạy build sạch**
+- [x] **Step 1: Chạy build sạch**
 
 Run: `dotnet build ECommerce.Web.slnx`
 Expected: PASS, 0 error. Ghi warnings nếu có.
 
-- [ ] **Step 2: Chạy toàn bộ test suite**
+- [x] **Step 2: Chạy toàn bộ test suite**
 
 Run: `dotnet test ECommerce.Web.slnx`
 Expected: PASS; đối chiếu với claim roadmap "23/23" — ghi số thực tế (21 methods, N cases sau khi Theory nở). Lệch số thì ghi DRIFT chứ không FAIL logic.
 
-- [ ] **Step 3: Đối chiếu coverage business rules**
+- [x] **Step 3: Đối chiếu coverage business rules**
 
 Xác nhận 4 nhóm được cover: stock update, cancel order, order total, rule validation — map mỗi nhóm tới tên test method cụ thể.
 
-- [ ] **Step 4: Ghi kết quả Task 8**
+- [x] **Step 4: Ghi kết quả Task 8**
 
 Ghi `Phase 8: PASS/FAIL + số tests thực tế + danh sách test đỏ (nếu có)`.
 
@@ -282,20 +284,20 @@ Ghi `Phase 8: PASS/FAIL + số tests thực tế + danh sách test đỏ (nếu 
 - Consumes: Catalog/Cart/Orders/Auth đã verify (Task 2–5).
 - Produces: Checklist ghép UI storefront (layout/CSS isolation/cart countộng/validation) cho Task 11.
 
-- [ ] **Step 1: Đối chiếu layout + cách ly CSS**
+- [x] **Step 1: Đối chiếu layout + cách ly CSS**
 
 Xác nhận `_Layout.cshtml` theo TechNova (Tailwind CDN, FontAwesome 6, Inter), `_AdminLayout.cshtml` + `Views/Admin/_ViewStart.cshtml` giữ Bootstrap 5, admin và storefront không lẫn CSS.
 
-- [ ] **Step 2: Đối chiếu _LoginPartial + cart count động**
+- [x] **Step 2: Đối chiếu _LoginPartial + cart count động**
 
 Mở `_LoginPartial.cshtml`, xác nhận dùng `ICartService` hiển thị số lượng thực; smoke: thêm item → số trên header tăng không cần reload cứng.
 
-- [ ] **Step 3: Smoke 8 trang storefront**
+- [x] **Step 3: Smoke 8 trang storefront**
 
 Mở lần lượt: `/` (hero/danh mục hot/bán chạy), `/Products` (filter+search+lưới), `/Products/Details` (tồn kho/tăng-giảm/add), `/Cart`, `/Cart/CheckoutPreview` (form xác nhận), `/Orders` + `/Orders/Details`, `/Account/Login`, `/Account/Register`.
 Expected: PASS khi đúng layout TechNova + validation hiện lỗi; ghi trang nào vỡ layout.
 
-- [ ] **Step 4: Ghi kết quả Task 9**
+- [x] **Step 4: Ghi kết quả Task 9**
 
 Ghi `Phase 8.5: PASS/FAIL` theo 4 nhóm trong roadmap + danh sách trang lỗi.
 
@@ -309,20 +311,20 @@ Ghi `Phase 8.5: PASS/FAIL` theo 4 nhóm trong roadmap + danh sách trang lỗi.
 - Consumes: Admin backend (Task 6) + layout cách ly (Task 9).
 - Produces: Checklist 7 nhóm trang admin TechNova cho Task 11.
 
-- [ ] **Step 1: Đối chiếu khung AdminLayout**
+- [x] **Step 1: Đối chiếu khung AdminLayout**
 
 Xác nhận sidebar cố định/thu gọn, topbar, Tailwind, FontAwesome 6, Inter, flash alerts (TempData) trong `_AdminLayout.cshtml`.
 
-- [ ] **Step 2: Đối chiếu 6 nhóm trang**
+- [x] **Step 2: Đối chiếu 6 nhóm trang**
 
 Mở từng view: Dashboard (KPI + phân tích trạng thái + low-stock + recent), Products/ProductForm (lọc category + active), Categories/CategoryForm (số lượng sp), Orders/OrderDetails (tabs trạng thái + update), Users/EditUserRoles (số đơn + phân quyền an toàn). Ghi mục nào thiếu so roadmap.
 
-- [ ] **Step 3: Smoke CRUD admin end-to-end**
+- [x] **Step 3: Smoke CRUD admin end-to-end**
 
 Login Admin: tạo category → tạo product → đổi trạng thái order → gán role; xác nhận mỗi thao tác persist sau reload.
 Expected: PASS cả 4 thao tác; FAIL thao tác nào thì ghi kèm URL + lỗi.
 
-- [ ] **Step 4: Ghi kết quả Task 10**
+- [x] **Step 4: Ghi kết quả Task 10**
 
 Ghi `Phase 8.6: PASS/FAIL` theo 7 dòng roadmap.
 
@@ -337,20 +339,20 @@ Ghi `Phase 8.6: PASS/FAIL` theo 7 dòng roadmap.
 - Consumes: Kết quả Task 1–10.
 - Produces: Báo cáo verify cuối cùng + roadmap hiệu chỉnh (nếu cần). Không sửa source.
 
-- [ ] **Step 1: Chạy build + test chốt số liệu**
+- [x] **Step 1: Chạy build + test chốt số liệu**
 
 Run: `dotnet build ECommerce.Web.slnx; if ($?) { dotnet test ECommerce.Web.slnx }`
 Expected: Ghi output thực tế (số passed/failed/skipped) vào báo cáo.
 
-- [ ] **Step 2: Viết báo cáo `docs/verify-legacy-phases-report.md` (2 luồng)**
+- [x] **Step 2: Viết báo cáo `docs/verify-legacy-phases-report.md` (2 luồng)**
 
 Luồng A — Verdict: bảng 11 phases × (PASS/FAIL/PARTIAL + bằng chứng + lệnh + GitNexus flow/symbol đã tra), danh sách DRIFT (vd. số test 21 methods vs claim 23).
 Luồng B — Đề xuất thay đổi/cải thiện: bảng `| # | Nguồn (Task/Phase) | Mô tả | Severity (Blocker/Major/Minor/Nice-to-have) | Đề xuất sửa | GitNexus impact + risk | Plan sửa riêng? |`, trong đó mọi dòng đụng code phải có `impact({target, direction:"upstream"})` + risk; HIGH/CRITICAL gắn cờ cảnh báo, UNKNOWN ghi rõ "chưa kết luận — cần text search thêm".
 
-- [ ] **Step 3: Graph change check + hiệu chỉnh `docs/roadmap.md` nếu checkbox sai**
+- [x] **Step 3: Graph change check + hiệu chỉnh `docs/roadmap.md` nếu checkbox sai**
 
 Run: `detect_changes({scope: "all"})` (MCP) hoặc `node .gitnexus/run.cjs detect-changes --scope all --repo .`; `partial:true`/`truncated:true` là chưa sạch — phải re-run. Chỉ bỏ `[x]` hoặc thêm ghi chú khi có bằng chứng FAIL; mỗi sửa phải dẫn link tới mục báo cáo.
 
-- [ ] **Step 4: Kết luận Go/No-Go Phase 9**
+- [x] **Step 4: Kết luận Go/No-Go Phase 9**
 
 Ghi một dòng: `Go Phase 9` chỉ khi Task 5 + Task 8 PASS tuyệt đối và không còn Blocker; ngược lại ghi `No-Go + danh sách điều kiện tiên quyết (Blocker/Major còn mở)`.

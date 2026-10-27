@@ -1,5 +1,7 @@
 # E-Commerce v2 Core Commerce Implementation Plan
 
+> **Trạng thái:** ✅ Hoàn thành phần P0 (Task A1–A10) — 2026-10-18 · commit `229a62e..8eb0ef3` · **114 test** · báo cáo tổng hợp: [`docs/superpowers/reports/2026-10-18-ecommerce-v2-core-commerce.md`](../reports/2026-10-18-ecommerce-v2-core-commerce.md). P1 (B1–B5) đã xong theo plan riêng; P2 (C1–C5) **chưa lập plan** — các mục C trong file này chỉ là dàn ý, không phải cam kết. · hộp kiểm được tick hồi tố ngày 2026-10-27.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bổ sung các năng lực E-commerce cốt lõi còn thiếu ở v1 — thông tin giao hàng, ảnh sản phẩm, và cổng thanh toán online — để sản phẩm bán được hàng thật, rồi mở rộng sang nhóm P1/P2.
@@ -45,7 +47,7 @@ Các lớp đầu vào / chế độ lỗi mà roadmap hàm ý nhưng chưa test
 **Interfaces:**
 - Produces: `Order.RecipientName` (string), `Order.RecipientPhone` (string), `Order.ShippingAddress` (string), `Order.Note` (string?).
 
-- [ ] **Step 1: Viết test failing khẳng định `Order` giữ được thông tin giao hàng**
+- [x] **Step 1: Viết test failing khẳng định `Order` giữ được thông tin giao hàng**
 
 ```csharp
 [Fact]
@@ -67,25 +69,25 @@ public void Order_StoresShippingInfo()
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~Order_StoresShippingInfo"`
 Expected: FAIL — `Order` không có property `RecipientName`.
 
-- [ ] **Step 3: Thêm property vào `Order.cs`**
+- [x] **Step 3: Thêm property vào `Order.cs`**
 
 Thêm 4 property `string` (3 required mặc định `= string.Empty`, `Note` để `string?`). Giữ `TotalAmount`/`Items` nguyên vẹn.
 
-- [ ] **Step 4: Tạo migration**
+- [x] **Step 4: Tạo migration**
 
 Run: `dotnet ef migrations add AddOrderShippingInfo --project ECommerce.Web`
 Expected: migration sinh ra 4 cột, tất cả nullable=false trừ `Note`. **Kiểm tra** giá trị mặc định cho hàng cũ: cột NOT NULL string sẽ cần default `""` — nếu EF không sinh default, sửa migration thêm `.HasDefaultValue("")` cho 3 cột bắt buộc.
 
-- [ ] **Step 5: Chạy test + build**
+- [x] **Step 5: Chạy test + build**
 
 Run: `dotnet build` → OK; `dotnet test --filter "FullyQualifiedName~Order_StoresShippingInfo"` → PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ECommerce.Web/Models/Entities/Order.cs ECommerce.Web/Data/Migrations ECommerce.Web.Tests/Models/ValidationAndCalculationsTests.cs
@@ -109,7 +111,7 @@ git commit -m "feat: add shipping info fields to Order"
   - `CheckoutViewModel { string RecipientName; string RecipientPhone; string ShippingAddress; string? Note; CartViewModel Cart; }`
   - `IOrderService.CreateOrderFromCartAsync(string userId, ShippingDetails shipping)` → `Task<(bool Success, string Message, int? OrderId)>`
 
-- [ ] **Step 1: Viết test failing — shipping được lưu vào Order khi checkout thành công**
+- [x] **Step 1: Viết test failing — shipping được lưu vào Order khi checkout thành công**
 
 ```csharp
 [Fact]
@@ -143,12 +145,12 @@ public async Task CreateOrderFromCartAsync_PersistsShippingDetails()
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~PersistsShippingDetails"`
 Expected: FAIL — không tồn tại overload 2 tham số.
 
-- [ ] **Step 3: Tạo `ShippingDetails`**
+- [x] **Step 3: Tạo `ShippingDetails`**
 
 ```csharp
 namespace ECommerce.Web.Models;
@@ -162,7 +164,7 @@ public class ShippingDetails
 }
 ```
 
-- [ ] **Step 4: Tạo `CheckoutViewModel` với validation**
+- [x] **Step 4: Tạo `CheckoutViewModel` với validation**
 
 ```csharp
 public class CheckoutViewModel
@@ -205,21 +207,21 @@ public void CheckoutViewModel_MissingRequiredFields_IsInvalid()
 }
 ```
 
-- [ ] **Step 5: Đổi chữ ký service và map shipping vào Order**
+- [x] **Step 5: Đổi chữ ký service và map shipping vào Order**
 
 `IOrderService`: đổi `CreateOrderFromCartAsync(string userId)` → `CreateOrderFromCartAsync(string userId, ShippingDetails shipping)`.
 Trong `OrderService.cs:59-66`, gán 4 field từ `shipping` khi khởi tạo `Order` (trim `RecipientName/Phone/Address`, `Note` giữ null nếu rỗng).
 
-- [ ] **Step 6: Cập nhật 4 call cũ trong `OrderServiceTests`**
+- [x] **Step 6: Cập nhật 4 call cũ trong `OrderServiceTests`**
 
 Tạo helper `private static ShippingDetails Ship() => new() { RecipientName = "Test", RecipientPhone = "0900000000", ShippingAddress = "Test Address" };` và truyền vào mọi call `CreateOrderFromCartAsync(...)`.
 
-- [ ] **Step 7: Chạy toàn bộ test**
+- [x] **Step 7: Chạy toàn bộ test**
 
 Run: `dotnet test`
 Expected: PASS toàn bộ (test cũ + 2 test mới).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Models ECommerce.Web/Services ECommerce.Web.Tests
@@ -238,36 +240,36 @@ git commit -m "feat: persist shipping details through order service"
 - Consumes: `CheckoutViewModel`, `CreateOrderFromCartAsync(userId, shipping)` (Task A2), `ICartService.GetCartAsync()`.
 - Produces: POST `Orders/Checkout` nhận `CheckoutViewModel`; GET `Cart/Checkout` render `CheckoutPreview` với `CheckoutViewModel`.
 
-- [ ] **Step 1: Viết test failing — checkout ModelState invalid không tạo đơn**
+- [x] **Step 1: Viết test failing — checkout ModelState invalid không tạo đơn**
 
 Assert: khi POST `Orders/Checkout` với `CheckoutViewModel` thiếu `ShippingAddress`, controller trả về view `CheckoutPreview` (không redirect tới `Details`), `ModelState.IsValid == false`, và `IOrderService.CreateOrderFromCartAsync` **không** được gọi (dùng `Mock<IOrderService>` + `Mock<ICartService>` + `Mock<INotyfService>`).
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~Checkout"`
 Expected: FAIL — chữ ký action chưa khớp / chưa có nhánh invalid.
 
-- [ ] **Step 3: GET `CartController.Checkout` trả `CheckoutViewModel`**
+- [x] **Step 3: GET `CartController.Checkout` trả `CheckoutViewModel`**
 
 Bọc `cart` hiện có vào `new CheckoutViewModel { Cart = cart }` và `return View("CheckoutPreview", vm);`.
 
-- [ ] **Step 4: POST `OrdersController.Checkout` bind `CheckoutViewModel`**
+- [x] **Step 4: POST `OrdersController.Checkout` bind `CheckoutViewModel`**
 
 Thêm tham số `CheckoutViewModel model`; inject `ICartService` vào constructor. Nếu `!ModelState.IsValid`: nạp lại `model.Cart = await _cartService.GetCartAsync()`, `_notyf.Error("Vui lòng kiểm tra thông tin nhận hàng.")`, `return View("CheckoutPreview", model);`. Nếu hợp lệ: map sang `ShippingDetails` rồi gọi service như hiện tại.
 
-- [ ] **Step 5: Thêm input vào `CheckoutPreview.cshtml`**
+- [x] **Step 5: Thêm input vào `CheckoutPreview.cshtml`**
 
 Thêm 4 trường (`RecipientName`, `RecipientPhone`, `ShippingAddress` textarea, `Note` textarea) **bên trong** form `asp-action="Checkout"` hiện có (hiện form chỉ có nút submit — các input phải nằm trong cùng `<form>`). Dùng `asp-for` + `asp-validation-for`, giữ style Tailwind hiện có. Giữ radio COD; thêm radio "Chuyển khoản/Cổng thanh toán" (sẽ kích hoạt ở Task A10).
 
-- [ ] **Step 6: Xác nhận render lại giữ dữ liệu đã nhập**
+- [x] **Step 6: Xác nhận render lại giữ dữ liệu đã nhập**
 
 Đảm bảo form dùng `asp-for` (không hardcode `value`) để khi invalid, giá trị cũ được giữ.
 
-- [ ] **Step 7: Chạy test + build**
+- [x] **Step 7: Chạy test + build**
 
 Run: `dotnet test --filter "FullyQualifiedName~Checkout"` → PASS; `dotnet build` → OK.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Controllers ECommerce.Web/Views/Cart ECommerce.Web.Tests/Controllers
@@ -283,20 +285,20 @@ git commit -m "feat: capture shipping info on checkout with server validation"
 **Interfaces:**
 - Consumes: `Order.RecipientName/RecipientPhone/ShippingAddress/Note` (Task A1).
 
-- [ ] **Step 1: Thêm khối "Thông tin nhận hàng" vào `Orders/Details.cshtml`**
+- [x] **Step 1: Thêm khối "Thông tin nhận hàng" vào `Orders/Details.cshtml`**
 
 Hiển thị người nhận, SĐT, địa chỉ, ghi chú (ẩn ghi chú nếu rỗng). Dùng style card/`border` sẵn có của trang.
 
-- [ ] **Step 2: Thêm khối tương tự vào `Admin/OrderDetails.cshtml`**
+- [x] **Step 2: Thêm khối tương tự vào `Admin/OrderDetails.cshtml`**
 
 Layout admin Bootstrap-style hiện có; đặt gần phần thông tin khách hàng.
 
-- [ ] **Step 3: Verify thủ công**
+- [x] **Step 3: Verify thủ công**
 
 Run: `dotnet run --project ECommerce.Web` → đăng nhập, tạo đơn thử, mở `/Orders/Details/{id}` và `/Admin/OrderDetails/{id}`.
 Expected: cả hai trang hiển thị đúng thông tin đã nhập. Dừng dev server sau khi xác nhận.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add ECommerce.Web/Views/Orders ECommerce.Web/Views/Admin
@@ -317,7 +319,7 @@ git commit -m "feat: show shipping info on order detail pages"
 **Interfaces:**
 - Produces: `Product.ImageUrl` (string?), `ProductFormViewModel.ImageUrl` (string?).
 
-- [ ] **Step 1: Viết test failing cho validation `ImageUrl`**
+- [x] **Step 1: Viết test failing cho validation `ImageUrl`**
 
 ```csharp
 [Theory]
@@ -337,32 +339,32 @@ public void ProductFormViewModel_ImageUrl_ValidatesUrlOrRelativePath(string url,
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~ImageUrl"`
 Expected: FAIL — property/annotation chưa có.
 
-- [ ] **Step 3: Thêm `ImageUrl` + validation**
+- [x] **Step 3: Thêm `ImageUrl` + validation**
 
 `Product.ImageUrl` là `string?`. `ProductFormViewModel.ImageUrl` thêm `[Url]` kết hợp cho phép đường dẫn tương đối: dùng `[RegularExpression(@"^(https?://\S+|/\S*)$", ErrorMessage="...")]` (không dùng `[Url]` thuần vì nó từ chối `/img/...`).
 
-- [ ] **Step 4: Thêm input vào `ProductForm.cshtml` + cột thumbnail ở `Products.cshtml`**
+- [x] **Step 4: Thêm input vào `ProductForm.cshtml` + cột thumbnail ở `Products.cshtml`**
 
 Input text cho ảnh (URL). Trong bảng admin, thêm cột ảnh nhỏ; nếu rỗng dùng `/img/product-placeholder.svg`.
 
-- [ ] **Step 5: Tạo `product-placeholder.svg`**
+- [x] **Step 5: Tạo `product-placeholder.svg`**
 
 File SVG đơn giản (icon hộp/ảnh xám), kích thước vuông.
 
-- [ ] **Step 6: Migration + map trong controller/service CRUD**
+- [x] **Step 6: Migration + map trong controller/service CRUD**
 
 Run: `dotnet ef migrations add AddProductImageUrl --project ECommerce.Web`. Đảm bảo `AdminController` (hoặc service CRUD sản phẩm) copy `ImageUrl` từ VM sang entity khi create/update.
 
-- [ ] **Step 7: Chạy test + build**
+- [x] **Step 7: Chạy test + build**
 
 Run: `dotnet test --filter "FullyQualifiedName~ImageUrl"` → PASS; `dotnet build` → OK.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Models ECommerce.Web/Views/Admin ECommerce.Web/wwwroot/img ECommerce.Web/Data/Migrations ECommerce.Web.Tests
@@ -385,7 +387,7 @@ git commit -m "feat: add product image url with admin management"
 - Consumes: `Product.ImageUrl` (Task A5).
 - Produces: `CartItemViewModel.ImageUrl` (string?).
 
-- [ ] **Step 1: Viết test failing — `GetCartAsync` surface `ImageUrl`**
+- [x] **Step 1: Viết test failing — `GetCartAsync` surface `ImageUrl`**
 
 ```csharp
 [Fact]
@@ -397,28 +399,28 @@ public async Task GetCartAsync_ExposesProductImageUrl()
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~ExposesProductImageUrl"`
 Expected: FAIL — `ImageUrl` không tồn tại trên `CartItemViewModel`.
 
-- [ ] **Step 3: Thêm `ImageUrl` vào `CartItemViewModel` và map trong `CartService`**
+- [x] **Step 3: Thêm `ImageUrl` vào `CartItemViewModel` và map trong `CartService`**
 
 Trong projection của `CartService`, gán `ImageUrl = p.ImageUrl`.
 
-- [ ] **Step 4: Thay mọi ảnh hardcode bằng `ImageUrl ?? "/img/product-placeholder.svg"`**
+- [x] **Step 4: Thay mọi ảnh hardcode bằng `ImageUrl ?? "/img/product-placeholder.svg"`**
 
 Grep `images.unsplash.com` và `GetProductImage` để tìm hết chỗ cần sửa. Xóa các `@functions GetProductImage` không còn dùng.
 
-- [ ] **Step 5: Thêm test fallback placeholder (Review Focus #4)**
+- [x] **Step 5: Thêm test fallback placeholder (Review Focus #4)**
 
 Test view-model level: `ImageUrl = null` → giá trị hiển thị fallback là placeholder (nếu logic fallback nằm ở service/helper, test ở đó; nếu ở view, thêm một E2E/Playwright assertion).
 
-- [ ] **Step 6: Chạy test + build**
+- [x] **Step 6: Chạy test + build**
 
 Run: `dotnet test` → PASS toàn bộ; `dotnet build` → OK.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ECommerce.Web/Models ECommerce.Web/Services ECommerce.Web/Views ECommerce.Web.Tests
@@ -447,33 +449,33 @@ git commit -m "feat: display real product images across storefront"
   - `PaymentInitResult { bool Success; string? RedirectUrl; string? TransactionRef; string? Error; }`
   - `PaymentCallbackResult { bool Success; string TransactionRef; decimal Amount; bool IsValidSignature; int? OrderId; }`
 
-- [ ] **Step 1: Viết test failing cho entity + unique index**
+- [x] **Step 1: Viết test failing cho entity + unique index**
 
 Assert: hai `PaymentTransaction` cùng `(Provider, TransactionRef)` khi `SaveChanges` sẽ ném `DbUpdateException` (Sqlite in-memory) — chứng minh unique index idempotency.
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~PaymentTransaction"`
 Expected: FAIL — entity chưa tồn tại.
 
-- [ ] **Step 3: Tạo enum + entity + DbSet**
+- [x] **Step 3: Tạo enum + entity + DbSet**
 
 `ApplicationDbContext`: thêm `DbSet<PaymentTransaction>`, `HasIndex(t => new { t.Provider, t.TransactionRef }).IsUnique()`, precision `(18,2)` cho `Amount`. `Order` thêm `PaymentMethod Method { get; set; } = PaymentMethod.Cod;`.
 
-- [ ] **Step 4: Tạo interface + DTO trong `Services/Payments/`**
+- [x] **Step 4: Tạo interface + DTO trong `Services/Payments/`**
 
 Định nghĩa đúng chữ ký ở Interfaces trên; không thêm method thừa (YAGNI).
 
-- [ ] **Step 5: Migration**
+- [x] **Step 5: Migration**
 
 Run: `dotnet ef migrations add AddPaymentTransaction --project ECommerce.Web`.
 **Kiểm tra** cột `Order.Method` cho hàng cũ cần default `0` (Cod).
 
-- [ ] **Step 6: Chạy test + build**
+- [x] **Step 6: Chạy test + build**
 
 Run: `dotnet test --filter "FullyQualifiedName~PaymentTransaction"` → PASS; `dotnet build` → OK.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ECommerce.Web/Models ECommerce.Web/Data ECommerce.Web/Services/Payments ECommerce.Web.Tests
@@ -494,7 +496,7 @@ git commit -m "feat: add payment transaction model and gateway abstraction"
 - Consumes: `IPaymentGateway` (Task A7).
 - Produces: `VnPayOptions { string TmnCode; string HashSecret; string BaseUrl; string ReturnUrl; }`; hai gateway implementation.
 
-- [ ] **Step 1: Viết test failing — chữ ký VNPay đúng/sai**
+- [x] **Step 1: Viết test failing — chữ ký VNPay đúng/sai**
 
 ```csharp
 [Theory]
@@ -510,29 +512,29 @@ public void VerifyCallback_ValidatesHmacSignature(bool tamper)
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~VnPayGatewayTests"`
 Expected: FAIL — class chưa tồn tại.
 
-- [ ] **Step 3: Implement `VnPayGateway`**
+- [x] **Step 3: Implement `VnPayGateway`**
 
 Build URL thanh toán (sort params, `vnp_SecureHash` = HMAC-SHA512 trên canonical string với `HashSecret`); `VerifyCallbackAsync` tính lại hash và so sánh constant-time. Dùng `System.Security.Cryptography.HMACSHA512`; **không** thêm package ngoài.
 Ref: https://sandbox.vnpayment.vn/apis/docs/ thanh toán (dùng tài liệu VNPay, không tự bịa format).
 
-- [ ] **Step 4: Implement `CodPaymentGateway`**
+- [x] **Step 4: Implement `CodPaymentGateway`**
 
 `Provider = "Cod"`; `CreatePaymentAsync` trả `Success = true`, `RedirectUrl = null` (xác nhận ngay, không redirect). `VerifyCallbackAsync` ném `NotSupportedException` (COD không có callback).
 
-- [ ] **Step 5: Đăng ký DI + config**
+- [x] **Step 5: Đăng ký DI + config**
 
 `Program.cs`: `builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("VnPay"));`, `AddSingleton<CodPaymentGateway>()`, `AddScoped<IPaymentGateway, VnPayGateway>()` (hoặc một resolver theo `PaymentMethod`). `appsettings.json` thêm section `VnPay` với placeholder; Production lấy từ env (`VnPay__HashSecret`).
 
-- [ ] **Step 6: Chạy test + build**
+- [x] **Step 6: Chạy test + build**
 
 Run: `dotnet test --filter "FullyQualifiedName~VnPayGatewayTests"` → PASS; `dotnet build` → OK.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Payments ECommerce.Web/Models/Configuration ECommerce.Web/Program.cs ECommerce.Web/appsettings.json ECommerce.Web/appsettings.Production.json ECommerce.Web.Tests
@@ -553,31 +555,31 @@ git commit -m "feat: implement VNPay and COD payment gateways"
   - `IPaymentService.StartPaymentAsync(int orderId, PaymentMethod method, string ipAddress)` → `Task<PaymentInitResult>`
   - `IPaymentService.HandleCallbackAsync(string provider, IQueryCollection query)` → `Task<(bool Success, string Message, int? OrderId)>`
 
-- [ ] **Step 1: Viết 3 test failing (bao gồm Review Focus #2, #3, #5)**
+- [x] **Step 1: Viết 3 test failing (bao gồm Review Focus #2, #3, #5)**
 
 - `HandleCallback_WhenValid_SetsOrderPaidAndTransactionSucceeded`
 - `HandleCallback_WhenCalledTwice_ProcessesOnlyOnce` (gọi 2 lần, assert chỉ 1 transaction Succeeded, `Order` không đổi thêm)
 - `HandleCallback_WhenInvalidSignature_RejectsAndLeavesOrderPending`
 - `HandleCallback_WhenAmountMismatch_Rejects` (số tiền callback ≠ `order.TotalAmount`)
 
-- [ ] **Step 2: Chạy test để xác nhận fail**
+- [x] **Step 2: Chạy test để xác nhận fail**
 
 Run: `dotnet test --filter "FullyQualifiedName~PaymentServiceTests"`
 Expected: FAIL — service chưa tồn tại.
 
-- [ ] **Step 3: Implement khởi tạo + callback**
+- [x] **Step 3: Implement khởi tạo + callback**
 
 `StartPaymentAsync`: tạo `PaymentTransaction` (Pending) + gọi gateway. `HandleCallbackAsync`: verify chữ ký → nếu đã có `(Provider, TransactionRef)` ở trạng thái `Succeeded` thì trả về ngay (idempotent); nếu hợp lệ + đúng tiền → `transaction.Status = Succeeded`, `order.PaymentStatus = Paid`, `order.Status = Processing` (dùng transaction DB + `CreateExecutionStrategy` như `OrderService`).
 
-- [ ] **Step 4: Verify hoàn kho khi huỷ đơn đã trả tiền → `Refunded`**
+- [x] **Step 4: Verify hoàn kho khi huỷ đơn đã trả tiền → `Refunded`**
 
 Mở rộng `CancelOrderAsync` (đã set `Refunded` khi `Paid` — xem `OrderService.cs:185-188`): thêm test `CancelOrderAsync_WhenOrderPaid_SetsRefunded` nếu chưa có.
 
-- [ ] **Step 5: Chạy toàn bộ test**
+- [x] **Step 5: Chạy toàn bộ test**
 
 Run: `dotnet test` → PASS toàn bộ.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Payments ECommerce.Web/Program.cs ECommerce.Web.Tests
@@ -597,34 +599,34 @@ git commit -m "feat: add idempotent payment service with order status transition
 - Consumes: `IPaymentService` (Task A9).
 - Produces: GET `Payment/Return` (redirect user), POST `Payment/Ipn` (server-to-server).
 
-- [ ] **Step 1: Cho `CheckoutViewModel` + service nhận `PaymentMethod`**
+- [x] **Step 1: Cho `CheckoutViewModel` + service nhận `PaymentMethod`**
 
 Thêm `public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;` vào `CheckoutViewModel`.
 
 Mở rộng chữ ký service **tường minh** (thay cho bản 2 tham số ở Task A2):
 `IOrderService.CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method)` → set `order.Method = method` khi tạo đơn. Cập nhật mọi call site (Task A3 controller, `OrderServiceTests` helper) trong cùng bước này để `dotnet build` xanh.
 
-- [ ] **Step 2: `PaymentController.Return` (GET) + `Ipn` (POST)**
+- [x] **Step 2: `PaymentController.Return` (GET) + `Ipn` (POST)**
 
 `Return`: gọi `HandleCallbackAsync("VnPay", Request.Query)`, redirect tới `Orders/Details` kèm notyf, hoặc `Payment/Result` khi thất bại. `Ipn`: trả JSON `{RspCode, Message}` theo spec VNPay. **Không** `[Authorize]` cho `Ipn`; `Return` có thể ẩn danh nhưng phải kiểm tra chữ ký.
 
-- [ ] **Step 3: Bật radio VNPay ở `CheckoutPreview.cshtml`**
+- [x] **Step 3: Bật radio VNPay ở `CheckoutPreview.cshtml`**
 
 Bỏ `disabled`; label + `asp-for="PaymentMethod"`; JS nhỏ (hoặc Razor) để hiển thị ghi chú "Bạn sẽ được chuyển tới cổng thanh toán".
 
-- [ ] **Step 4: Tạo `Views/Payment/Result.cshtml`**
+- [x] **Step 4: Tạo `Views/Payment/Result.cshtml`**
 
 Thông báo thành công/thất bại, link về đơn hàng.
 
-- [ ] **Step 5: Hiển thị phương thức + trạng thái thanh toán ở `Orders/Details`**
+- [x] **Step 5: Hiển thị phương thức + trạng thái thanh toán ở `Orders/Details`**
 
 Thêm badge `PaymentMethod` và `PaymentStatus` (đã có enum sẵn).
 
-- [ ] **Step 6: Verify thủ công COD + build/test**
+- [x] **Step 6: Verify thủ công COD + build/test**
 
 Run: `dotnet run --project ECommerce.Web` → checkout COD tạo đơn `Paid`? (COD giữ `Pending` — đúng nghiệp vụ) → xác nhận UI. Run `dotnet build` + `dotnet test`. Dừng dev server.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add ECommerce.Web/Controllers ECommerce.Web/Views ECommerce.Web/Models

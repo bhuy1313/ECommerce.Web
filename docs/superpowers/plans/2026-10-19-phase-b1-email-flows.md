@@ -1,5 +1,7 @@
 # B1 — Email Flows (dev infrastructure) Implementation Plan
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-19 · commit `9011743..ac5b1ea` · **159 test** · báo cáo: [`docs/superpowers/reports/2026-10-19-phase-b1-email-flows.md`](../reports/2026-10-19-phase-b1-email-flows.md) · hộp kiểm được tick hồi tố ngày 2026-10-27.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make email confirmation, forgot/reset password and order confirmation work end-to-end in Development through a logging email sink and Razor templates.
@@ -45,7 +47,7 @@
 - Consumes: nothing.
 - Produces: `namespace ECommerce.Web.Services.Email; public interface IEmailSender { Task SendAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default); }` and `public sealed class LogEmailSender : IEmailSender`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 using ECommerce.Web.Services.Email;
@@ -82,12 +84,12 @@ public class LogEmailSenderTests
 }
 ```
 
-- [ ] **Step 2: Run it and verify it fails**
+- [x] **Step 2: Run it and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~LogEmailSenderTests"`
 Expected: compile error `The type or namespace name 'IEmailSender' could not be found`.
 
-- [ ] **Step 3: Implement the sender and register it**
+- [x] **Step 3: Implement the sender and register it**
 
 `IEmailSender.cs` is the interface above. `LogEmailSender` stores `ILogger<LogEmailSender>`,
 and `SendAsync` writes one Information entry with this exact shape (newlines inside the
@@ -110,12 +112,12 @@ builder.Services.AddSingleton<IEmailSender, LogEmailSender>();
 
 with `using ECommerce.Web.Services.Email;` added to the file.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~LogEmailSenderTests"`
 Expected: 1 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Email/IEmailSender.cs ECommerce.Web/Services/Email/LogEmailSender.cs ECommerce.Web/Program.cs ECommerce.Web.Tests/Services/Email/LogEmailSenderTests.cs
@@ -144,7 +146,7 @@ git commit -m "feat: add email sender abstraction with a dev log sink"
   - `public sealed record EmailLinkViewModel(string Url);`
   - Template path constant used by later tasks: `"~/Views/Emails/ConfirmEmail.cshtml"`.
 
-- [ ] **Step 1: Write the failing codec tests**
+- [x] **Step 1: Write the failing codec tests**
 
 ```csharp
 using ECommerce.Web.Services.Email;
@@ -180,19 +182,19 @@ public class IdentityTokenCodecTests
 }
 ```
 
-- [ ] **Step 2: Run it and verify it fails**
+- [x] **Step 2: Run it and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~IdentityTokenCodecTests"`
 Expected: compile error `The type or namespace name 'IdentityTokenCodec' could not be found`.
 
-- [ ] **Step 3: Implement the codec**
+- [x] **Step 3: Implement the codec**
 
 `Encode` = `WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))` (namespace
 `Microsoft.AspNetCore.WebUtilities`). `TryDecode` rejects null/whitespace, returns `false`
 on `FormatException` from `WebEncoders.Base64UrlDecode`, sets `token = string.Empty` on
 failure, and returns `false` when the decoded string is empty.
 
-- [ ] **Step 4: Write the failing renderer test**
+- [x] **Step 4: Write the failing renderer test**
 
 ```csharp
 using ECommerce.Web.Models.Entities;
@@ -265,12 +267,12 @@ public class RazorEmailTemplateRendererTests
 }
 ```
 
-- [ ] **Step 5: Run it and verify it fails**
+- [x] **Step 5: Run it and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~RazorEmailTemplateRendererTests"`
 Expected: compile errors for `IEmailTemplateRenderer` / `EmailLinkViewModel`.
 
-- [ ] **Step 6: Implement the renderer and the confirm template**
+- [x] **Step 6: Implement the renderer and the confirm template**
 
 `RazorEmailTemplateRenderer` ctor: `(IHttpContextAccessor httpContextAccessor, IRazorViewEngine viewEngine, ITempDataProvider tempDataProvider, IModelMetadataProvider metadataProvider)`.
 
@@ -314,12 +316,12 @@ Register in `Program.cs`:
 builder.Services.AddSingleton<IEmailTemplateRenderer, RazorEmailTemplateRenderer>();
 ```
 
-- [ ] **Step 7: Run both test classes**
+- [x] **Step 7: Run both test classes**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~IdentityTokenCodecTests|FullyQualifiedName~RazorEmailTemplateRendererTests"`
 Expected: all pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Email/IdentityTokenCodec.cs ECommerce.Web/Services/Email/IEmailTemplateRenderer.cs ECommerce.Web/Services/Email/RazorEmailTemplateRenderer.cs ECommerce.Web/Models/ViewModels/EmailViewModels.cs ECommerce.Web/Views/Emails/ConfirmEmail.cshtml ECommerce.Web/Program.cs ECommerce.Web.Tests/Services/Email/IdentityTokenCodecTests.cs ECommerce.Web.Tests/Services/Email/RazorEmailTemplateRendererTests.cs
@@ -358,7 +360,7 @@ public sealed record OrderConfirmationEmailViewModel(ECommerce.Web.Models.Entiti
 
 - Exact subjects: `"Xác thực email của bạn – TechNova"`, `"Đặt lại mật khẩu – TechNova"`, `$"Xác nhận đơn hàng #{order.Id} – TechNova"`.
 
-- [ ] **Step 1: Write the failing service tests**
+- [x] **Step 1: Write the failing service tests**
 
 ```csharp
 using ECommerce.Web.Data;
@@ -492,12 +494,12 @@ public class EmailServiceTests
 }
 ```
 
-- [ ] **Step 2: Run it and verify it fails**
+- [x] **Step 2: Run it and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~EmailServiceTests"`
 Expected: compile errors for `EmailService` / `IEmailService` / `OrderConfirmationEmailViewModel`.
 
-- [ ] **Step 3: Implement the service and templates**
+- [x] **Step 3: Implement the service and templates**
 
 `EmailService` ctor `(IEmailTemplateRenderer renderer, IEmailSender sender, ApplicationDbContext db, ILogger<EmailService> logger)`.
 
@@ -525,12 +527,12 @@ Register in `Program.cs`:
 builder.Services.AddScoped<IEmailService, EmailService>();
 ```
 
-- [ ] **Step 4: Run the service tests**
+- [x] **Step 4: Run the service tests**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~EmailServiceTests"`
 Expected: 5 passed.
 
-- [ ] **Step 5: Extend the renderer test to cover the two new templates**
+- [x] **Step 5: Extend the renderer test to cover the two new templates**
 
 Add to `RazorEmailTemplateRendererTests` (reuse the private `RenderAsync` helper from Task 2):
 
@@ -570,7 +572,7 @@ public async Task RenderAsync_OrderConfirmation_ContainsOrderAndProduct()
 
 Expected: both pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add ECommerce.Web/Services/Email/IEmailService.cs ECommerce.Web/Services/Email/EmailService.cs ECommerce.Web/Models/ViewModels/EmailViewModels.cs ECommerce.Web/Views/Emails/ResetPassword.cshtml ECommerce.Web/Views/Emails/OrderConfirmation.cshtml ECommerce.Web/Program.cs ECommerce.Web.Tests/Services/Email/EmailServiceTests.cs ECommerce.Web.Tests/Services/Email/RazorEmailTemplateRendererTests.cs
@@ -598,7 +600,7 @@ git commit -m "feat: add email service and password-reset/order templates"
   - `GET ResendEmailConfirmation()` and `POST ResendEmailConfirmation(ResendConfirmationViewModel model)`, `ResendConfirmationViewModel.Email` is required + `[EmailAddress]`.
   - Exact copy: success `Email của bạn đã được xác thực thành công.`; failure `Liên kết xác thực không hợp lệ hoặc đã hết hạn.`; resend info `Nếu email tồn tại và chưa xác thực, chúng tôi đã gửi lại liên kết xác thực.`
 
-- [ ] **Step 1: Write the failing controller tests**
+- [x] **Step 1: Write the failing controller tests**
 
 ```csharp
 using System.Security.Claims;
@@ -788,12 +790,12 @@ public class AccountEmailFlowTests
 }
 ```
 
-- [ ] **Step 2: Run and verify it fails**
+- [x] **Step 2: Run and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AccountEmailFlowTests"`
 Expected: compile errors (`AccountController` arity, `ConfirmEmail`, `ResendEmailConfirmation`, view models).
 
-- [ ] **Step 3: Implement controller, view models and views**
+- [x] **Step 3: Implement controller, view models and views**
 
 - Ctor: add `IEmailService emailService` and `INotyfService notyf`; store both.
 - `Register` (after `AddToRoleAsync`, before `SignInAsync`): generate token, encode, build
@@ -818,12 +820,12 @@ Expected: compile errors (`AccountController` arity, `ConfirmEmail`, `ResendEmai
 - `Login.cshtml`: add a `Gửi lại email xác thực` link
   (`asp-action="ResendEmailConfirmation"`) next to the register link.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AccountEmailFlowTests"`
 Expected: 7 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ECommerce.Web/Controllers/AccountController.cs ECommerce.Web/Models/ViewModels/ConfirmEmailViewModel.cs ECommerce.Web/Models/ViewModels/ResendConfirmationViewModel.cs ECommerce.Web/Views/Account/ConfirmEmail.cshtml ECommerce.Web/Views/Account/ResendEmailConfirmation.cshtml ECommerce.Web/Views/Account/Login.cshtml ECommerce.Web.Tests/Controllers/AccountEmailFlowTests.cs
@@ -855,7 +857,7 @@ git commit -m "feat: send and confirm verification email from registration"
   - `ForgotPasswordViewModel { string Email }`, `ResetPasswordViewModel { string UserId; string Code; string Password; string ConfirmPassword }` (Password rules mirror `RegisterViewModel`).
   - Exact errors: reset invalid `Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.`; success page `Mật khẩu của bạn đã được đặt lại. Vui lòng đăng nhập bằng mật khẩu mới.`
 
-- [ ] **Step 1: Write the failing tests (append to `AccountEmailFlowTests`)**
+- [x] **Step 1: Write the failing tests (append to `AccountEmailFlowTests`)**
 
 ```csharp
 [Fact]
@@ -946,12 +948,12 @@ public async Task ResetPassword_TokenRejected_ReRendersWithError()
 }
 ```
 
-- [ ] **Step 2: Run and verify it fails**
+- [x] **Step 2: Run and verify it fails**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AccountEmailFlowTests"`
 Expected: compile errors for the new actions/view models.
 
-- [ ] **Step 3: Implement actions, view models and views**
+- [x] **Step 3: Implement actions, view models and views**
 
 - `ForgotPassword` POST: ModelState invalid → view; `FindByEmailAsync`; when found,
   generate + encode + `Url.Action(nameof(ResetPassword), "Account", new { userId, code }, Request.Scheme)`
@@ -973,12 +975,12 @@ Expected: compile errors for the new actions/view models.
 - `Login.cshtml`: add `<a asp-action="ForgotPassword" ...>Quên mật khẩu?</a>` at the end of
   the `.flex.items-center.justify-between` row.
 
-- [ ] **Step 4: Run the controller tests**
+- [x] **Step 4: Run the controller tests**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AccountEmailFlowTests"`
 Expected: 12 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ECommerce.Web/Controllers/AccountController.cs ECommerce.Web/Models/ViewModels/ForgotPasswordViewModel.cs ECommerce.Web/Models/ViewModels/ResetPasswordViewModel.cs ECommerce.Web/Views/Account/ForgotPassword.cshtml ECommerce.Web/Views/Account/ForgotPasswordConfirmation.cshtml ECommerce.Web/Views/Account/ResetPassword.cshtml ECommerce.Web/Views/Account/ResetPasswordConfirmation.cshtml ECommerce.Web.Tests/Controllers/AccountEmailFlowTests.cs
@@ -998,7 +1000,7 @@ git commit -m "feat: add forgot and reset password flows"
 - Produces: `OrdersController` ctor gains `IEmailService emailService` as the parameter
   immediately before `ILogger<OrdersController>`.
 
-- [ ] **Step 1: Update the test helper and add the failing tests**
+- [x] **Step 1: Update the test helper and add the failing tests**
 
 Change `CreateController` to accept `Mock<IEmailService>? emailService = null` as the
 **last** parameter (after the existing `string userId = "user-checkout"`), pass
@@ -1071,13 +1073,13 @@ public async Task Checkout_WhenOrderEmailThrows_StillRedirectsToOrderDetails()
 }
 ```
 
-- [ ] **Step 2: Run and verify they fail**
+- [x] **Step 2: Run and verify they fail**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~CheckoutControllerTests"`
 Expected: compile error on the extra constructor argument, then (once wired) the new
 assertions fail because no email is sent.
 
-- [ ] **Step 3: Wire the email into checkout**
+- [x] **Step 3: Wire the email into checkout**
 
 Add `IEmailService` to the ctor (field + assignment), then in `Checkout` insert
 immediately after the `if (!success || !orderId.HasValue)` guard and **before**
@@ -1096,12 +1098,12 @@ catch (Exception ex)
 }
 ```
 
-- [ ] **Step 4: Run the whole checkout test class**
+- [x] **Step 4: Run the whole checkout test class**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~CheckoutControllerTests"`
 Expected: all pass (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ECommerce.Web/Controllers/OrdersController.cs ECommerce.Web.Tests/Controllers/CheckoutControllerTests.cs
@@ -1116,7 +1118,7 @@ git commit -m "feat: email order confirmation after checkout without failing the
 - Modify: `C:\Users\hieub\AppData\Local\Temp\opencode\live-verify.ps1` (reuse the existing
   boot/drive/teardown scaffolding from the Phase A script) — not committed.
 
-- [ ] **Step 1: Build and run the full suite**
+- [x] **Step 1: Build and run the full suite**
 
 Run: `dotnet build ECommerce.Web.slnx --no-incremental`
 Expected: `0 Warning(s)`.
@@ -1124,7 +1126,7 @@ Expected: `0 Warning(s)`.
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj`
 Expected: all tests pass (130 existing + the new ones).
 
-- [ ] **Step 2: Add the email checks to the live script (one boot, then teardown)**
+- [x] **Step 2: Add the email checks to the live script (one boot, then teardown)**
 
 Checks to implement, each printed as `CHECK <name> = True/False`:
 
@@ -1149,12 +1151,12 @@ Checks to implement, each printed as `CHECK <name> = True/False`:
    `Xác nhận đơn hàng #{id} – TechNova` plus the product name used in the order.
 10. `teardown_clean` — 0 listeners on port 5080 and 0 `ECommerce.Web` processes remain.
 
-- [ ] **Step 3: Run the script**
+- [x] **Step 3: Run the script**
 
 Run: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\hieub\AppData\Local\Temp\opencode\live-verify.ps1`
 Expected: every check `True`, `FAILED_CHECKS=0`.
 
-- [ ] **Step 4: Report**
+- [x] **Step 4: Report**
 
 Record in the SDD ledger/report: the commit chain for B1, test count delta, the live-check
 result, and the side effects on the dev database (new user `b1.<timestamp>@technova.local`

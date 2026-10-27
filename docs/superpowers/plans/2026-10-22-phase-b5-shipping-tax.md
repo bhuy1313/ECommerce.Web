@@ -1,5 +1,7 @@
 # Phase B5 — Shipping & tax: Implementation Plan
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-22 · commit `bfaa5f7..46edad9` · **266 test** · báo cáo: [`docs/superpowers/reports/2026-10-22-phase-b5-shipping-tax.md`](../reports/2026-10-22-phase-b5-shipping-tax.md) · hộp kiểm đã tick trong lúc thực thi.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans.
 
 **Goal:** Tính phí vận chuyển theo phương thức admin cấu hình + thuế VAT, hiển thị và lưu snapshot vào đơn.

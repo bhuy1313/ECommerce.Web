@@ -1,5 +1,7 @@
 # Kế hoạch triển khai Render Free (Docker) + SQLite
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-16/17 · commit `abb7afa..44a11f6` · báo cáo: không có (bằng chứng: commit + `/healthz`) · hộp kiểm được tick hồi tố ngày 2026-10-27 từ commit.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Mục tiêu:** Đưa ECommerce.Web lên Render gói free dưới dạng Docker web service, dùng database SQLite tạm thời phục vụ demo.
@@ -52,12 +54,12 @@
 - Dùng từ task trước: không có.
 - Tạo ra cho task sau: image `ecommerce-demo` chạy app trên `$PORT` (mặc định `10000` nếu không có); Task 2–4 dùng image này cho mọi lần kiểm chứng.
 
-- [ ] **Bước 1: Viết probe chứng minh đang fail**
+- [x] **Bước 1: Viết probe chứng minh đang fail**
 
 Chạy: `docker build -t ecommerce-demo .`
 Kết quả mong đợi: FAIL với lỗi "ERROR: failed to solve: Dockerfile not found" (chứng minh file đang thiếu, chưa bàn nội dung).
 
-- [ ] **Bước 2: Tạo `.dockerignore` ở thư mục gốc repo**
+- [x] **Bước 2: Tạo `.dockerignore` ở thư mục gốc repo**
 
 Nội dung chính xác:
 
@@ -72,7 +74,7 @@ TestResults/
 *.user
 ```
 
-- [ ] **Bước 3: Tạo `Dockerfile` ở thư mục gốc repo**
+- [x] **Bước 3: Tạo `Dockerfile` ở thư mục gốc repo**
 
 Nhiều giai đoạn, image và hành vi chính xác (cách làm: multi-stage chuẩn của Microsoft; ghi rõ body vì cách xử lý `$PORT` và tag preview chính là quyết định):
 
@@ -92,12 +94,12 @@ ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-10000} dotnet ECommerc
 
 **[tự chốt]:** dùng ENTRYPOINT dạng shell chỉ để giãn nở `$PORT` (dạng exec không làm được); `PORT:-10000` khớp mặc định của Render. Không chuyển `USER app` — chỉ demo, tránh rắc rối quyền ghi file SQLite (không đặt mục tiêu: hardening container).
 
-- [ ] **Bước 4: Chạy build để xác nhận pass**
+- [x] **Bước 4: Chạy build để xác nhận pass**
 
 Chạy: `docker build -t ecommerce-demo .`
 Kết quả mong đợi: build xong, exit 0. Nếu tag `10.0-preview` không pull được, thay cả hai tag bằng tag preview có ngày mới nhất trên `mcr.microsoft.com` (vd `10.0-preview.7`) rồi build lại — không được hạ xuống `9.0`/`8.0`.
 
-- [ ] **Bước 5: Commit**
+- [x] **Bước 5: Commit**
 
 ```bash
 git add Dockerfile .dockerignore
@@ -117,7 +119,7 @@ git commit -m "deploy: add Dockerfile and .dockerignore for Render free tier"
 - Dùng từ task trước: image/mẫu lệnh `docker run` từ Task 1.
 - Tạo ra cho task sau: quy tắc — connection string chứa `.db` (không phân biệt hoa thường) ⇒ `UseSqlite` + `EnsureCreated()`; ngược lại ⇒ `UseSqlServer` + `Migrate()` (hành vi dev giữ nguyên từng byte). Task 3–4 dựa vào đường SQLite này.
 
-- [ ] **Bước 1: Viết probe chứng minh đang fail**
+- [x] **Bước 1: Viết probe chứng minh đang fail**
 
 Chạy (từ thư mục gốc repo, cần image đã build lại sau Bước 3):
 
@@ -127,7 +129,7 @@ docker run --rm -e "ConnectionStrings__DefaultConnection=Data Source=/tmp/demo-p
 
 Kết quả mong đợi (trước fix): crash với lỗi `PlatformNotSupportedException` / LocalDB / lỗi kết nối SQL Server (chứng minh SQL Server vẫn đang cứng). Quan sát xong thì stop container.
 
-- [ ] **Bước 2: Thêm package SQLite trong `ECommerce.Web/ECommerce.Web.csproj`**
+- [x] **Bước 2: Thêm package SQLite trong `ECommerce.Web/ECommerce.Web.csproj`**
 
 ```xml
 <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
@@ -135,7 +137,7 @@ Kết quả mong đợi (trước fix): crash với lỗi `PlatformNotSupportedE
 
 (đặt trong `<ItemGroup>` PackageReferences đã có).
 
-- [ ] **Bước 3: Chọn provider trong `ECommerce.Web/Program.cs:29-31`**
+- [x] **Bước 3: Chọn provider trong `ECommerce.Web/Program.cs:29-31`**
 
 Thay đoạn đăng ký `AddDbContext` hiện tại bằng:
 
@@ -158,7 +160,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 **[tự chốt]:** quy tắc substring `.db`, không thêm setting config mới — không sinh thêm cài đặt, connection string dev (`...Database=ECommerceDb;...`) không bao giờ chứa `.db`.
 
-- [ ] **Bước 4: Rẽ nhánh khởi tạo schema trong `ECommerce.Web/Program.cs:92-107`**
+- [x] **Bước 4: Rẽ nhánh khởi tạo schema trong `ECommerce.Web/Program.cs:92-107`**
 
 Trong khối `using (var scope ...)` hiện có, thay dòng `await db.Database.Migrate();` unconditional: ngay sau dòng `var db = ...GetRequiredService<ApplicationDbContext>();` chèn
 
@@ -177,7 +179,7 @@ rồi xóa dòng `db.Database.Migrate();` cũ. Lệnh gọi `SeedAsync` bên dư
 
 **[tự chốt]:** dùng `EnsureCreated` (không làm bộ migration riêng cho SQLite) vì DB demo dùng-hủy; tránh phải duy trì hai lịch sử migration. Rủi ro drift đã ghi nhận: nếu entity đổi, schema SQLite demo chỉ mới khi dùng file mới.
 
-- [ ] **Bước 5: Build lại image, chạy với SQLite, kiểm chứng seed + trang chủ**
+- [x] **Bước 5: Build lại image, chạy với SQLite, kiểm chứng seed + trang chủ**
 
 Chạy:
 
@@ -189,7 +191,7 @@ docker run --rm -p 5136:10000 -e PORT=10000 -e "ConnectionStrings__DefaultConnec
 
 Kết quả mong đợi, theo thứ tự: log không báo warning mật khẩu admin mặc định (vì đã set password, nên không có warning), không exception; `curl http://localhost:5136/` trả 200 có chữ `TechNova` (đồng thời chứng minh `$PORT=10000` được tôn trọng); login tại `/Account/Login` bằng `admin@ecommerce.local` / `Demo@12345` về `/`; thêm cùng một sản phẩm vào giỏ từ hai tab trình duyệt liên tiếp → không hiện trang lỗi `database is locked`. Xong thì stop container. Chạy thêm `dotnet test ECommerce.Web.slnx` — kết quả mong đợi: 62/62 (chứng minh đường SQL Server của dev còn nguyên).
 
-- [ ] **Bước 6: Commit**
+- [x] **Bước 6: Commit**
 
 ```bash
 git add ECommerce.Web/ECommerce.Web.csproj ECommerce.Web/Program.cs
@@ -207,12 +209,12 @@ git commit -m "deploy: select SQLite provider for file connection strings, Ensur
 - Dùng từ task trước: quy tắc provider từ Task 2 (health check phải trả lời được trên cả đường SQLite).
 - Tạo ra cho task sau: `GET /healthz` công khai → `200 "healthy"`; `render.yaml` (Task 4) và bước warm-up demo dùng endpoint này.
 
-- [ ] **Bước 1: Viết probe chứng minh đang fail**
+- [x] **Bước 1: Viết probe chứng minh đang fail**
 
 Chạy (container build từ Task 2): start như Task 2 Bước 5, rồi `curl -i http://localhost:5136/healthz`.
 Kết quả mong đợi: `404` (chứng minh endpoint chưa có). Stop container.
 
-- [ ] **Bước 2: Thêm `MapGet("/healthz")` trong `ECommerce.Web/Program.cs`**
+- [x] **Bước 2: Thêm `MapGet("/healthz")` trong `ECommerce.Web/Program.cs`**
 
 Đặt ngay trước `app.MapControllerRoute(...)`:
 
@@ -222,12 +224,12 @@ app.MapGet("/healthz", () => Results.Ok("healthy"));
 
 Không auth, không chạm DB — phải trả lời được ngay cả khi migration/seed đang chạy. **[tự chốt]:** body là chuỗi thường (không phải JSON) để người trình bày cũng curl tay được lúc demo.
 
-- [ ] **Bước 3: Build lại, xác nhận 200**
+- [x] **Bước 3: Build lại, xác nhận 200**
 
 Chạy: build lại image, start container như Task 2 Bước 5, `curl -i http://localhost:5136/healthz`.
 Kết quả mong đợi: `HTTP/1.1 200 OK` với body `healthy`. Stop container.
 
-- [ ] **Bước 4: Commit**
+- [x] **Bước 4: Commit**
 
 ```bash
 git add ECommerce.Web/Program.cs
@@ -245,12 +247,12 @@ git commit -m "deploy: add unauthenticated /healthz endpoint for host health che
 - Dùng từ task trước: chuẩn image (Task 1), đường SQLite (Task 2), `/healthz` (Task 3), tên biến môi trường app đã đọc (`SeedAdmin__Password`, `RateLimiting:AuthPermitLimit` — code mặc định 10, KHÔNG set trên Render).
 - Tạo ra: URL demo công khai + runbook người trình bày dùng trong ngày demo.
 
-- [ ] **Bước 1: Viết probe chứng minh đang thiếu**
+- [x] **Bước 1: Viết probe chứng minh đang thiếu**
 
 Chạy: `Test-Path -LiteralPath "render.yaml"`
 Kết quả mong đợi: `False` (chứng minh blueprint là file mới).
 
-- [ ] **Bước 2: Tạo `render.yaml` ở thư mục gốc repo**
+- [x] **Bước 2: Tạo `render.yaml` ở thư mục gốc repo**
 
 Nội dung chính xác (tên/giá trị đã chốt; **[tự chốt]** tên service `ecommerce-demo`):
 
@@ -272,7 +274,7 @@ services:
 
 `sync: false` buộc nhập secret trên dashboard Render (không bao giờ commit). Không set `RateLimiting__AuthPermitLimit` — traffic demo của người thật không vượt quá mặc định 10/phút.
 
-- [ ] **Bước 3: Commit + push**
+- [x] **Bước 3: Commit + push**
 
 ```bash
 git add render.yaml
@@ -280,14 +282,14 @@ git commit -m "deploy: add Render Blueprint for free Docker web service"
 git push origin main
 ```
 
-- [ ] **Bước 4: Deploy qua dashboard (các bước làm tay, worker chỉ ghi lại — không có CLI cho việc này)**
+- [x] **Bước 4: Deploy qua dashboard (các bước làm tay, worker chỉ ghi lại — không có CLI cho việc này)**
 
 1. Dashboard Render → New → Blueprint → chọn repo `ECommerce.Web` (nhánh `main`).
 2. Khi hỏi `SeedAdmin__Password`, nhập mật khẩu mạnh (vd tự sinh, tối thiểu 8 ký tự gồm hoa/thường/số/ký tự đặc biệt theo policy Identity) rồi lưu vào trình quản lý mật khẩu — lúc demo login admin cần nó.
 3. Deploy; xem log: không exception, có dòng `Now listening on`, health checker `GET /healthz 200`.
 4. Mở URL công khai `https://ecommerce-demo.onrender.com` (subdomain thực tế xem trên dashboard).
 
-- [ ] **Bước 5: Kiểm chứng sau deploy (pass hết theo thứ tự)**
+- [x] **Bước 5: Kiểm chứng sau deploy (pass hết theo thứ tự)**
 
 Chạy từ máy này:
 
@@ -297,7 +299,7 @@ curl -i https://<render-url>/healthz
 
 Kết quả mong đợi: `200` + `healthy`. Rồi mở trình duyệt: trang chủ hiện `TechNova`; `/Products` liệt kê sản phẩm seed tiếng Việt giá `đ`; login `admin@ecommerce.local` + mật khẩu dashboard → `/Admin` hiện `Tổng quan hệ thống`; thêm sản phẩm vào giỏ dưới dạng guest → `/Cart` hiện hàng. Bước nào fail thì đọc log service Render trước (Deploy → Logs), đừng đụng code vội.
 
-- [ ] **Bước 6: Ghi lại runbook ngày demo (trả lời trong chat, không tạo thêm file)**
+- [x] **Bước 6: Ghi lại runbook ngày demo (trả lời trong chat, không tạo thêm file)**
 
 1. Trước 5 phút: mở URL công khai (warm-up — hấp thụ ~60s cold start sau sleep 15 phút).
 2. Giữ một tab trang chủ; nếu cú click đầu treo thì refresh (đang wake sau sleep).

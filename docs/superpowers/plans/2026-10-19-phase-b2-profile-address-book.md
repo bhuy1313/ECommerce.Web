@@ -1,5 +1,7 @@
 # Phase B2 — Hồ sơ & sổ địa chỉ (implementation plan)
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-19 · commit `e04ac31..c4afdc6` · **178 test** · báo cáo: [`docs/superpowers/reports/2026-10-19-phase-b2-profile-address-book.md`](../reports/2026-10-19-phase-b2-profile-address-book.md) · hộp kiểm được tick hồi tố ngày 2026-10-27.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** `docs/superpowers/specs/2026-10-19-phase-b2-profile-address-book-design.md`
@@ -48,7 +50,7 @@
 - Create: `ECommerce.Web/Services/IAddressService.cs`, `ECommerce.Web/Services/AddressService.cs`
 - Test: `ECommerce.Web.Tests/Services/AddressServiceTests.cs`
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `ECommerce.Web.Tests/Services/AddressServiceTests.cs`:
 
@@ -109,12 +111,12 @@ public class AddressServiceTests
 
 Viết đầy đủ 8 test theo chú thích trên (mỗi test `[Fact]`, dùng `await using var db`/`using var` theo `TestDbContextFactory`).
 
-- [ ] **Step 2: Chạy test, xác nhận RED**
+- [x] **Step 2: Chạy test, xác nhận RED**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AddressServiceTests"`
 Expected: KHÔNG compile (chưa có `AddressService`). Ghi nhận RED; tiếp tục.
 
-- [ ] **Step 3: Tạo entity + cấu hình EF**
+- [x] **Step 3: Tạo entity + cấu hình EF**
 
 `Address.cs`:
 
@@ -155,14 +157,14 @@ address.HasOne(a => a.User)
 address.HasIndex(a => a.UserId);
 ```
 
-- [ ] **Step 4: Tạo migration**
+- [x] **Step 4: Tạo migration**
 
 Run:
 `dotnet ef migrations add AddAddresses --project ECommerce.Web --startup-project ECommerce.Web --output-dir Data/Migrations`
 
 Kiểm tra file generated: `CreateTable("Addresses")`, cột `IsDefault` NOT NULL, index `IX_Addresses_UserId`, FK cascade. KHÔNG sửa tay trừ khi có lỗi.
 
-- [ ] **Step 5: Viết `IAddressService` + `AddressService`**
+- [x] **Step 5: Viết `IAddressService` + `AddressService`**
 
 ```csharp
 namespace ECommerce.Web.Services;
@@ -187,7 +189,7 @@ public interface IAddressService
 - `DeleteAddressAsync`: tìm theo `Id && UserId`; null → `(false, "Không tìm thấy địa chỉ.")`; ghi nhớ `wasDefault`; remove + save; nếu `wasDefault` thì lấy địa chỉ còn lại `OrderBy(Id).FirstOrDefaultAsync()`, set `IsDefault = true`, save; trả `(true, "Đã xóa địa chỉ.")`.
 - `ClearDefaultsAsync`: load các dòng `UserId && IsDefault`, set false (không save — caller save).
 
-- [ ] **Step 6: Đăng ký DI**
+- [x] **Step 6: Đăng ký DI**
 
 `Program.cs` sau `builder.Services.AddScoped<ICartService, CartService>();`:
 
@@ -195,23 +197,23 @@ public interface IAddressService
 builder.Services.AddScoped<IAddressService, AddressService>();
 ```
 
-- [ ] **Step 7: Chạy test xanh**
+- [x] **Step 7: Chạy test xanh**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~AddressServiceTests"`
 Expected: 8/8 pass.
 
-- [ ] **Step 7b: Mutation check (RED là compile-time)**
+- [x] **Step 7b: Mutation check (RED là compile-time)**
 
 Tạm sửa `AddAddressAsync`: đổi `var makeDefault = requested || !hasAny;` thành `var makeDefault = requested;`
 → chạy lại filter, xác nhận `AddAddressAsync_FirstAddress_BecomesDefault` fail.
 Khôi phục bằng **reverse-edit** (không `git checkout`), chạy lại → 8/8 pass.
 
-- [ ] **Step 8: Áp migration vào dev DB**
+- [x] **Step 8: Áp migration vào dev DB**
 
 Run: `dotnet ef database update --project ECommerce.Web --startup-project ECommerce.Web`
 Expected: `Done.` (dev LocalDB; `MigrateAsync()` ở startup cũng áp dụng khi chạy app).
 
-- [ ] **Step 9: Build + commit**
+- [x] **Step 9: Build + commit**
 
 Run: `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning, 0 error.
 
@@ -231,7 +233,7 @@ git commit -m "feat(profile): add address entity, migration and address service"
 - Modify: `ECommerce.Web/Views/Shared/_LoginPartial.cshtml`
 - Test: `ECommerce.Web.Tests/Controllers/ProfileControllerTests.cs`
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 `ProfileControllerTests.cs` — harness theo mẫu `AccountEmailFlowTests.CreateController`:
 
@@ -268,7 +270,7 @@ Test (8):
 Run RED:
 `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~ProfileControllerTests"`
 
-- [ ] **Step 2: View models**
+- [x] **Step 2: View models**
 
 `AddressFormViewModel.cs`:
 
@@ -314,7 +316,7 @@ public class ProfileViewModel
 }
 ```
 
-- [ ] **Step 3: Controller**
+- [x] **Step 3: Controller**
 
 ```csharp
 using AspNetCoreHero.ToastNotification.Abstractions;
@@ -344,7 +346,7 @@ public class ProfileController : Controller
 - `SetDefault(int id)` / `Delete(int id)`: gọi service, toast theo `Success`, `RedirectToAction(nameof(Index))`.
 - Cả 3 POST: `[HttpPost]`, `[ValidateAntiForgeryToken]`, `[EnableRateLimiting("mutating")]`.
 
-- [ ] **Step 4: Views**
+- [x] **Step 4: Views**
 
 `_AddressForm.cshtml` (`@model AddressFormViewModel`) — form `asp-controller="Profile" asp-action="Add" method="post"`, các trường `asp-for` + `asp-validation-for`, checkbox `asp-for="MakeDefault"`, nút "Lưu địa chỉ". Style theo `CheckoutPreview` (label `block font-medium ...`, input `w-full px-3.5 py-2.5 border ... rounded-xl`).
 
@@ -390,17 +392,17 @@ Khi danh sách rỗng hiển thị text "Bạn chưa lưu địa chỉ nào."; s
 </a>
 ```
 
-- [ ] **Step 5: Chạy test xanh + build**
+- [x] **Step 5: Chạy test xanh + build**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~ProfileControllerTests"` → pass.
 Run: `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning.
 
-- [ ] **Step 5b: Mutation check (RED là compile-time)**
+- [x] **Step 5b: Mutation check (RED là compile-time)**
 
 Tạm đổi `Index` trả `View(new ProfileViewModel())` (bỏ danh sách) → `Index_ReturnsViewWithAddresses` phải fail.
 Reverse-edit khôi phục; chạy lại filter → pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add ECommerce.Web/Models/ViewModels/AddressFormViewModel.cs ECommerce.Web/Models/ViewModels/ProfileViewModel.cs ECommerce.Web/Controllers/ProfileController.cs ECommerce.Web/Views/Profile ECommerce.Web/Views/Shared/_LoginPartial.cshtml ECommerce.Web.Tests/Controllers/ProfileControllerTests.cs
@@ -418,7 +420,7 @@ git commit -m "feat(profile): add profile page with saved address book"
 - Modify: `ECommerce.Web/Views/Cart/CheckoutPreview.cshtml`
 - Test: `ECommerce.Web.Tests/Controllers/CartControllerCheckoutTests.cs`
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 `CartControllerCheckoutTests.cs`:
 
@@ -455,7 +457,7 @@ Tests (3):
 Run RED:
 `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~CartControllerCheckoutTests"`
 
-- [ ] **Step 2: VM**
+- [x] **Step 2: VM**
 
 `SavedAddressOption.cs`:
 
@@ -474,7 +476,7 @@ public int? SavedAddressId { get; set; }
 public IReadOnlyList<SavedAddressOption> SavedAddresses { get; set; } = Array.Empty<SavedAddressOption>();
 ```
 
-- [ ] **Step 3: Controller**
+- [x] **Step 3: Controller**
 
 - Thêm field + tham số ctor `IAddressService addressService` (giữ thứ tự `cartService, notyf, addressService`).
 - Trong `Checkout` GET, sau kiểm tra login:
@@ -501,7 +503,7 @@ return View("CheckoutPreview", new CheckoutViewModel
 
 Thêm `using System.Security.Claims;` và `using ECommerce.Web.Models.Entities;`.
 
-- [ ] **Step 4: View**
+- [x] **Step 4: View**
 
 Trong `CheckoutPreview.cshtml`, chèn ngay trước khối `RecipientName`:
 
@@ -546,17 +548,17 @@ Cuối file (trong `<script>` riêng, sau script payment hiện có):
 </script>
 ```
 
-- [ ] **Step 5: Test xanh + toàn bộ suite**
+- [x] **Step 5: Test xanh + toàn bộ suite**
 
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj` → tất cả pass (159 + 19 = 178).
 Run: `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning.
 
-- [ ] **Step 5b: Mutation check (RED là compile-time)**
+- [x] **Step 5b: Mutation check (RED là compile-time)**
 
 Tạm bỏ prefill (đặt `RecipientName = string.Empty`) → `Checkout_WithDefaultAddress_PrefillsShippingFields` phải fail.
 Reverse-edit khôi phục; chạy lại filter → pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add ECommerce.Web/Models/ViewModels/SavedAddressOption.cs ECommerce.Web/Models/ViewModels/CheckoutViewModel.cs ECommerce.Web/Controllers/CartController.cs ECommerce.Web/Views/Cart/CheckoutPreview.cshtml ECommerce.Web.Tests/Controllers/CartControllerCheckoutTests.cs
@@ -567,11 +569,11 @@ git commit -m "feat(checkout): prefill and pick saved shipping addresses"
 
 ### Task 4: Live verify + graph gate
 
-- [ ] **Step 1: Boot dev server (một command duy nhất, có teardown)**
+- [x] **Step 1: Boot dev server (một command duy nhất, có teardown)**
 
 Theo AGENTS.md: gộp boot → drive → kill trong một command; không pid file; `ASPNETCORE_ENVIRONMENT=Development`; log redirect; đọc log bằng `FileShare.ReadWrite` nếu cần. Port `5080`.
 
-- [ ] **Step 2: Kịch bản kiểm tra (CHECK list)**
+- [x] **Step 2: Kịch bản kiểm tra (CHECK list)**
 
 Đăng nhập `qa.a4@technova.local` / `Qa!23456`:
 
@@ -588,12 +590,12 @@ Theo AGENTS.md: gộp boot → drive → kill trong một command; không pid fi
 
 Ghi lại id đơn hàng + user đã tạo vào report (side effect dev LocalDB).
 
-- [ ] **Step 3: Graph change gate**
+- [x] **Step 3: Graph change gate**
 
 Run: `node .gitnexus/run.cjs detect-changes --scope compare --base-ref ac5b1ea --repo .`
 Yêu cầu: không `partial`/`truncated`; rà các process checkout/profile bị ảnh hưởng; risk cao là bình thường (đụng checkout).
 
-- [ ] **Step 4: Report**
+- [x] **Step 4: Report**
 
 Ghi `.superpowers/sdd/2026-10-19-phase-b2-profile-address-book/report-phase-b2-profile-address-book.md`: commit range, số test trước/sau, kết quả live verify từng CHECK, side effect DB, graph gate.
 

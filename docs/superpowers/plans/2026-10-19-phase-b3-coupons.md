@@ -1,5 +1,7 @@
 # Phase B3 — Coupon / mã giảm giá (implementation plan)
 
+> **Trạng thái:** ✅ Hoàn thành — 2026-10-19 · commit `910b49d..8f89825` · **206 test** · báo cáo: [`docs/superpowers/reports/2026-10-19-phase-b3-coupons.md`](../reports/2026-10-19-phase-b3-coupons.md) · hộp kiểm được tick hồi tố ngày 2026-10-27.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Admin quản lý mã giảm giá; khách áp mã ở checkout và server trừ lượt dùng atomic trong transaction tạo đơn.
@@ -62,7 +64,7 @@ public interface ICouponService
 - Blank code: `ValidateAsync`/`RedeemAsync` trả `new CouponValidationResult(false, null, null, 0m, null)`.
 - Hợp lệ: `IsValid = true`, `Code` đã chuẩn hóa, `DiscountAmount`, `Description`.
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 `CouponServiceTests.cs` — helper:
 
@@ -104,7 +106,7 @@ Test (16 `[Fact]`, tên + assertion chính):
 Run: `dotnet test ECommerce.Web.Tests/ECommerce.Web.Tests.csproj --filter "FullyQualifiedName~CouponServiceTests"`
 Expected: RED (compile-time — chưa có type).
 
-- [ ] **Step 2: Tạo model**
+- [x] **Step 2: Tạo model**
 
 `Coupon.cs`:
 ```csharp
@@ -133,7 +135,7 @@ public class Coupon
 `ApplicationDbContext`: `DbSet<Coupon> Coupons`; config `Code` max 50 + unique index,
 `Value`/`MinOrderAmount` precision (18,2).
 
-- [ ] **Step 3: Viết CouponService**
+- [x] **Step 3: Viết CouponService**
 
 - `Normalize(string code) => code.Trim().ToUpperInvariant()`.
 - `ValidateAsync`: blank → blank result; load `AsNoTracking` theo Code chuẩn hóa; kiểm tra theo thứ tự
@@ -158,7 +160,7 @@ var affected = await _db.Coupons
   Toggle message: "Đã cập nhật trạng thái mã giảm giá.".
 - `GetAllAsync`: `OrderByDescending(c => c.IsActive).ThenBy(c => c.EndsOn).ThenBy(c => c.Code)`.
 
-- [ ] **Step 4: DI + migration**
+- [x] **Step 4: DI + migration**
 
 `Program.cs` sau `IAddressService`: `builder.Services.AddScoped<ICouponService, CouponService>();`
 
@@ -168,14 +170,14 @@ Run:
 Kiểm tra generated: bảng `Coupons` + unique index `IX_Coupons_Code`, precision `decimal(18,2)`.
 (Chưa thêm cột Orders ở task này — Task 2 mới thêm.)
 
-- [ ] **Step 5: Test xanh + mutation check**
+- [x] **Step 5: Test xanh + mutation check**
 
 Run filter CouponServiceTests → 16/16 pass.
 
 Mutation check (RED compile-time): tạm đổi `ValidateAsync` bỏ cap (`discount = discount` thay vì
 `Math.Min(discount, subtotal)`) → test 3 phải fail. Reverse-edit; chạy lại → pass.
 
-- [ ] **Step 6: Build + commit**
+- [x] **Step 6: Build + commit**
 
 Run `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning.
 
@@ -199,7 +201,7 @@ git commit -m "feat(coupons): add coupon entity, service and migration"
 - Produces: `CreateOrderFromCartAsync(string userId, ShippingDetails shipping, PaymentMethod method, string? couponCode = null)`.
 - `Order` thêm `decimal DiscountAmount`, `string? CouponCode`.
 
-- [ ] **Step 1: Test đỏ cho OrderService**
+- [x] **Step 1: Test đỏ cho OrderService**
 
 Thêm vào `OrderServiceTests` (ctor đổi thành `new OrderService(_db, new CouponService(_db), _loggerMock.Object)`):
 
@@ -215,7 +217,7 @@ Thêm vào `OrderServiceTests` (ctor đổi thành `new OrderService(_db, new Co
 
 Run filter `OrderServiceTests` → RED (compile-time do signature 4 tham số).
 
-- [ ] **Step 2: Sửa OrderService + interface**
+- [x] **Step 2: Sửa OrderService + interface**
 
 Trong `CreateOrderFromCartAsync`, sau precheck tồn kho và **trước** vòng trừ kho:
 
@@ -231,7 +233,7 @@ if (!coupon.IsValid)
 Order khởi tạo thêm `DiscountAmount = coupon.DiscountAmount`, `CouponCode = coupon.Code`,
 `TotalAmount = subtotal - coupon.DiscountAmount` (không âm vì service đã cap).
 
-- [ ] **Step 3: Test đỏ cho OrdersController**
+- [x] **Step 3: Test đỏ cho OrdersController**
 
 Sửa helper `CreateController` (thêm `Mock<ICouponService>? couponService = null`):
 - truyền `(couponService ?? new Mock<ICouponService>()).Object` vào ctor **sau** `cartService`;
@@ -247,7 +249,7 @@ Thêm 2 test:
 Cập nhật **mọi** `Setup(s => s.CreateOrderFromCartAsync(...))` hiện có: thêm tham số thứ 4
 `It.IsAny<string?>()` (7 chỗ: dòng ~87, 115, 126, 151, 166, 197, 225).
 
-- [ ] **Step 4: Sửa OrdersController**
+- [x] **Step 4: Sửa OrdersController**
 
 Thêm field + tham số `ICouponService couponService` (sau `cartService`).
 - Trong `if (!ModelState.IsValid)`: sau `model.Cart = ...`, gọi `ValidateAsync` và gán
@@ -255,7 +257,7 @@ Thêm field + tham số `ICouponService couponService` (sau `cartService`).
 - Truyền `model.CouponCode` vào `CreateOrderFromCartAsync`.
 - Khi `!success`: `_notyf.Error(message); return RedirectToAction("Checkout", "Cart", new { couponCode = model.CouponCode });`
 
-- [ ] **Step 5: Thêm cột Order + migration**
+- [x] **Step 5: Thêm cột Order + migration**
 
 `Order` thêm 2 property; `ApplicationDbContext` config `DiscountAmount` precision (18,2),
 `CouponCode` max 50. Chạy:
@@ -263,7 +265,7 @@ Thêm field + tham số `ICouponService couponService` (sau `cartService`).
 Kiểm tra `Orders.DiscountAmount` NOT NULL **có `defaultValue: 0m`** và `CouponCode` nullable.
 Rồi `dotnet ef database update --project ECommerce.Web --startup-project ECommerce.Web`.
 
-- [ ] **Step 6: Test xanh + toàn bộ suite + commit**
+- [x] **Step 6: Test xanh + toàn bộ suite + commit**
 
 Run filter OrderServiceTests và CheckoutControllerTests → pass; chạy toàn bộ → pass; build 0 warning.
 
@@ -287,7 +289,7 @@ git commit -m "feat(checkout): redeem coupon atomically when creating order"
 - Produces: `CheckoutViewModel` thêm `string? CouponCode`, `decimal DiscountAmount`,
   `string? CouponError`, `string? CouponDescription`, computed `decimal PayableTotal`.
 
-- [ ] **Step 1: Test đỏ**
+- [x] **Step 1: Test đỏ**
 
 Cập nhật harness `CreateController` thêm `Mock<ICouponService>` (ctor `CartController(cart, notyf, addresses, coupons)`).
 Thêm:
@@ -299,7 +301,7 @@ Thêm:
 
 Run filter → RED.
 
-- [ ] **Step 2: VM + controller**
+- [x] **Step 2: VM + controller**
 
 `CheckoutViewModel`:
 ```csharp
@@ -316,7 +318,7 @@ sau khi xác thực đăng nhập, gọi `ValidateAsync(couponCode, cart.TotalAm
 `DiscountAmount = result.DiscountAmount`, `CouponError = result.Error`,
 `CouponDescription = result.Description`.
 
-- [ ] **Step 3: View**
+- [x] **Step 3: View**
 
 Trên khối `.bg-white ... rounded-3xl` (trước `<form asp-controller="Orders" ...>`), thêm panel GET:
 ```html
@@ -334,7 +336,7 @@ Trong phần Totals: chèn dòng "Giảm giá" khi `Model.DiscountAmount > 0`
 (hiển thị `-<vc:money amount="@Model.DiscountAmount" />`), và đổi "Tổng thanh toán"
 từ `Model.Cart.TotalAmount` sang `Model.PayableTotal`.
 
-- [ ] **Step 4: Test xanh + build + commit**
+- [x] **Step 4: Test xanh + build + commit**
 
 Filter CartControllerCheckoutTests → pass; full suite; build 0 warning.
 
@@ -356,7 +358,7 @@ git commit -m "feat(checkout): preview coupon discount and applicable total"
 **Interfaces:**
 - Consumes: toàn bộ `ICouponService` (Task 1).
 
-- [ ] **Step 1: Controller**
+- [x] **Step 1: Controller**
 
 Thêm `ICouponService` vào ctor (sau `_orderService`). Actions (tất cả `[Authorize(Roles = AppRoles.Admin)]`):
 
@@ -373,7 +375,7 @@ Thêm `ICouponService` vào ctor (sau `_orderService`). Actions (tất cả `[Au
 POST actions dùng `[ValidateAntiForgeryToken]`; admin actions không cần rate-limit `mutating`
 (đã `[Authorize(Roles=Admin)]`, theo pattern hiện có của AdminController).
 
-- [ ] **Step 2: Views**
+- [x] **Step 2: Views**
 
 `Coupons.cshtml` (`@model IReadOnlyList<ECommerce.Web.Models.Entities.Coupon>`): tiêu đề + nút
 "Thêm mã" (`asp-action="CreateCoupon"`); bảng cột Mã, Loại, Giá trị, Đơn tối thiểu, Đã dùng/Giới hạn,
@@ -391,7 +393,7 @@ Value, MinOrderAmount, UsageLimit, StartsOn, EndsOn (`type="date"`), IsActive ch
 <a asp-action="Coupons" class="..."><i class="fas fa-ticket-alt ..."></i> Mã giảm giá</a>
 ```
 
-- [ ] **Step 3: Build + commit**
+- [x] **Step 3: Build + commit**
 
 Run `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning (Razor compile).
 Chạy full test suite (không đổi hành vi) → pass.
@@ -410,7 +412,7 @@ git commit -m "feat(admin): add coupon management screens"
 - Modify: `ECommerce.Web/Views/Admin/OrderDetails.cshtml`
 - Modify: `ECommerce.Web/Views/Emails/OrderConfirmation.cshtml`
 
-- [ ] **Step 1: Dòng giảm giá**
+- [x] **Step 1: Dòng giảm giá**
 
 - `Views/Orders/Details.cshtml`: trong `<tfoot>`, trước dòng "Tổng thanh toán", thêm khi
   `Model.DiscountAmount > 0`: cột label `Giảm giá (@Model.CouponCode):`, cột giá trị
@@ -419,11 +421,11 @@ git commit -m "feat(admin): add coupon management screens"
 - `Views/Emails/OrderConfirmation.cshtml`: ngay trên dòng "Tổng cộng", thêm khi
   `order.DiscountAmount > 0`: `Giảm giá (@order.CouponCode): -@order.DiscountAmount.ToString("N0") đ`.
 
-- [ ] **Step 2: Build + full suite**
+- [x] **Step 2: Build + full suite**
 
 `dotnet build ECommerce.Web.slnx --no-incremental` → 0 warning; `dotnet test ...` → pass.
 
-- [ ] **Step 3: Live verify (một command, tự teardown)**
+- [x] **Step 3: Live verify (một command, tự teardown)**
 
 Boot dev server port 5080 (`ASPNETCORE_ENVIRONMENT=Development`), script HTTP với cookie jar;
 kịch bản:
@@ -446,7 +448,7 @@ kịch bản:
 Ghi kết quả từng CHECK vào report `.superpowers/sdd/2026-10-19-phase-b3-coupons/report-phase-b3-coupons.md`
 kèm commit range, số test trước/sau, side effect DB (user/mã/đơn test).
 
-- [ ] **Step 4: Graph gate**
+- [x] **Step 4: Graph gate**
 
 `node .gitnexus/run.cjs detect-changes --scope compare --base-ref c4afdc6 --repo .`
 Yêu cầu không `partial`/`truncated`; risk thường cao vì đụng checkout/order.
