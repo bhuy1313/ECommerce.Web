@@ -10,4 +10,10 @@ public class VnPayOptions
     public string BaseUrl { get; set; } = string.Empty;
 
     public string ReturnUrl { get; set; } = string.Empty;
+
+    /// <summary>Đủ cấu hình để khởi tạo giao dịch VNPay hay chưa.</summary>
+    public bool IsConfigured =>
+        !string.IsNullOrWhiteSpace(TmnCode) &&
+        !string.IsNullOrWhiteSpace(HashSecret) &&
+        !string.IsNullOrWhiteSpace(ReturnUrl);
 }

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Controllers;
 using ECommerce.Web.Models;
+using ECommerce.Web.Models.Configuration;
 using ECommerce.Web.Models.Entities;
 using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Models.ViewModels;
@@ -30,8 +31,16 @@ public class CheckoutControllerTests
         string userId = "user-checkout",
         Mock<IEmailService>? emailService = null,
         Mock<ICouponService>? couponService = null,
-        Mock<IShippingCalculator>? shippingService = null)
+        Mock<IShippingCalculator>? shippingService = null,
+        VnPayOptions? vnPayOptions = null)
     {
+        vnPayOptions ??= new VnPayOptions
+        {
+            TmnCode = "TEST_TMN",
+            HashSecret = "TEST_SECRET",
+            ReturnUrl = "https://example.com/return"
+        };
+
         var store = new Mock<IUserStore<ApplicationUser>>();
         var userManager = new Mock<UserManager<ApplicationUser>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
@@ -64,7 +73,8 @@ public class CheckoutControllerTests
             shippingService.Object,
             (paymentService ?? new Mock<IPaymentService>()).Object,
             (emailService ?? new Mock<IEmailService>()).Object,
-            Mock.Of<ILogger<OrdersController>>())
+            Mock.Of<ILogger<OrdersController>>(),
+            vnPayOptions)
         {
             ControllerContext = new ControllerContext
             {
@@ -204,6 +214,38 @@ public class CheckoutControllerTests
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(OrdersController.Details), redirect.ActionName);
         Assert.Equal(77, redirect.RouteValues?["id"]);
+    }
+
+    [Fact]
+    public async Task Checkout_WhenVnPaySelectedAndNotConfigured_DoesNotCreateOrderAndAddsError()
+    {
+        // Arrange
+        var orderService = new Mock<IOrderService>();
+        var cartService = new Mock<ICartService>();
+        cartService.Setup(s => s.GetCartAsync()).ReturnsAsync(new CartViewModel());
+
+        // Controller với VnPayOptions chưa cấu hình (IsConfigured == false)
+        var controller = CreateController(orderService, cartService, vnPayOptions: new VnPayOptions());
+        var model = new CheckoutViewModel
+        {
+            RecipientName = "Nguyen Van A",
+            RecipientPhone = "0901234567",
+            ShippingAddress = "12 Le Loi, Q1",
+            PaymentMethod = PaymentMethod.VnPay,
+            ShippingMethodId = 1,
+            Cart = new CartViewModel()
+        };
+
+        // Act
+        var result = await controller.Checkout(model);
+
+        // Assert
+        orderService.Verify(
+            s => s.CreateOrderFromCartAsync(It.IsAny<string>(), It.IsAny<ShippingDetails>(), It.IsAny<PaymentMethod>(), It.IsAny<string?>(), It.IsAny<int?>()),
+            Times.Never);
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("~/Views/Cart/CheckoutPreview.cshtml", view.ViewName);
+        Assert.True(controller.ModelState.ContainsKey(nameof(CheckoutViewModel.PaymentMethod)));
     }
 
     [Fact]

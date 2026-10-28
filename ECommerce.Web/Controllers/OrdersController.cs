@@ -1,6 +1,8 @@
 using AspNetCoreHero.ToastNotification.Abstractions;
 using ECommerce.Web.Models;
+using ECommerce.Web.Models.Configuration;
 using ECommerce.Web.Models.Entities;
+using ECommerce.Web.Models.Entities.Enums;
 using ECommerce.Web.Models.ViewModels;
 using ECommerce.Web.Services;
 using ECommerce.Web.Services.Email;
@@ -24,6 +26,7 @@ public class OrdersController : Controller
     private readonly IPaymentService _paymentService;
     private readonly IEmailService _emailService;
     private readonly ILogger<OrdersController> _logger;
+    private readonly VnPayOptions _vnPayOptions;
 
     public OrdersController(
         IOrderService orderService,
@@ -34,7 +37,8 @@ public class OrdersController : Controller
         IShippingCalculator shippingCalculator,
         IPaymentService paymentService,
         IEmailService emailService,
-        ILogger<OrdersController> logger)
+        ILogger<OrdersController> logger,
+        VnPayOptions? vnPayOptions = null)
     {
         _orderService = orderService;
         _userManager = userManager;
@@ -45,6 +49,7 @@ public class OrdersController : Controller
         _paymentService = paymentService;
         _emailService = emailService;
         _logger = logger;
+        _vnPayOptions = vnPayOptions ?? new VnPayOptions();
     }
 
     [HttpGet]
@@ -109,6 +114,15 @@ public class OrdersController : Controller
         {
             ModelState.AddModelError(nameof(model.ShippingMethodId), "Vui lòng chọn phương thức vận chuyển hợp lệ.");
             _notyf.Error("Vui lòng chọn phương thức vận chuyển hợp lệ.");
+            await PopulateCheckoutAsync(model);
+            return View("~/Views/Cart/CheckoutPreview.cshtml", model);
+        }
+
+        if (model.PaymentMethod == PaymentMethod.VnPay && !_vnPayOptions.IsConfigured)
+        {
+            ModelState.AddModelError(nameof(model.PaymentMethod),
+                "Thanh toán VNPay hiện chưa khả dụng. Vui lòng chọn thanh toán khi nhận hàng (COD).");
+            _notyf.Error("VNPay hiện chưa khả dụng, vui lòng chọn COD.");
             await PopulateCheckoutAsync(model);
             return View("~/Views/Cart/CheckoutPreview.cshtml", model);
         }
