@@ -5,74 +5,78 @@
     ViewData["Title"] = "Thanh toán an toàn";
 }
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
-    <nav class="flex text-sm text-gray-500 dark:text-gray-400 mb-6 items-center">
-        <a asp-controller="Home" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Trang chủ</a>
-        <span class="mx-2 text-gray-400">/</span>
-        <a asp-controller="Cart" asp-action="Index" class="hover:text-primary dark:hover:text-indigo-300 transition-colors">Giỏ hàng</a>
-        <span class="mx-2 text-gray-400">/</span>
-        <span class="text-gray-900 dark:text-gray-100 font-medium">Xác nhận thanh toán</span>
+    <nav class="flex text-xs text-zinc-500 dark:text-zinc-400 mb-6 items-center gap-1.5" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Trang chủ</a>
+        <span class="text-zinc-400 dark:text-zinc-600">/</span>
+        <a asp-controller="Cart" asp-action="Index" class="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Giỏ hàng</a>
+        <span class="text-zinc-400 dark:text-zinc-600">/</span>
+        <span class="text-zinc-900 dark:text-zinc-100 font-medium">Xác nhận thanh toán</span>
     </nav>
 
-    <div class="text-center mb-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Xác nhận & Hoàn tất đơn hàng</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kiểm tra thông tin giao nhận và tóm tắt sản phẩm trước khi tạo đơn</p>
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Xác nhận & Hoàn tất đơn hàng</h1>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Kiểm tra thông tin giao nhận và tóm tắt sản phẩm trước khi tạo đơn</p>
     </div>
 
-    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-        <div class="p-6 sm:p-8 border-b border-gray-100 dark:border-gray-800">
-            <form asp-controller="Cart" asp-action="Checkout" method="get" class="flex flex-col sm:flex-row gap-2">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+        <!-- Coupon Bar -->
+        <div class="p-5 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60">
+            <form asp-controller="Cart" asp-action="Checkout" method="get" class="flex flex-col sm:flex-row gap-2 max-w-xl">
                 <div class="flex-1">
                     <label for="couponCodeInput" class="sr-only">Mã giảm giá</label>
                     <input id="couponCodeInput" name="couponCode" value="@Model.CouponCode" maxlength="50"
                            placeholder="Nhập mã giảm giá (ví dụ: SAVE10)"
-                           class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 uppercase placeholder:normal-case focus:ring-primary focus:border-primary" />
+                           class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 uppercase placeholder:normal-case placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100" />
                 </div>
-                <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors">
+                <button type="submit" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-sm font-medium rounded-md active:scale-[0.98] transition-all">
                     Áp dụng
                 </button>
                 @if (!string.IsNullOrEmpty(Model.CouponCode))
                 {
                     <a asp-controller="Cart" asp-action="Checkout"
-                       class="px-5 py-2.5 text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl transition-colors">
+                       class="px-4 py-2 text-center text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-md active:scale-[0.98] transition-all">
                         Bỏ mã
                     </a>
                 }
             </form>
             @if (!string.IsNullOrEmpty(Model.CouponError))
             {
-                <p class="mt-2 text-xs text-red-600 dark:text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>@Model.CouponError</p>
+                <p class="mt-2 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-circle"></i>@Model.CouponError
+                </p>
             }
             else if (Model.DiscountAmount > 0)
             {
-                <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-check-circle mr-1"></i>@Model.CouponDescription — giảm <vc:money amount="@Model.DiscountAmount" />
+                <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
+                    <i class="fas fa-check-circle"></i>@Model.CouponDescription — giảm <vc:money amount="@Model.DiscountAmount" />
                 </p>
             }
         </div>
+
         <form asp-controller="Orders" asp-action="Checkout" method="post">
         <div class="flex flex-col md:flex-row">
             <!-- Form Thông tin giao hàng -->
-            <div class="w-full md:w-3/5 p-6 sm:p-8 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800">
-                <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
-                    <i class="fas fa-map-marker-alt text-primary dark:text-indigo-300 mr-2"></i>Thông tin nhận hàng
+            <div class="w-full md:w-3/5 p-6 sm:p-8 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-5 flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-zinc-500"></i>Thông tin nhận hàng
                 </h2>
 
                 <div class="space-y-4 text-sm">
                     <div>
-                        <label class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Tài khoản khách hàng</label>
-                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-medium">
-                            <i class="fas fa-user-circle text-primary dark:text-indigo-300 mr-2"></i>@User.Identity?.Name
+                        <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tài khoản khách hàng</label>
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-medium flex items-center">
+                            <i class="fas fa-user-circle text-zinc-400 mr-2"></i>@User.Identity?.Name
                         </div>
                     </div>
 
                     @if (Model.SavedAddresses.Any())
                     {
                         <div>
-                            <label asp-for="SavedAddressId" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ đã lưu</label>
+                            <label asp-for="SavedAddressId" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Địa chỉ đã lưu</label>
                             <select asp-for="SavedAddressId" id="savedAddressSelect"
-                                    class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary">
+                                    class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100">
                                 <option value="">— Nhập địa chỉ mới —</option>
                                 @foreach (var option in Model.SavedAddresses)
                                 {
@@ -85,65 +89,65 @@
                     }
 
                     <div>
-                        <label asp-for="RecipientName" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <label asp-for="RecipientName" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1"></label>
                         <input asp-for="RecipientName" autocomplete="name" placeholder="Nguyễn Văn A"
-                               class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
-                        <span asp-validation-for="RecipientName" class="block mt-1 text-xs text-red-600"></span>
+                               class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100" />
+                        <span asp-validation-for="RecipientName" class="block mt-1 text-xs text-rose-500"></span>
                     </div>
 
                     <div>
-                        <label asp-for="RecipientPhone" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <label asp-for="RecipientPhone" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1"></label>
                         <input asp-for="RecipientPhone" type="tel" autocomplete="tel" placeholder="09xx xxx xxx"
-                               class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary" />
-                        <span asp-validation-for="RecipientPhone" class="block mt-1 text-xs text-red-600"></span>
+                               class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100" />
+                        <span asp-validation-for="RecipientPhone" class="block mt-1 text-xs text-rose-500"></span>
                     </div>
 
                     <div>
-                        <label asp-for="ShippingAddress" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <label asp-for="ShippingAddress" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1"></label>
                         <textarea asp-for="ShippingAddress" rows="3" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-                                  class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary"></textarea>
-                        <span asp-validation-for="ShippingAddress" class="block mt-1 text-xs text-red-600"></span>
+                                  class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100"></textarea>
+                        <span asp-validation-for="ShippingAddress" class="block mt-1 text-xs text-rose-500"></span>
                     </div>
 
                     <div>
-                        <label asp-for="Note" class="block font-medium text-gray-700 dark:text-gray-300 mb-1"></label>
+                        <label asp-for="Note" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1"></label>
                         <textarea asp-for="Note" rows="2" placeholder="Ví dụ: giao ngoài giờ hành chính"
-                                  class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-primary focus:border-primary"></textarea>
-                        <span asp-validation-for="Note" class="block mt-1 text-xs text-red-600"></span>
+                                  class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100"></textarea>
+                        <span asp-validation-for="Note" class="block mt-1 text-xs text-rose-500"></span>
                     </div>
 
                     <div>
                         <fieldset>
-                            <legend class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức vận chuyển</legend>
+                            <legend class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-2">Phương thức vận chuyển</legend>
                             @if (Model.ShippingMethods.Count == 0)
                             {
-                                <p class="text-sm text-red-600 dark:text-red-400" role="alert">
+                                <p class="text-xs text-rose-600 dark:text-rose-400" role="alert">
                                     <i class="fas fa-exclamation-circle mr-1"></i>@Model.ShippingError
                                 </p>
                             }
                             else
                             {
-                                <div class="space-y-3">
+                                <div class="space-y-2.5">
                                     @foreach (var option in Model.ShippingMethods)
                                     {
-                                        <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
+                                        <label class="flex items-center p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
                                             <input type="radio" name="ShippingMethodId" value="@option.Id"
-                                                   class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary"
+                                                   class="h-4 w-4 text-zinc-900 focus:ring-zinc-900 dark:focus:ring-zinc-100 accent-zinc-900 dark:accent-zinc-100"
                                                    checked="@(Model.ShippingMethodId == option.Id)" />
                                             <span class="ml-3">
-                                                <span class="block font-medium text-gray-900 dark:text-gray-100">@option.Name</span>
+                                                <span class="block text-xs font-medium text-zinc-900 dark:text-zinc-100">@option.Name</span>
                                                 @if (!string.IsNullOrWhiteSpace(option.Description))
                                                 {
-                                                    <span class="block text-xs text-gray-500 dark:text-gray-400">@option.Description</span>
+                                                    <span class="block text-[11px] text-zinc-500 dark:text-zinc-400">@option.Description</span>
                                                 }
                                             </span>
-                                            <span class="ml-auto font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                                            <span class="ml-auto text-xs font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
                                                 <vc:money amount="@option.Fee" />
                                             </span>
                                         </label>
                                     }
                                 </div>
-                                <span asp-validation-for="ShippingMethodId" class="block mt-1 text-xs text-red-600"></span>
+                                <span asp-validation-for="ShippingMethodId" class="block mt-1 text-xs text-rose-500"></span>
                             }
                         </fieldset>
                     </div>
@@ -151,113 +155,114 @@
                     <div>
                         @{ var vnPayReady = VnPayConfig.Value.IsConfigured; }
                         <fieldset>
-                            <legend class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Phương thức thanh toán</legend>
-                            <div class="space-y-3" id="paymentOptions">
-                                <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
-                                    <input type="radio" name="PaymentMethod" value="Cod" id="paymentMethodCod" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" @(Model.PaymentMethod == PaymentMethod.Cod || !vnPayReady ? "checked" : null) />
-                                    <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Thanh toán khi nhận hàng (COD)</span>
-                                    <i class="fas fa-hand-holding-usd text-primary dark:text-indigo-300 ml-auto text-lg"></i>
+                            <legend class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-2">Phương thức thanh toán</legend>
+                            <div class="space-y-2.5" id="paymentOptions">
+                                <label class="flex items-center p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+                                    <input type="radio" name="PaymentMethod" value="Cod" id="paymentMethodCod" class="h-4 w-4 text-zinc-900 focus:ring-zinc-900 dark:focus:ring-zinc-100 accent-zinc-900 dark:accent-zinc-100" @(Model.PaymentMethod == PaymentMethod.Cod || !vnPayReady ? "checked" : null) />
+                                    <span class="ml-3 text-xs font-medium text-zinc-900 dark:text-zinc-100">Thanh toán khi nhận hàng (COD)</span>
+                                    <i class="fas fa-hand-holding-usd text-zinc-400 ml-auto text-base"></i>
                                 </label>
                                 @if (vnPayReady)
                                 {
-                                    <label class="flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors">
-                                        <input type="radio" name="PaymentMethod" value="VnPay" id="paymentMethodVnPay" class="h-4 w-4 text-primary dark:text-indigo-300 focus:ring-primary" @(Model.PaymentMethod == PaymentMethod.VnPay ? "checked" : null) />
-                                        <span class="ml-3 font-medium text-gray-900 dark:text-gray-100">Chuyển khoản / Cổng thanh toán VNPay</span>
-                                        <i class="fab fa-cc-visa text-primary dark:text-indigo-300 ml-auto text-xl"></i>
+                                    <label class="flex items-center p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+                                        <input type="radio" name="PaymentMethod" value="VnPay" id="paymentMethodVnPay" class="h-4 w-4 text-zinc-900 focus:ring-zinc-900 dark:focus:ring-zinc-100 accent-zinc-900 dark:accent-zinc-100" @(Model.PaymentMethod == PaymentMethod.VnPay ? "checked" : null) />
+                                        <span class="ml-3 text-xs font-medium text-zinc-900 dark:text-zinc-100">Chuyển khoản / Cổng thanh toán VNPay</span>
+                                        <i class="fab fa-cc-visa text-zinc-400 ml-auto text-base"></i>
                                     </label>
                                 }
                             </div>
-                            <span asp-validation-for="PaymentMethod" class="block mt-1 text-xs text-red-600"></span>
+                            <span asp-validation-for="PaymentMethod" class="block mt-1 text-xs text-rose-500"></span>
                         </fieldset>
                         @if (vnPayReady)
                         {
-                            <div id="vnPayNote" class="hidden mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start">
-                                <i class="fas fa-info-circle text-amber-500 mr-2 mt-0.5"></i>
+                            <div id="vnPayNote" class="hidden mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-md text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                                <i class="fas fa-info-circle text-amber-500 mt-0.5"></i>
                                 <span>Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch. Đơn hàng chỉ được ghi nhận là đã thanh toán sau khi VNPay xác nhận với hệ thống.</span>
                             </div>
                         }
                     </div>
 
-                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-800 leading-relaxed flex items-start">
-                        <i class="fas fa-shield-alt text-blue-500 text-base mr-2.5 mt-0.5"></i>
+                    <div class="mt-6 p-3.5 bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 rounded-md text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed flex items-start gap-2.5">
+                        <i class="fas fa-shield-alt text-zinc-400 text-sm mt-0.5"></i>
                         <div>
-                            <strong>Bảo đảm tồn kho an toàn:</strong> Khi bạn bấm "Xác nhận Đặt Hàng", hệ thống sẽ tự động tạo đơn, kích hoạt transaction để trừ kho và lưu đơn hàng vào lịch sử tài khoản của bạn.
+                            <strong class="text-zinc-900 dark:text-zinc-200 font-medium">Bảo đảm tồn kho an toàn:</strong> Khi bạn bấm "Xác nhận Đặt Hàng", hệ thống sẽ tự động tạo đơn, kích hoạt transaction để trừ kho và lưu đơn hàng vào lịch sử tài khoản của bạn.
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Review Đơn hàng -->
-            <div class="w-full md:w-2/5 bg-gray-50/75 p-6 sm:p-8 flex flex-col justify-between">
+            <div class="w-full md:w-2/5 bg-zinc-50/70 dark:bg-zinc-900/40 p-6 sm:p-8 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-5 flex items-center justify-between">
                         <span>Đơn hàng của bạn</span>
-                        <span class="text-xs bg-indigo-100 text-primary dark:text-indigo-300 font-bold px-2.5 py-1 rounded-full">@Model.Cart.TotalItems món</span>
+                        <span class="text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-medium px-2 py-0.5 rounded">@Model.Cart.TotalItems món</span>
                     </h2>
 
                     <!-- Mini Cart Items -->
-                    <div class="overflow-y-auto max-h-64 pr-1 mb-6 space-y-3 divide-y divide-gray-100">
+                    <div class="overflow-y-auto max-h-64 pr-1 mb-6 space-y-3 divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach (var item in Model.Cart.Items)
                         {
                             <div class="pt-3 first:pt-0 flex justify-between items-start gap-3 text-sm">
                                 <div class="flex gap-3">
-                                    <div class="w-12 h-12 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center p-1.5 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                                    <div class="w-12 h-12 bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 flex items-center justify-center p-1 flex-shrink-0">
                                         <img src="@ProductImage.Resolve(item.ImageUrl)" alt="@item.ProductName" class="w-full h-full object-contain">
                                     </div>
                                     <div>
-                                        <p class="font-medium text-gray-800 dark:text-gray-200 line-clamp-1">@item.ProductName</p>
-                                        <p class="text-xs text-gray-400">SL: @item.Quantity × <vc:money amount="@item.UnitPrice" /></p>
+                                        <p class="text-xs font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">@item.ProductName</p>
+                                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">SL: @item.Quantity × <vc:money amount="@item.UnitPrice" /></p>
                                     </div>
                                 </div>
-                                <span class="font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap"><vc:money amount="@item.LineTotal" /></span>
+                                <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap"><vc:money amount="@item.LineTotal" /></span>
                             </div>
                         }
                     </div>
 
                     <!-- Totals -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 mb-6 text-sm">
-                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-4 space-y-2 mb-6 text-xs">
+                        <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                             <span>Tạm tính</span>
-                            <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.Cart.TotalAmount" /></span>
+                            <span class="font-medium text-zinc-900 dark:text-zinc-100"><vc:money amount="@Model.Cart.TotalAmount" /></span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                        <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                             <span>Phí vận chuyển</span>
                             @if (Model.ShippingMethodId.HasValue)
                             {
-                                <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.ShippingFee" /></span>
+                                <span class="font-medium text-zinc-900 dark:text-zinc-100"><vc:money amount="@Model.ShippingFee" /></span>
                             }
                             else
                             {
-                                <span class="text-gray-400">Chưa chọn</span>
+                                <span class="text-zinc-400">Chưa chọn</span>
                             }
                         </div>
                         @if (Model.DiscountAmount > 0)
                         {
-                            <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                            <div class="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                                 <span>Giảm giá (@Model.CouponCode)</span>
-                                <span class="font-medium">-<vc:money amount="@Model.DiscountAmount" /></span>
+                                <span>-<vc:money amount="@Model.DiscountAmount" /></span>
                             </div>
                         }
                         @if (Model.ShippingMethodId.HasValue)
                         {
-                            <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                                 <span>Thuế VAT (@((Model.TaxRate * 100).ToString("0.#"))%)</span>
-                                <span class="font-medium text-gray-800 dark:text-gray-200"><vc:money amount="@Model.TaxAmount" /></span>
+                                <span class="font-medium text-zinc-900 dark:text-zinc-100"><vc:money amount="@Model.TaxAmount" /></span>
                             </div>
                         }
-                        <div class="flex justify-between text-base font-bold text-gray-900 dark:text-gray-100 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex justify-between text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                             <span>Tổng thanh toán</span>
-                            <span class="text-primary dark:text-indigo-300 text-xl font-extrabold"><vc:money amount="@Model.PayableTotal" /></span>
+                            <span class="text-base font-bold"><vc:money amount="@Model.PayableTotal" /></span>
                         </div>
-                        <p class="text-[11px] text-gray-400 italic">Ngoại tệ chỉ để tham khảo — đơn hàng thanh toán bằng VNĐ.</p>
+                        <p class="text-[10px] text-zinc-400 italic">Ngoại tệ chỉ để tham khảo — đơn hàng thanh toán bằng VNĐ.</p>
                     </div>
                 </div>
 
                 <div class="space-y-3 pt-4">
-                    <button type="submit" disabled="@(Model.ShippingMethods.Count == 0)" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl text-base flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg">
-                        Xác nhận Đặt Hàng <i class="fas fa-check-circle ml-2 group-hover:scale-110 transition-transform"></i>
+                    <button type="submit" disabled="@(Model.ShippingMethods.Count == 0)" class="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-medium py-3 px-4 rounded-md shadow-sm active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span>Xác nhận Đặt Hàng</span>
+                        <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-0.5"></i>
                     </button>
-                    <a asp-controller="Cart" asp-action="Index" class="block w-full text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 transition-colors">
+                    <a asp-controller="Cart" asp-action="Index" class="block w-full text-center text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
                         ← Quay lại giỏ hàng
                     </a>
                 </div>
@@ -278,10 +283,12 @@
             options.forEach(function (input) {
                 var label = input.closest('label');
                 var selected = input.checked;
-                label.classList.toggle('border-primary', selected);
-                label.classList.toggle('bg-indigo-50/50', selected);
-                label.classList.toggle('border-gray-200', !selected);
-                label.classList.toggle('dark:border-gray-700', !selected);
+                label.classList.toggle('border-zinc-900', selected);
+                label.classList.toggle('dark:border-zinc-100', selected);
+                label.classList.toggle('bg-zinc-50', selected);
+                label.classList.toggle('dark:bg-zinc-800/40', selected);
+                label.classList.toggle('border-zinc-200', !selected);
+                label.classList.toggle('dark:border-zinc-800', !selected);
             });
 
             var vnPay = document.querySelector('#paymentOptions input[value="VnPay"]');

@@ -3,52 +3,52 @@
     ViewData["Title"] = Model.Success ? "Thanh toán thành công" : "Thanh toán chưa hoàn tất";
 }
 
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 sm:p-10 text-center">
+<div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-8 sm:p-10 text-center shadow-sm">
         @if (Model.Success)
         {
-            <div class="w-20 h-20 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-6">
-                <i class="fas fa-check-circle text-emerald-500 text-4xl"></i>
+            <div class="w-12 h-12 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-center mb-5 text-emerald-600 dark:text-emerald-400">
+                <i class="fas fa-check text-xl"></i>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Thanh toán thành công</h1>
+            <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Thanh toán thành công</h1>
         }
         else
         {
-            <div class="w-20 h-20 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center mb-6">
-                <i class="fas fa-exclamation-circle text-rose-500 text-4xl"></i>
+            <div class="w-12 h-12 mx-auto rounded-full bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 flex items-center justify-center mb-5 text-rose-600 dark:text-rose-400">
+                <i class="fas fa-exclamation text-xl"></i>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Thanh toán chưa hoàn tất</h1>
+            <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Thanh toán chưa hoàn tất</h1>
         }
 
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed max-w-xl mx-auto">@Model.Message</p>
+        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-2.5 leading-relaxed max-w-md mx-auto">@Model.Message</p>
 
         @if (Model.OrderId.HasValue)
         {
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                Mã đơn hàng:
-                <span class="font-bold text-gray-900 dark:text-gray-100">#ORD-@Model.OrderId.Value.ToString("D5")</span>
-            </p>
+            <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 text-xs">
+                <span class="text-zinc-500 dark:text-zinc-400">Mã đơn hàng:</span>
+                <span class="font-mono font-semibold text-zinc-900 dark:text-zinc-100">#ORD-@Model.OrderId.Value.ToString("D5")</span>
+            </div>
         }
 
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2.5">
             @if (Model.OrderId.HasValue)
             {
                 <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId.Value"
-                   class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary hover:bg-indigo-700 text-white font-semibold transition-colors">
-                    <i class="fas fa-receipt mr-2"></i> Xem chi tiết đơn hàng
+                   class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-medium active:scale-[0.98] transition-all">
+                    <i class="fas fa-receipt mr-1.5 text-xs"></i> Chi tiết đơn hàng
                 </a>
             }
             <a asp-controller="Orders" asp-action="Index"
-               class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">
-                <i class="fas fa-list mr-2"></i> Đơn hàng của tôi
+               class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-medium active:scale-[0.98] transition-all">
+                <i class="fas fa-list mr-1.5 text-xs"></i> Đơn hàng của tôi
             </a>
             <a asp-controller="Cart" asp-action="Index"
-               class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">
-                <i class="fas fa-shopping-bag mr-2"></i> Về giỏ hàng
+               class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-medium active:scale-[0.98] transition-all">
+                <i class="fas fa-shopping-bag mr-1.5 text-xs"></i> Về giỏ hàng
             </a>
         </div>
 
-        <p class="mt-6 text-xs text-gray-400 italic">
+        <p class="mt-6 text-[11px] text-zinc-400 italic">
             Nếu bạn cho rằng đây là sai sót, vui lòng liên hệ bộ phận hỗ trợ kèm mã đơn hàng ở trên.
         </p>
     </div>

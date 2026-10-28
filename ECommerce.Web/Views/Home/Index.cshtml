@@ -1,156 +1,201 @@
-﻿@model IEnumerable<ECommerce.Web.Models.Entities.Product>
+@model IEnumerable<ECommerce.Web.Models.Entities.Product>
 @{
     ViewData["Title"] = "Trang chủ";
 }
 
 @functions {
-    (string Icon, string Tile) GetCategoryStyle(string? categoryName)
+    string GetCategoryIcon(string? categoryName)
     {
         var cat = categoryName?.ToLower() ?? "";
         if (cat.Contains("laptop") || cat.Contains("thiết bị") || cat.Contains("electron"))
-            return ("fa-laptop", "bg-blue-50 text-blue-600 group-hover:bg-primary group-hover:text-white");
+            return "fa-laptop";
         if (cat.Contains("gaming") || cat.Contains("phụ kiện"))
-            return ("fa-keyboard", "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white");
+            return "fa-keyboard";
         if (cat.Contains("thời trang"))
-            return ("fa-tshirt", "bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white");
-        return ("fa-book", "bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white");
+            return "fa-tshirt";
+        return "fa-cube";
     }
 }
 
-<!-- Hero Banner -->
-<section class="relative bg-dark text-white overflow-hidden">
-    <div class="absolute inset-0">
-        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="Tech Background" class="w-full h-full object-cover opacity-40">
-        <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/80 to-transparent"></div>
-    </div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 flex flex-col justify-center">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-indigo-300 border border-primary/30 w-max mb-4">
-            <i class="fas fa-sparkles mr-1.5"></i> Ra mắt bộ sưu tập công nghệ mới
-        </span>
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-            Thế hệ thiết bị mới.<br><span class="text-primary dark:text-indigo-300">Đỉnh cao công nghệ.</span>
-        </h1>
-        <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed">
-            Khám phá bộ sưu tập thiết bị, phụ kiện và tài liệu chuyên ngành được tuyển chọn khắt khe với chất lượng và trải nghiệm vượt trội.
-        </p>
-        <div class="flex flex-wrap gap-4">
-            <a asp-controller="Products" asp-action="Index" class="bg-primary hover:bg-indigo-700 text-white font-semibold py-3.5 px-8 rounded-full transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 inline-flex items-center">
-                Mua Sắm Ngay <i class="fas fa-arrow-right ml-2 text-sm"></i>
-            </a>
-            <a asp-controller="Products" asp-action="Index" class="bg-white/10 hover:bg-white/20 text-white font-medium py-3.5 px-6 rounded-full backdrop-blur-sm transition-colors border border-white/20">
-                Khám phá danh mục
-            </a>
+<!-- Hero Section (Editorial Minimalist) -->
+<section class="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-7">
+                <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 text-xs font-medium mb-6">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span>Sản phẩm chính hãng tuyển chọn</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-zinc-950 dark:text-white leading-[1.1] mb-6">
+                    Thiết bị công nghệ & phụ kiện cao cấp.
+                </h1>
+                <p class="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed mb-8">
+                    Danh mục thiết bị điện tử, máy tính và phụ kiện được tuyển chọn kỹ lưỡng. Cam kết chất lượng, bảo hành tiêu chuẩn và hỗ trợ kỹ thuật tận tâm.
+                </p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <a asp-controller="Products" asp-action="Index" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-medium text-sm hover:bg-zinc-800 dark:hover:bg-white transition-colors shadow-sm">
+                        Xem tất cả sản phẩm
+                        <i class="fas fa-arrow-right ml-2 text-xs" aria-hidden="true"></i>
+                    </a>
+                    <a href="#featured-categories" class="inline-flex items-center justify-center px-5 py-3 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                        Khám phá danh mục
+                    </a>
+                </div>
+            </div>
+            <div class="lg:col-span-5 hidden lg:block">
+                <div class="relative rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-8 overflow-hidden">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-3.5 rounded-md bg-white dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 shadow-sm">
+                            <div class="w-10 h-10 rounded-md bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 text-sm">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Bảo hành chính hãng</h4>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Cam kết 100% sản phẩm có nguồn gốc rõ ràng</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3.5 rounded-md bg-white dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 shadow-sm">
+                            <div class="w-10 h-10 rounded-md bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 text-sm">
+                                <i class="fas fa-truck-fast"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Giao hàng toàn quốc</h4>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Đóng gói chuẩn kỹ thuật, theo dõi lộ trình minh bạch</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3.5 rounded-md bg-white dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 shadow-sm">
+                            <div class="w-10 h-10 rounded-md bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 text-sm">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Thanh toán linh hoạt</h4>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Hỗ trợ nhận hàng thanh toán (COD) an toàn</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- Danh mục nổi bật -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="flex items-center justify-between mb-6">
+<section id="featured-categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+    <div class="flex items-end justify-between mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Danh Mục Nổi Bật</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Lựa chọn các nhóm sản phẩm phù hợp với nhu cầu</p>
+            <h2 class="text-xl font-bold tracking-tight text-zinc-950 dark:text-white">Danh Mục Sản Phẩm</h2>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Phân loại các dòng thiết bị và phụ kiện có sẵn</p>
         </div>
-        <a asp-controller="Products" asp-action="Index" class="text-primary dark:text-indigo-300 hover:text-indigo-800 font-medium text-sm">
-            Xem tất cả <i class="fas fa-arrow-right ml-1"></i>
+        <a asp-controller="Products" asp-action="Index" class="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white inline-flex items-center gap-1 transition-colors">
+            Xem tất cả <i class="fas fa-arrow-right text-[10px]"></i>
         </a>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         @foreach (var category in (ViewBag.Categories as IEnumerable<ECommerce.Web.Models.Entities.Category>) ?? Enumerable.Empty<ECommerce.Web.Models.Entities.Category>())
         {
-            var style = GetCategoryStyle(category.Name);
-            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@category.Id" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-800 hover:border-primary/20">
-                <div class="w-16 h-16 mx-auto @style.Tile rounded-2xl flex items-center justify-center mb-4 text-2xl transition-colors">
-                    <i class="fas @style.Icon" aria-hidden="true"></i>
+            var icon = GetCategoryIcon(category.Name);
+            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@category.Id" 
+               class="group p-5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all">
+                <div class="w-10 h-10 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center mb-3 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-950 transition-colors text-base">
+                    <i class="fas @icon" aria-hidden="true"></i>
                 </div>
-                <h3 class="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary dark:hover:text-indigo-300 transition-colors">@category.Name</h3>
-                <p class="text-xs text-gray-400 mt-1">@category.Description</p>
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+                    @category.Name
+                </h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">
+                    @(string.IsNullOrWhiteSpace(category.Description) ? "Khám phá danh mục" : category.Description)
+                </p>
             </a>
         }
     </div>
-</div>
+</section>
 
-<!-- Sản phẩm bán chạy -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-16">
-    <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-10 shadow-sm border border-gray-100 dark:border-gray-800">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Sản Phẩm Tiêu Biểu</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Được tuyển chọn và đánh giá cao bởi cộng đồng</p>
-            </div>
-            <a asp-controller="Products" asp-action="Index" class="text-primary dark:text-indigo-300 hover:text-indigo-800 font-semibold text-sm inline-flex items-center">
-                Xem tất cả (@Model.Count()) <i class="fas fa-arrow-right ml-1.5 text-xs"></i>
-            </a>
+<!-- Sản phẩm tiêu biểu -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="flex items-end justify-between mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-zinc-950 dark:text-white">Sản Phẩm Tiêu Biểu</h2>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Các mặt hàng được quan tâm nhiều nhất</p>
         </div>
+        <a asp-controller="Products" asp-action="Index" class="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white inline-flex items-center gap-1 transition-colors">
+            Xem toàn bộ kho (@Model.Count()) <i class="fas fa-arrow-right text-[10px]"></i>
+        </a>
+    </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @foreach (var product in Model)
-            {
-                <div class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col hover:-translate-y-1">
-                    <!-- Ảnh sản phẩm -->
-                    <div class="relative pt-[85%] bg-gray-50 dark:bg-gray-800 overflow-hidden">
-                        @if (product.StockQuantity <= 0)
-                        {
-                            <span class="absolute top-3 left-3 bg-gray-800/90 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 backdrop-blur-sm">
-                                Hết hàng
-                            </span>
-                        }
-                        else if (product.StockQuantity <= 15)
-                        {
-                            <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-sm">
-                                Chỉ còn @product.StockQuantity sp
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="absolute top-3 left-3 bg-primary/90 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-sm">
-                                @product.Category?.Name
-                            </span>
-                        }
-
-                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="absolute inset-0 p-6 flex items-center justify-center" aria-label="Xem chi tiết @product.Name">
-                            <img src="@ProductImage.Resolve(product.ImageUrl)" alt="@product.Name" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
-                        </a>
-                    </div>
-
-                    <!-- Nội dung card -->
-                    <div class="p-5 flex flex-col flex-grow">
-                        <div class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        @foreach (var product in Model)
+        {
+            <div class="group bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all flex flex-col overflow-hidden">
+                <!-- Vùng ảnh sản phẩm -->
+                <div class="relative aspect-square bg-zinc-50 dark:bg-zinc-800/40 p-6 flex items-center justify-center overflow-hidden border-b border-zinc-100 dark:border-zinc-800/60">
+                    @if (product.StockQuantity <= 0)
+                    {
+                        <span class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+                            Hết hàng
+                        </span>
+                    }
+                    else if (product.StockQuantity <= 15)
+                    {
+                        <span class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            Còn @product.StockQuantity sp
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded text-[11px] font-medium text-zinc-600 dark:text-zinc-400 bg-white/90 dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-zinc-700/80">
                             @product.Category?.Name
-                        </div>
-                        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 hover:text-primary dark:hover:text-indigo-300 line-clamp-2 transition-colors">
-                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">
-                            @(string.IsNullOrWhiteSpace(product.Description) ? "Sản phẩm chính hãng với bảo hành tiêu chuẩn." : product.Description)
-                        </p>
+                        </span>
+                    }
 
-                        <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                            <div>
-                                <span class="text-xl font-bold text-gray-900 dark:text-gray-100"><vc:money amount="@product.Price" /></span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center text-xs" title="Xem chi tiết" aria-label="Xem chi tiết @product.Name">
-                                    <i class="fas fa-eye" aria-hidden="true"></i>
-                                </a>
-                                @if (product.StockQuantity > 0)
-                                {
-                                    <form asp-controller="Cart" asp-action="AddToCart" method="post" class="inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="productId" value="@product.Id" />
-                                        <input type="hidden" name="quantity" value="1" />
-                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                        <button type="submit" class="w-9 h-9 rounded-full bg-primary text-white hover:bg-indigo-700 transition-colors flex items-center justify-center shadow-sm" title="Thêm vào giỏ" aria-label="Thêm @product.Name vào giỏ">
-                                            <i class="fas fa-cart-plus text-xs" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                }
-                            </div>
+                    <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="w-full h-full flex items-center justify-center" aria-label="Xem @product.Name">
+                        <img src="@ProductImage.Resolve(product.ImageUrl)" alt="@product.Name" loading="lazy" 
+                             class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
+                    </a>
+                </div>
+
+                <!-- Thông tin sản phẩm -->
+                <div class="p-4 flex flex-col flex-grow">
+                    <div class="text-[11px] uppercase tracking-wider text-zinc-400 font-medium mb-1">
+                        @product.Category?.Name
+                    </div>
+                    <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 line-clamp-2 transition-colors leading-snug mb-2">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
+                    </h3>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4 leading-relaxed">
+                        @(string.IsNullOrWhiteSpace(product.Description) ? "Sản phẩm chính hãng với bảo hành tiêu chuẩn." : product.Description)
+                    </p>
+
+                    <div class="mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="text-base font-bold text-zinc-950 dark:text-white tracking-tight">
+                                <vc:money amount="@product.Price" />
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" 
+                               class="w-8 h-8 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center text-xs" 
+                               title="Xem chi tiết" aria-label="Xem chi tiết @product.Name">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </a>
+                            @if (product.StockQuantity > 0)
+                            {
+                                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                    <button type="submit" 
+                                            class="w-8 h-8 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white transition-colors flex items-center justify-center text-xs shadow-sm" 
+                                            title="Thêm vào giỏ" aria-label="Thêm @product.Name vào giỏ">
+                                        <i class="fas fa-cart-plus" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            }
                         </div>
                     </div>
                 </div>
-            }
-        </div>
+            </div>
+        }
     </div>
-</div>
+</section>

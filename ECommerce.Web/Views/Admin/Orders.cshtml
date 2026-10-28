@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ECommerce.Web.Models.Entities.Order>
+@model IEnumerable<ECommerce.Web.Models.Entities.Order>
 @{
     ViewData["Title"] = "Quản lý Đơn hàng";
     ECommerce.Web.Models.Entities.Enums.OrderStatus? selectedStatus = ViewBag.SelectedStatus;
@@ -6,29 +6,29 @@
 }
 
 <!-- Header -->
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
-            <i class="fas fa-receipt text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Quản lý Đơn hàng
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            <i class="fas fa-receipt text-zinc-400 text-base"></i>Quản lý Đơn hàng
         </h1>
-        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Theo dõi, duyệt đóng gói, vận chuyển và cập nhật trạng thái đơn toàn hệ thống</p>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Theo dõi, duyệt đóng gói, vận chuyển và cập nhật trạng thái đơn toàn hệ thống</p>
     </div>
-    <span class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 border border-indigo-100 rounded-xl text-xs font-bold w-max">
+    <span class="inline-flex items-center px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs font-medium w-max">
         Tổng số: @Model.Count() đơn hàng
     </span>
 </div>
 
 <!-- Thanh tìm kiếm & lọc trạng thái -->
-<div class="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 mb-6">
-    <form method="get" asp-action="Orders" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 mb-5 shadow-xs">
+    <form method="get" asp-action="Orders" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         <div class="md:col-span-6 relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <i class="fas fa-search text-sm"></i>
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
+                <i class="fas fa-search text-xs"></i>
             </div>
-            <input type="text" name="search" value="@searchQuery" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Tìm theo Mã đơn (VD: 1) hoặc Email khách..." />
+            <input type="text" name="search" value="@searchQuery" class="w-full pl-9 pr-3 py-1.5 text-xs border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100" placeholder="Tìm theo Mã đơn (VD: 1) hoặc Email khách..." />
         </div>
         <div class="md:col-span-4">
-            <select name="status" class="w-full py-2.5 px-3 text-sm border border-slate-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-900">
+            <select name="status" class="w-full py-1.5 px-3 text-xs border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100">
                 <option value="">-- Tất cả trạng thái --</option>
                 @foreach (ECommerce.Web.Models.Entities.Enums.OrderStatus st in Enum.GetValues(typeof(ECommerce.Web.Models.Entities.Enums.OrderStatus)))
                 {
@@ -43,13 +43,13 @@
                 }
             </select>
         </div>
-        <div class="md:col-span-2 flex items-center gap-2">
-            <button type="submit" class="flex-1 py-2.5 px-4 bg-slate-900 hover:bg-black text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
+        <div class="md:col-span-2 flex items-center gap-1.5">
+            <button type="submit" class="flex-1 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 rounded-md text-xs font-medium active:scale-[0.98] transition-all">
                 Lọc
             </button>
             @if (selectedStatus.HasValue || !string.IsNullOrWhiteSpace(searchQuery))
             {
-                <a asp-action="Orders" class="py-2.5 px-3 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-400 rounded-xl text-sm font-semibold transition-colors" title="Xóa bộ lọc">
+                <a asp-action="Orders" class="py-1.5 px-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-md text-xs font-medium transition-colors" title="Xóa bộ lọc">
                     ✕
                 </a>
             }
@@ -58,26 +58,26 @@
 </div>
 
 <!-- Bảng đơn hàng -->
-<div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+<div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs">
     <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-zinc-50/75 dark:bg-zinc-800/40 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] border-b border-zinc-200 dark:border-zinc-800">
                 <tr>
-                    <th class="py-4 px-6 font-semibold w-24">Mã đơn</th>
-                    <th class="py-4 px-6 font-semibold">Khách hàng</th>
-                    <th class="py-4 px-6 font-semibold">Ngày đặt</th>
-                    <th class="py-4 px-6 font-semibold text-center">Số lượng</th>
-                    <th class="py-4 px-6 font-semibold text-right">Tổng tiền</th>
-                    <th class="py-4 px-6 font-semibold text-center">Trạng thái đơn</th>
-                    <th class="py-4 px-6 font-semibold text-center">Thanh toán</th>
-                    <th class="py-4 px-6 font-semibold text-right">Hành động</th>
+                    <th class="py-2.5 px-4 font-medium w-24">Mã đơn</th>
+                    <th class="py-2.5 px-4 font-medium">Khách hàng</th>
+                    <th class="py-2.5 px-4 font-medium">Ngày đặt</th>
+                    <th class="py-2.5 px-4 font-medium text-center">Số lượng</th>
+                    <th class="py-2.5 px-4 font-medium text-right">Tổng tiền</th>
+                    <th class="py-2.5 px-4 font-medium text-center">Trạng thái đơn</th>
+                    <th class="py-2.5 px-4 font-medium text-center">Thanh toán</th>
+                    <th class="py-2.5 px-4 font-medium text-right">Hành động</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="py-12 text-center text-slate-400">
+                        <td colspan="8" class="py-10 text-center text-zinc-400">
                             Không tìm thấy đơn hàng nào phù hợp với bộ lọc.
                         </td>
                     </tr>
@@ -86,64 +86,64 @@
                 {
                     @foreach (var order in Model)
                     {
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                            <td class="py-4 px-6 font-bold text-slate-800 dark:text-gray-200 text-xs">
+                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                            <td class="py-3 px-4 font-mono font-medium text-zinc-900 dark:text-zinc-100 text-xs">
                                 #ORD-@order.Id.ToString("D5")
                             </td>
-                            <td class="py-4 px-6 font-medium text-slate-900 dark:text-gray-100 text-xs">
+                            <td class="py-3 px-4 font-medium text-zinc-900 dark:text-zinc-100 text-xs">
                                 @(order.User?.Email ?? order.UserId)
                             </td>
-                            <td class="py-4 px-6 text-slate-400 text-xs">
+                            <td class="py-3 px-4 text-zinc-400 text-xs">
                                 @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
                             </td>
-                            <td class="py-4 px-6 text-center">
-                                <span class="inline-block px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 text-xs font-semibold rounded-full">
+                            <td class="py-3 px-4 text-center">
+                                <span class="inline-block px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">
                                     @order.Items.Sum(i => i.Quantity) món
                                 </span>
                             </td>
-                            <td class="py-4 px-6 text-right font-extrabold text-slate-900 dark:text-gray-100 text-sm">
+                            <td class="py-3 px-4 text-right font-medium text-zinc-900 dark:text-zinc-100 text-xs">
                                 @order.TotalAmount.ToString("N0") đ
                             </td>
-                            <td class="py-4 px-6 text-center">
+                            <td class="py-3 px-4 text-center">
                                 @switch (order.Status)
                                 {
                                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">Chờ duyệt</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium rounded border border-amber-200 dark:border-amber-800/50">Chờ duyệt</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-200">Đang đóng gói</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 text-[11px] font-medium rounded border border-blue-200 dark:border-blue-800/50">Đang gói</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">Đang giao</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">Đang giao</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">Hoàn tất</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium rounded border border-emerald-200 dark:border-emerald-800/50">Hoàn tất</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400 text-xs font-bold rounded-full border border-slate-200 dark:border-gray-700">Đã hủy</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">Đã hủy</span>
                                         break;
                                 }
                             </td>
-                            <td class="py-4 px-6 text-center">
+                            <td class="py-3 px-4 text-center">
                                 @switch (order.PaymentStatus)
                                 {
                                     case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Pending:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-gray-400 text-xs font-medium rounded-full border border-slate-200 dark:border-gray-700">Chờ trả</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">Chờ trả</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Paid:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">Đã trả</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium rounded border border-emerald-200 dark:border-emerald-800/50">Đã trả</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.PaymentStatus.RefundPending:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">Chờ hoàn tiền</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium rounded border border-amber-200 dark:border-amber-800/50">Chờ hoàn</span>
                                         break;
                                     case ECommerce.Web.Models.Entities.Enums.PaymentStatus.Refunded:
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200">Hoàn tiền</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-[11px] font-medium rounded border border-rose-200 dark:border-rose-900/50">Đã hoàn</span>
                                         break;
                                 }
                             </td>
-                            <td class="py-4 px-6 text-right">
-                                <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-indigo-50 hover:text-primary dark:hover:text-indigo-300 text-slate-700 dark:text-gray-300 text-xs font-semibold transition-colors">
-                                    Chi tiết <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                            <td class="py-3 px-4 text-right">
+                                <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-flex items-center px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-medium active:scale-[0.98] transition-all">
+                                    Chi tiết <i class="fas fa-arrow-right ml-1 text-[10px]"></i>
                                 </a>
                             </td>
                         </tr>

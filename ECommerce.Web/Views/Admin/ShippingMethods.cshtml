@@ -4,85 +4,85 @@
     var taxRate = (decimal)ViewBag.TaxRate;
 }
 
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
-            <i class="fas fa-truck text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Phương thức vận chuyển
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            <i class="fas fa-truck text-zinc-400 text-base"></i>Phương thức vận chuyển
         </h1>
-        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Cấu hình phí giao hàng khách chọn khi thanh toán</p>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Cấu hình phí giao hàng khách chọn khi thanh toán</p>
     </div>
-    <a asp-action="CreateShippingMethod" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors">
-        <i class="fas fa-plus mr-2"></i> Thêm phương thức
+    <a asp-action="CreateShippingMethod" class="inline-flex items-center px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-medium active:scale-[0.98] transition-all shadow-sm">
+        <i class="fas fa-plus mr-1.5 text-xs"></i> Thêm phương thức
     </a>
 </div>
 
-<div class="mb-6 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 text-sm text-indigo-800 dark:text-indigo-200">
-    <i class="fas fa-percent mr-2"></i>Thuế VAT hiện hành: <strong>@((taxRate * 100).ToString("0.#"))%</strong>
-    <span class="text-xs text-indigo-600/80 dark:text-indigo-300/80 ml-1">(cấu hình trong <code>appsettings.json</code> — mục <code>Tax:Rate</code>)</span>
+<div class="mb-5 p-3 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 flex items-center">
+    <i class="fas fa-percent mr-2 text-zinc-500"></i>Thuế VAT hiện hành: <strong class="ml-1 font-semibold">@((taxRate * 100).ToString("0.#"))%</strong>
+    <span class="text-[11px] text-zinc-400 ml-1.5">(cấu hình trong <code>appsettings.json</code> — mục <code>Tax:Rate</code>)</span>
 </div>
 
 @if (Model.Count == 0)
 {
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-800 p-12 text-center text-slate-500 dark:text-gray-400">
-        <i class="fas fa-truck text-4xl mb-3 text-slate-300 dark:text-gray-700"></i>
+    <div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-10 text-center text-xs text-zinc-400">
+        <i class="fas fa-truck text-2xl mb-2 text-zinc-300 dark:text-zinc-700 block"></i>
         <p class="font-medium">Chưa có phương thức vận chuyển nào.</p>
-        <p class="text-sm mt-1">Khách sẽ không thể đặt hàng cho đến khi bạn thêm ít nhất một phương thức đang hoạt động.</p>
+        <p class="text-[11px] mt-1 text-zinc-500">Khách sẽ không thể đặt hàng cho đến khi bạn thêm ít nhất một phương thức đang hoạt động.</p>
     </div>
 }
 else
 {
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-800 overflow-hidden">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-gray-800/60 text-slate-500 dark:text-gray-400">
+            <table class="w-full text-xs">
+                <thead class="bg-zinc-50/75 dark:bg-zinc-800/40 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] border-b border-zinc-200 dark:border-zinc-800">
                     <tr>
-                        <th class="text-left font-semibold px-5 py-3">Phương thức</th>
-                        <th class="text-left font-semibold px-5 py-3">Phí</th>
-                        <th class="text-left font-semibold px-5 py-3">Thứ tự</th>
-                        <th class="text-left font-semibold px-5 py-3">Trạng thái</th>
-                        <th class="text-right font-semibold px-5 py-3">Thao tác</th>
+                        <th class="text-left font-medium px-4 py-2.5">Phương thức</th>
+                        <th class="text-left font-medium px-4 py-2.5">Phí</th>
+                        <th class="text-left font-medium px-4 py-2.5">Thứ tự</th>
+                        <th class="text-left font-medium px-4 py-2.5">Trạng thái</th>
+                        <th class="text-right font-medium px-4 py-2.5">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                     @foreach (var method in Model)
                     {
-                        <tr>
-                            <td class="px-5 py-4">
-                                <p class="font-semibold text-slate-800 dark:text-gray-200">@method.Name</p>
+                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                            <td class="px-4 py-3">
+                                <p class="font-medium text-zinc-900 dark:text-zinc-100">@method.Name</p>
                                 @if (!string.IsNullOrWhiteSpace(method.Description))
                                 {
-                                    <p class="text-xs text-slate-500 dark:text-gray-400 mt-0.5">@method.Description</p>
+                                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">@method.Description</p>
                                 }
                             </td>
-                            <td class="px-5 py-4 whitespace-nowrap font-medium text-slate-700 dark:text-gray-300">@method.Fee.ToString("N0") đ</td>
-                            <td class="px-5 py-4 text-slate-600 dark:text-gray-400">@method.DisplayOrder</td>
-                            <td class="px-5 py-4">
+                            <td class="px-4 py-3 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-100">@method.Fee.ToString("N0") đ</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">@method.DisplayOrder</td>
+                            <td class="px-4 py-3">
                                 @if (method.IsActive)
                                 {
-                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">Hoạt động</span>
+                                    <span class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-medium">Hoạt động</span>
                                 }
                                 else
                                 {
-                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-xs font-semibold">Tạm tắt</span>
+                                    <span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 text-[11px] font-medium">Tạm tắt</span>
                                 }
                             </td>
-                            <td class="px-5 py-4 whitespace-nowrap text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a asp-action="EditShippingMethod" asp-route-id="@method.Id" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 text-xs font-semibold transition-colors">
-                                        <i class="fas fa-pen mr-1"></i>Sửa
+                            <td class="px-4 py-3 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a asp-action="EditShippingMethod" asp-route-id="@method.Id" class="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 text-xs font-medium active:scale-[0.98] transition-all">
+                                        <i class="fas fa-pen mr-1 text-[10px]"></i>Sửa
                                     </a>
                                     <form asp-action="ToggleShippingMethodStatus" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@method.Id" />
-                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 text-xs font-semibold transition-colors">
-                                            <i class="fas fa-power-off mr-1"></i>@(method.IsActive ? "Tắt" : "Bật")
+                                        <button type="submit" class="px-2.5 py-1 rounded bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 text-xs font-medium active:scale-[0.98] transition-all">
+                                            <i class="fas fa-power-off mr-1 text-[10px]"></i>@(method.IsActive ? "Tắt" : "Bật")
                                         </button>
                                     </form>
                                     <form asp-action="DeleteShippingMethod" method="post" onsubmit="return confirm('Xóa phương thức vận chuyển này? Các đơn hàng cũ vẫn giữ phí đã lưu.');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@method.Id" />
-                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 text-xs font-semibold transition-colors">
-                                            <i class="fas fa-trash mr-1"></i>Xóa
+                                        <button type="submit" class="px-2.5 py-1 rounded bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 text-xs font-medium active:scale-[0.98] transition-all">
+                                            <i class="fas fa-trash mr-1 text-[10px]"></i>Xóa
                                         </button>
                                     </form>
                                 </div>

@@ -1,176 +1,178 @@
-﻿@model ECommerce.Web.Models.ViewModels.AdminDashboardViewModel
+@model ECommerce.Web.Models.ViewModels.AdminDashboardViewModel
 @{
     ViewData["Title"] = "Tổng quan Dashboard";
 }
 
 <!-- Page Header -->
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-gray-100 flex items-center">
-            <i class="fas fa-chart-pie text-primary dark:text-indigo-300 mr-3 text-2xl"></i>Tổng quan hệ thống
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            <i class="fas fa-chart-pie text-zinc-400 text-base"></i>Tổng quan hệ thống
         </h1>
-        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">Giám sát doanh thu, đơn hàng, trạng thái kho vận và tài khoản người dùng</p>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Giám sát doanh thu, đơn hàng, trạng thái kho vận và tài khoản người dùng</p>
     </div>
-    <div class="flex items-center gap-3">
-        <a asp-action="Coupons" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
-            <i class="fas fa-ticket-alt mr-2 text-primary dark:text-indigo-300"></i> Mã giảm giá
+    <div class="flex flex-wrap items-center gap-2">
+        <a asp-action="Coupons" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium active:scale-[0.98] transition-all">
+            <i class="fas fa-ticket-alt mr-1.5 text-zinc-400 text-xs"></i> Mã giảm giá
         </a>
-        <a asp-action="Reviews" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
-            <i class="fas fa-star mr-2 text-primary dark:text-indigo-300"></i> Đánh giá
+        <a asp-action="Reviews" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium active:scale-[0.98] transition-all">
+            <i class="fas fa-star mr-1.5 text-zinc-400 text-xs"></i> Đánh giá
         </a>
-        <a asp-action="ShippingMethods" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
-            <i class="fas fa-truck mr-2 text-primary dark:text-indigo-300"></i> Vận chuyển
+        <a asp-action="ShippingMethods" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium active:scale-[0.98] transition-all">
+            <i class="fas fa-truck mr-1.5 text-zinc-400 text-xs"></i> Vận chuyển
         </a>
-        <a asp-action="Products" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold shadow-sm transition-colors">
-            <i class="fas fa-boxes mr-2 text-primary dark:text-indigo-300"></i> Quản lý kho hàng
+        <a asp-action="Products" class="inline-flex items-center px-3 py-1.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium active:scale-[0.98] transition-all">
+            <i class="fas fa-boxes mr-1.5 text-zinc-400 text-xs"></i> Kho hàng
         </a>
-        <a asp-action="ProductForm" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-colors">
-            <i class="fas fa-plus mr-1.5"></i> Thêm sản phẩm
+        <a asp-action="ProductForm" class="inline-flex items-center px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-medium active:scale-[0.98] transition-all">
+            <i class="fas fa-plus mr-1 text-xs"></i> Thêm SP
         </a>
     </div>
 </div>
 
 <!-- 4 Thẻ KPI chính -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
     <!-- Card 1: Doanh thu -->
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 sm:p-5 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between">
         <div>
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng doanh thu</span>
-            <div class="text-2xl sm:text-3xl font-extrabold text-primary dark:text-indigo-300 mt-1">@Model.TotalRevenue.ToString("N0") đ</div>
-            <p class="text-xs text-slate-400 mt-1"><i class="fas fa-check-circle text-emerald-500 mr-1"></i>Tính trên đơn hợp lệ</p>
+            <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500">Tổng doanh thu</span>
+            <div class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-1">@Model.TotalRevenue.ToString("N0") đ</div>
+            <p class="text-[11px] text-zinc-400 mt-1 flex items-center gap-1">
+                <i class="fas fa-check text-emerald-500 text-[10px]"></i> Tính trên đơn hợp lệ
+            </p>
         </div>
-        <div class="w-13 h-13 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 flex items-center justify-center text-2xl p-3.5">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-coins"></i>
         </div>
     </div>
 
     <!-- Card 2: Đơn hàng -->
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 sm:p-5 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between">
         <div>
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng đơn hàng</span>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-gray-100 mt-1">@Model.TotalOrders</div>
-            <p class="text-xs text-slate-400 mt-1">
-                Chờ duyệt: <strong class="text-amber-500">@Model.PendingOrders</strong> | Xong: <strong class="text-emerald-600">@Model.CompletedOrders</strong>
+            <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500">Tổng đơn hàng</span>
+            <div class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-1">@Model.TotalOrders</div>
+            <p class="text-[11px] text-zinc-400 mt-1">
+                Chờ duyệt: <strong class="text-amber-600 dark:text-amber-400 font-semibold">@Model.PendingOrders</strong> · Xong: <strong class="text-emerald-600 dark:text-emerald-400 font-semibold">@Model.CompletedOrders</strong>
             </p>
         </div>
-        <div class="w-13 h-13 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-2xl p-3.5">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-shopping-cart"></i>
         </div>
     </div>
 
     <!-- Card 3: Sản phẩm -->
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 sm:p-5 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between">
         <div>
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sản phẩm & Danh mục</span>
-            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">@Model.TotalProducts</div>
-            <p class="text-xs text-slate-400 mt-1">
-                Đang bán: <strong>@Model.ActiveProducts</strong> | Danh mục: <strong>@Model.TotalCategories</strong>
+            <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500">Sản phẩm & Danh mục</span>
+            <div class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-1">@Model.TotalProducts</div>
+            <p class="text-[11px] text-zinc-400 mt-1">
+                Đang bán: <strong class="text-zinc-700 dark:text-zinc-300 font-semibold">@Model.ActiveProducts</strong> · Danh mục: <strong class="text-zinc-700 dark:text-zinc-300 font-semibold">@Model.TotalCategories</strong>
             </p>
         </div>
-        <div class="w-13 h-13 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl p-3.5">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-box-open"></i>
         </div>
     </div>
 
     <!-- Card 4: Người dùng & Tồn kho -->
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-gray-800 flex items-center justify-between">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 sm:p-5 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between">
         <div>
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Khách hàng & Cảnh báo</span>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-gray-100 mt-1">@Model.TotalUsers <span class="text-xs text-slate-400 font-normal">users</span></div>
-            <p class="text-xs mt-1 @(Model.LowStockCount > 0 ? "text-rose-600 font-bold animate-pulse" : "text-slate-400")">
-                <i class="fas fa-exclamation-triangle mr-1"></i> Tồn kho ít (&lt;@ECommerce.Web.Models.Constants.AppConstants.LowStockThreshold): @Model.LowStockCount
+            <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500">Khách hàng & Tồn kho</span>
+            <div class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-1">@Model.TotalUsers <span class="text-xs text-zinc-400 font-normal">users</span></div>
+            <p class="text-[11px] mt-1 @(Model.LowStockCount > 0 ? "text-rose-600 dark:text-rose-400 font-medium" : "text-zinc-400")">
+                <i class="fas fa-exclamation-triangle mr-1 text-[10px]"></i> Tồn kho ít (&lt;@ECommerce.Web.Models.Constants.AppConstants.LowStockThreshold): @Model.LowStockCount
             </p>
         </div>
-        <div class="w-13 h-13 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl p-3.5">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-users"></i>
         </div>
     </div>
 </div>
 
 <!-- Lọc nhanh trạng thái đơn hàng -->
-<div class="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-gray-800 mb-8 flex flex-wrap items-center gap-3">
-    <span class="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mr-2">Trạng thái đơn:</span>
-    <a asp-action="Orders" asp-route-status="Pending" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition-colors">
+<div class="bg-white dark:bg-zinc-900 rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 mb-6 flex flex-wrap items-center gap-2 text-xs">
+    <span class="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mr-1">Trạng thái:</span>
+    <a asp-action="Orders" asp-route-status="Pending" class="inline-flex items-center px-2.5 py-1 rounded bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-800/50 transition-colors">
         Chờ xử lý: @Model.PendingOrders
     </a>
-    <a asp-action="Orders" asp-route-status="Processing" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold border border-blue-200 transition-colors">
+    <a asp-action="Orders" asp-route-status="Processing" class="inline-flex items-center px-2.5 py-1 rounded bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800/50 transition-colors">
         Đang xử lý: @Model.ProcessingOrders
     </a>
-    <a asp-action="Orders" asp-route-status="Shipped" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 text-indigo-800 text-xs font-bold border border-indigo-200 transition-colors">
+    <a asp-action="Orders" asp-route-status="Shipped" class="inline-flex items-center px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-medium border border-zinc-200 dark:border-zinc-700 transition-colors">
         Đang giao: @Model.ShippedOrders
     </a>
-    <a asp-action="Orders" asp-route-status="Completed" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors">
+    <a asp-action="Orders" asp-route-status="Completed" class="inline-flex items-center px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-medium border border-emerald-200 dark:border-emerald-800/50 transition-colors">
         Hoàn thành: @Model.CompletedOrders
     </a>
-    <a asp-action="Orders" asp-route-status="Cancelled" class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-bold border border-slate-200 dark:border-gray-700 transition-colors">
+    <a asp-action="Orders" asp-route-status="Cancelled" class="inline-flex items-center px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 font-medium border border-zinc-200 dark:border-zinc-700 transition-colors">
         Đã hủy: @Model.CancelledOrders
     </a>
 </div>
 
 <!-- 2 Cột: Đơn hàng gần đây & Cảnh báo tồn kho -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
     <!-- Đơn hàng gần đây (Cột 7) -->
-    <div class="lg:col-span-7 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden flex flex-col">
-        <div class="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
-            <h2 class="font-bold text-slate-800 dark:text-gray-200 flex items-center text-base">
-                <i class="fas fa-history text-primary dark:text-indigo-300 mr-2"></i> Đơn hàng phát sinh gần đây
+    <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col shadow-xs">
+        <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <h2 class="font-medium text-zinc-900 dark:text-zinc-100 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-history text-zinc-400"></i> Đơn hàng gần đây
             </h2>
-            <a asp-action="Orders" class="text-xs text-primary dark:text-indigo-300 hover:text-indigo-800 font-semibold flex items-center">
-                Xem tất cả <i class="fas fa-arrow-right ml-1"></i>
+            <a asp-action="Orders" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium transition-colors">
+                Xem tất cả →
             </a>
         </div>
 
         <div class="flex-1 overflow-x-auto">
             @if (Model.RecentOrders.Any())
             {
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-zinc-50/75 dark:bg-zinc-800/40 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] border-b border-zinc-200 dark:border-zinc-800">
                         <tr>
-                            <th class="py-3 px-5 font-semibold">Mã đơn</th>
-                            <th class="py-3 px-5 font-semibold">Khách hàng</th>
-                            <th class="py-3 px-5 font-semibold text-right">Tổng tiền</th>
-                            <th class="py-3 px-5 font-semibold text-center">Trạng thái</th>
-                            <th class="py-3 px-5 font-semibold text-center">Thao tác</th>
+                            <th class="py-2.5 px-4 font-medium">Mã đơn</th>
+                            <th class="py-2.5 px-4 font-medium">Khách hàng</th>
+                            <th class="py-2.5 px-4 font-medium text-right">Tổng tiền</th>
+                            <th class="py-2.5 px-4 font-medium text-center">Trạng thái</th>
+                            <th class="py-2.5 px-4 font-medium text-center">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach (var order in Model.RecentOrders)
                         {
-                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                                <td class="py-3.5 px-5 font-bold text-slate-800 dark:text-gray-200 text-xs">
+                            <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                <td class="py-3 px-4 font-mono font-medium text-zinc-900 dark:text-zinc-100">
                                     #ORD-@order.Id.ToString("D5")
                                 </td>
-                                <td class="py-3.5 px-5">
-                                    <div class="font-medium text-slate-800 dark:text-gray-200 text-xs truncate max-w-[150px]">
+                                <td class="py-3 px-4">
+                                    <div class="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[140px]">
                                         @(order.User?.Email ?? $"User #{order.UserId}")
                                     </div>
-                                    <div class="text-[10px] text-slate-400">@order.OrderDate.ToString("dd/MM HH:mm")</div>
+                                    <div class="text-[10px] text-zinc-400">@order.OrderDate.ToString("dd/MM HH:mm")</div>
                                 </td>
-                                <td class="py-3.5 px-5 text-right font-bold text-slate-900 dark:text-gray-100 text-xs">
+                                <td class="py-3 px-4 text-right font-medium text-zinc-900 dark:text-zinc-100">
                                     @order.TotalAmount.ToString("N0") đ
                                 </td>
-                                <td class="py-3.5 px-5 text-center">
+                                <td class="py-3 px-4 text-center">
                                     @switch (order.Status)
                                     {
                                         case ECommerce.Web.Models.Entities.Enums.OrderStatus.Pending:
-                                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full border border-amber-200">Chờ duyệt</span>
+                                            <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium rounded border border-amber-200 dark:border-amber-800/50">Chờ duyệt</span>
                                             break;
                                         case ECommerce.Web.Models.Entities.Enums.OrderStatus.Processing:
-                                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-full border border-blue-200">Đang đóng gói</span>
+                                            <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 text-[11px] font-medium rounded border border-blue-200 dark:border-blue-800/50">Đang gói</span>
                                             break;
                                         case ECommerce.Web.Models.Entities.Enums.OrderStatus.Shipped:
-                                            <span class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 text-[11px] font-bold rounded-full border border-indigo-200">Đang giao</span>
+                                            <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">Đang giao</span>
                                             break;
                                         case ECommerce.Web.Models.Entities.Enums.OrderStatus.Completed:
-                                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-200">Hoàn tất</span>
+                                            <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-medium rounded border border-emerald-200 dark:border-emerald-800/50">Hoàn tất</span>
                                             break;
                                         case ECommerce.Web.Models.Entities.Enums.OrderStatus.Cancelled:
-                                            <span class="px-2.5 py-1 bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400 text-[11px] font-bold rounded-full border border-slate-200 dark:border-gray-700">Đã hủy</span>
+                                            <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-700">Đã hủy</span>
                                             break;
                                     }
                                 </td>
-                                <td class="py-3.5 px-5 text-center">
-                                    <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-flex items-center px-2.5 py-1 bg-slate-100 dark:bg-gray-800 hover:bg-indigo-50 hover:text-primary dark:hover:text-indigo-300 text-slate-600 dark:text-gray-400 rounded-lg text-xs font-semibold transition-colors">
+                                <td class="py-3 px-4 text-center">
+                                    <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium active:scale-[0.98] transition-all">
                                         Chi tiết
                                     </a>
                                 </td>
@@ -181,7 +183,7 @@
             }
             else
             {
-                <div class="p-8 text-center text-slate-400 text-sm">
+                <div class="p-8 text-center text-zinc-400 text-xs">
                     Chưa có đơn hàng nào phát sinh trong hệ thống.
                 </div>
             }
@@ -189,12 +191,12 @@
     </div>
 
     <!-- Cảnh báo tồn kho ít (Cột 5) -->
-    <div class="lg:col-span-5 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden flex flex-col">
-        <div class="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
-            <h2 class="font-bold text-rose-600 flex items-center text-base">
-                <i class="fas fa-exclamation-triangle mr-2"></i> Cảnh báo kho (&lt;10 sp)
+    <div class="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col shadow-xs">
+        <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <h2 class="font-medium text-rose-600 dark:text-rose-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-exclamation-triangle"></i> Cảnh báo kho (&lt;10 sp)
             </h2>
-            <a asp-action="Products" class="text-xs text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200 font-semibold">
+            <a asp-action="Products" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium transition-colors">
                 Quản lý kho →
             </a>
         </div>
@@ -202,34 +204,34 @@
         <div class="flex-1 overflow-x-auto">
             @if (Model.LowStockProducts.Any())
             {
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 dark:bg-gray-800 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-zinc-50/75 dark:bg-zinc-800/40 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] border-b border-zinc-200 dark:border-zinc-800">
                         <tr>
-                            <th class="py-3 px-5 font-semibold">Sản phẩm</th>
-                            <th class="py-3 px-5 font-semibold text-center">Tồn kho</th>
-                            <th class="py-3 px-5 font-semibold text-right">Thao tác</th>
+                            <th class="py-2.5 px-4 font-medium">Sản phẩm</th>
+                            <th class="py-2.5 px-4 font-medium text-center">Tồn kho</th>
+                            <th class="py-2.5 px-4 font-medium text-right">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach (var prod in Model.LowStockProducts)
                         {
-                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                                <td class="py-3.5 px-5">
-                                    <div class="font-bold text-slate-800 dark:text-gray-200 text-xs truncate max-w-[160px]">@prod.Name</div>
-                                    <div class="text-[10px] text-slate-400">@(prod.Category?.Name ?? "N/A") • @prod.Price.ToString("N0") đ</div>
+                            <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                <td class="py-3 px-4">
+                                    <div class="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[150px]">@prod.Name</div>
+                                    <div class="text-[10px] text-zinc-400">@(prod.Category?.Name ?? "N/A") · @prod.Price.ToString("N0") đ</div>
                                 </td>
-                                <td class="py-3.5 px-5 text-center">
+                                <td class="py-3 px-4 text-center">
                                     @if (prod.StockQuantity == 0)
                                     {
-                                        <span class="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-extrabold rounded-full">Hết hàng (0)</span>
+                                        <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-[11px] font-medium rounded border border-rose-200 dark:border-rose-900/50">Hết hàng</span>
                                     }
                                     else
                                     {
-                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-extrabold rounded-full">Còn @prod.StockQuantity sp</span>
+                                        <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium rounded border border-amber-200 dark:border-amber-800/50">Còn @prod.StockQuantity</span>
                                     }
                                 </td>
-                                <td class="py-3.5 px-5 text-right">
-                                    <a asp-action="ProductForm" asp-route-id="@prod.Id" class="inline-flex items-center px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/40 hover:bg-primary text-primary dark:text-indigo-300 hover:text-white rounded-lg text-xs font-semibold transition-colors">
+                                <td class="py-3 px-4 text-right">
+                                    <a asp-action="ProductForm" asp-route-id="@prod.Id" class="inline-flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium active:scale-[0.98] transition-all">
                                         Cập nhật
                                     </a>
                                 </td>
@@ -240,8 +242,8 @@
             }
             else
             {
-                <div class="p-8 text-center text-slate-400 text-sm">
-                    <i class="fas fa-check-circle text-emerald-500 text-2xl mb-2 block"></i>
+                <div class="p-8 text-center text-zinc-400 text-xs">
+                    <i class="fas fa-check-circle text-emerald-500 text-xl mb-1.5 block"></i>
                     Tất cả sản phẩm đều đảm bảo lượng tồn kho an toàn!
                 </div>
             }
@@ -250,44 +252,44 @@
 </div>
 
 <!-- Lối tắt quản trị nhanh -->
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-    <a asp-action="ProductForm" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-primary/30 transition-all flex items-center space-x-4">
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+    <a asp-action="ProductForm" class="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-plus"></i>
         </div>
         <div>
-            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Thêm sản phẩm mới</div>
-            <div class="text-xs text-slate-400">Mở rộng danh mục bán</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100 text-xs group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">Thêm sản phẩm mới</div>
+            <div class="text-[11px] text-zinc-400">Mở rộng kho hàng</div>
         </div>
     </a>
 
-    <a asp-action="CategoryForm" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-emerald-600/30 transition-all flex items-center space-x-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+    <a asp-action="CategoryForm" class="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-tag"></i>
         </div>
         <div>
-            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Tạo danh mục mới</div>
-            <div class="text-xs text-slate-400">Phân loại hàng hóa</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100 text-xs group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">Tạo danh mục mới</div>
+            <div class="text-[11px] text-zinc-400">Phân loại hàng hóa</div>
         </div>
     </a>
 
-    <a asp-action="Orders" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-amber-500/30 transition-all flex items-center space-x-4">
-        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+    <a asp-action="Orders" class="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-receipt"></i>
         </div>
         <div>
-            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Xử lý toàn bộ đơn</div>
-            <div class="text-xs text-slate-400">Duyệt & cập nhật giao nhận</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100 text-xs group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">Xử lý toàn bộ đơn</div>
+            <div class="text-[11px] text-zinc-400">Duyệt & giao nhận</div>
         </div>
     </a>
 
-    <a asp-action="Users" class="p-5 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md hover:border-primary/30 transition-all flex items-center space-x-4">
-        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+    <a asp-action="Users" class="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center text-sm">
             <i class="fas fa-user-shield"></i>
         </div>
         <div>
-            <div class="font-bold text-slate-800 dark:text-gray-200 text-sm">Phân quyền tài khoản</div>
-            <div class="text-xs text-slate-400">Quản lý roles Admin</div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100 text-xs group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">Phân quyền tài khoản</div>
+            <div class="text-[11px] text-zinc-400">Quản trị viên & nhân viên</div>
         </div>
     </a>
 </div>
