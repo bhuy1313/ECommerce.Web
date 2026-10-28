@@ -99,6 +99,21 @@
 
             @if (User.IsInRole(ECommerce.Web.Models.Constants.AppRoles.Admin))
             {
+            <a asp-controller="Admin" asp-action="Coupons" class="flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors @(currentAction.StartsWith("Coupon") ? "bg-primary text-white shadow-md shadow-indigo-600/30" : "text-slate-300 hover:bg-white/5 hover:text-white")">
+                <i class="fas fa-ticket-alt w-6 text-base"></i>
+                <span>Mã giảm giá</span>
+            </a>
+
+            <a asp-controller="Admin" asp-action="Reviews" class="flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors @(currentAction.StartsWith("Review") ? "bg-primary text-white shadow-md shadow-indigo-600/30" : "text-slate-300 hover:bg-white/5 hover:text-white")">
+                <i class="fas fa-star w-6 text-base"></i>
+                <span>Quản lý Đánh giá</span>
+            </a>
+
+            <a asp-controller="Admin" asp-action="ShippingMethods" class="flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors @(currentAction.StartsWith("Shipping") ? "bg-primary text-white shadow-md shadow-indigo-600/30" : "text-slate-300 hover:bg-white/5 hover:text-white")">
+                <i class="fas fa-truck w-6 text-base"></i>
+                <span>Phương thức Vận chuyển</span>
+            </a>
+
             <a asp-controller="Admin" asp-action="Users" class="flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors @(currentAction.StartsWith("User") || currentAction == "EditUserRoles" ? "bg-primary text-white shadow-md shadow-indigo-600/30" : "text-slate-300 hover:bg-white/5 hover:text-white")">
                 <i class="fas fa-users-cog w-6 text-base"></i>
                 <span>Quản lý Người dùng</span>
