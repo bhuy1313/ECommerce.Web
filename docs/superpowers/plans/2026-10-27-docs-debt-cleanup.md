@@ -103,7 +103,7 @@
 - Consumes: 6 report trong `.superpowers/sdd/*/report-*.md`; 12 file docs đang untracked.
 - Produces: đường dẫn report ổn định để Task 2 (banner plan) và Task 3/4 (roadmap, index) link tới; baseline trong git để `git diff` ở Task 2 soát được thay đổi tick/banner.
 
-- [ ] **Step 1: Tạo thư mục và copy 6 report (A, B1, B2, B3, B4, B5)**
+- [x] **Step 1: Tạo thư mục và copy 6 report (A, B1, B2, B3, B4, B5)**
 
 ```powershell
 New-Item -ItemType Directory -Force docs/superpowers/reports | Out-Null
@@ -121,7 +121,7 @@ foreach ($k in $map.Keys) {
 }
 ```
 
-- [ ] **Step 2: Xác nhận bản sao khớp nguồn (sau khi bỏ BOM)**
+- [x] **Step 2: Xác nhận bản sao khớp nguồn (sau khi bỏ BOM)**
 
 ```powershell
 $map = @{
@@ -141,13 +141,13 @@ foreach ($k in $map.Keys) {
 
 Expected: 6 dòng `OK`. Có `DIFF` → dừng, so sánh bằng `git diff --no-index`, không tiếp tục.
 
-- [ ] **Step 3: Di chuyển report v1 bằng `git mv` (giữ history)**
+- [x] **Step 3: Di chuyển report v1 bằng `git mv` (giữ history)**
 
 ```powershell
 git mv docs/verify-legacy-phases-report.md docs/superpowers/reports/2026-10-14-verify-legacy-phases.md
 ```
 
-- [ ] **Step 4: Viết report tổng hợp cho đợt P0 (A1–A10)**
+- [x] **Step 4: Viết report tổng hợp cho đợt P0 (A1–A10)**
 
 Tạo `docs/superpowers/reports/2026-10-18-ecommerce-v2-core-commerce.md` với **đúng** các mục sau (nội dung tiếng Việt, không bịa thêm số liệu ngoài bảng):
 
@@ -183,7 +183,7 @@ Tạo `docs/superpowers/reports/2026-10-18-ecommerce-v2-core-commerce.md` với 
 - B1–B5 (P1) có plan và report riêng trong cùng thư mục.
 ```
 
-- [ ] **Step 5: Kiểm tra encoding + link nội bộ**
+- [x] **Step 5: Kiểm tra encoding + link nội bộ**
 
 ```powershell
 Get-ChildItem docs/superpowers/reports/*.md | ForEach-Object {
@@ -196,12 +196,12 @@ Get-ChildItem docs/superpowers/reports/*.md | ForEach-Object {
 
 Expected: mọi dòng `bom=False mojibake=False`.
 
-- [ ] **Step 6: Graph gate**
+- [x] **Step 6: Graph gate**
 
 Run: `node .gitnexus/run.cjs detect-changes --scope all`
 Expected: chỉ file `docs/**`; risk `low`; không `partial`/`truncated`. Thấy file code → STOP.
 
-- [ ] **Step 7: Baseline hoá plan/spec đang untracked (để `git diff` ở Task 2 soát được)**
+- [x] **Step 7: Baseline hoá plan/spec đang untracked (để `git diff` ở Task 2 soát được)**
 
 12 file docs hiện **chưa được git track**: 8 plan trong `docs/superpowers/plans/` (7 plan v2 + plan này) và 5 spec trong `docs/superpowers/specs/`. Nếu không commit baseline, `git diff` ở Task 2 Step 4 sẽ **rỗng** và không chứng minh được gì.
 
@@ -213,7 +213,7 @@ git status --short -- docs/superpowers/plans docs/superpowers/specs   # phải r
 
 Expected: lệnh `git status --short` đầu tiên liệt kê đúng 8 dòng `??` cho plans và các file `??` cho specs; sau `git add` phải rỗng.
 
-- [ ] **Step 8: Commit archive + baseline trong một commit**
+- [x] **Step 8: Commit archive + baseline trong một commit**
 
 ```bash
 git add docs/superpowers/reports
@@ -235,7 +235,7 @@ Gộp archive và baseline vào **một** commit (không phải hai) để Task 
 - Consumes: đường dẫn report do Task 1 tạo.
 - Produces: mỗi plan có dòng `**Trạng thái:**` mà Task 3/4 có thể trích dẫn; số hộp `[ ]` còn lại = 0 ở 8 plan đã xong.
 
-- [ ] **Step 1: Chèn banner ngay sau dòng H1 của từng plan**
+- [x] **Step 1: Chèn banner ngay sau dòng H1 của từng plan**
 
 Dùng `edit` tool: `oldString` = dòng H1 hiện có, `newString` = dòng H1 + một dòng trống + banner (mỗi file một banner, chép nguyên văn):
 
@@ -268,7 +268,7 @@ Dùng `edit` tool: `oldString` = dòng H1 hiện có, `newString` = dòng H1 + m
 > **Trạng thái:** ✅ Hoàn thành — 2026-10-22 · commit `bfaa5f7..46edad9` · **266 test** · báo cáo: [`docs/superpowers/reports/2026-10-22-phase-b5-shipping-tax.md`](../reports/2026-10-22-phase-b5-shipping-tax.md) · hộp kiểm đã tick trong lúc thực thi.
 ~~~
 
-- [ ] **Step 2: Tick hồi tố — chỉ dòng bắt đầu bằng `- [ ]`**
+- [x] **Step 2: Tick hồi tố — chỉ dòng bắt đầu bằng `- [ ]`**
 
 ```powershell
 $files = @(
@@ -290,7 +290,7 @@ foreach ($f in $files) {
 }
 ```
 
-- [ ] **Step 3: Xác nhận số hộp còn lại = 0 và dòng mẫu còn nguyên**
+- [x] **Step 3: Xác nhận số hộp còn lại = 0 và dòng mẫu còn nguyên**
 
 ```powershell
 Get-ChildItem docs/superpowers/plans/*.md | ForEach-Object {
@@ -303,7 +303,7 @@ Get-ChildItem docs/superpowers/plans/*.md | ForEach-Object {
 
 Expected: 8 file đã xong có `todo=0`; `2026-10-27-docs-debt-cleanup.md` chưa tick nên `todo>0` (sẽ tick ở Task 6); `sampleLineOk=1` cho 7 file có dòng mẫu, `0` cho B4/B5.
 
-- [ ] **Step 4: Soát diff — chỉ có tick + banner, không đổi câu chữ**
+- [x] **Step 4: Soát diff — chỉ có tick + banner, không đổi câu chữ**
 
 Diff này chỉ soát được **vì** Task 1 đã commit baseline 8 plan; nếu Task 1 chưa xong thì lệnh dưới trả rỗng và bước này vô nghĩa.
 
@@ -313,12 +313,12 @@ git diff -U0 -- docs/superpowers/plans | Select-String '^[+-](?!\+\+|--)' | Sele
 
 Expected: không còn dòng nào (mọi thay đổi đều là hộp kiểm, banner, hoặc dòng trống). Có dòng khác → `git checkout -- <file>` file đó và làm lại bằng tay.
 
-- [ ] **Step 5: Graph gate**
+- [x] **Step 5: Graph gate**
 
 Run: `node .gitnexus/run.cjs detect-changes --scope all`
 Expected: chỉ `docs/**`, risk `low`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/superpowers/plans/2026-10-14-verify-legacy-phases.md docs/superpowers/plans/2026-10-16-render-free-sqlite-deploy.md docs/superpowers/plans/2026-10-18-ecommerce-v2-core-commerce.md docs/superpowers/plans/2026-10-18-phase-a-review-fixes.md docs/superpowers/plans/2026-10-19-phase-b1-email-flows.md docs/superpowers/plans/2026-10-19-phase-b2-profile-address-book.md docs/superpowers/plans/2026-10-19-phase-b3-coupons.md docs/superpowers/plans/2026-10-22-phase-b4-reviews.md docs/superpowers/plans/2026-10-22-phase-b5-shipping-tax.md
@@ -336,7 +336,7 @@ git commit -m "docs(plans): mark completed phases with status and ticked steps"
 - Consumes: report path (Task 1), banner trạng thái (Task 2).
 - Produces: trạng thái tiến độ duy nhất Task 4 trích dẫn; bảng nhật ký cho người đọc không cần mở git log.
 
-- [ ] **Step 1: Thêm khối trạng thái ngay sau `# E-Commerce Roadmap`**
+- [x] **Step 1: Thêm khối trạng thái ngay sau `# E-Commerce Roadmap`**
 
 ```markdown
 > **Cập nhật lần cuối:** 2026-10-27 · nhánh `main` @ `46edad9` · test `266/266` PASS · production: <https://ecommerce-demo-9phe.onrender.com>
@@ -344,7 +344,7 @@ git commit -m "docs(plans): mark completed phases with status and ticked steps"
 > Đây là **nguồn chân lý duy nhất cho tiến độ**. Bản đồ tài liệu (spec / plan / report, quy ước cập nhật) ở [`docs/README.md`](README.md).
 ```
 
-- [ ] **Step 2: Sửa 3 chỗ sai/lỗi thời đã xác minh (định vị bằng nội dung, không bằng số dòng)**
+- [x] **Step 2: Sửa 3 chỗ sai/lỗi thời đã xác minh (định vị bằng nội dung, không bằng số dòng)**
 
 1. Bullet Phase 8.5 nói sai tên file. Thay **nguyên dòng**:
 
@@ -362,7 +362,7 @@ git commit -m "docs(plans): mark completed phases with status and ticked steps"
 3. Dòng kết thúc Phase 8.6 (`... chạy lại 23/23 unit tests`) → thêm hậu tố:
    ` (23/23 tại thời điểm Phase 8.6; hiện 266/266)`
 
-- [ ] **Step 3: Tick P0/P1 và gắn mã task**
+- [x] **Step 3: Tick P0/P1 và gắn mã task**
 
 Thay 10 dòng `- [ ]` trong hai mục P0/P1 thành `- [x]`, giữ nguyên câu chữ, thêm hậu tố mã task:
 
@@ -370,7 +370,7 @@ Thay 10 dòng `- [ ]` trong hai mục P0/P1 thành `- [x]`, giữ nguyên câu c
 - P1: `· B1`, `· B2`, `· B3`, `· B4`, `· B5`.
 - P2: **giữ nguyên 5 dòng `- [ ]`** (chưa làm).
 
-- [ ] **Step 4: Thêm bảng nhật ký thực thi ngay dưới mục P2**
+- [x] **Step 4: Thêm bảng nhật ký thực thi ngay dưới mục P2**
 
 ```markdown
 ### Nhật ký thực thi (v1 + v2)
@@ -388,7 +388,7 @@ Thay 10 dòng `- [ ]` trong hai mục P0/P1 thành `- [x]`, giữ nguyên câu c
 | v2 P1 — shipping & tax (B5) | `superpowers/plans/2026-10-22-phase-b5-shipping-tax.md` | [`reports/2026-10-22-phase-b5-shipping-tax.md`](superpowers/reports/2026-10-22-phase-b5-shipping-tax.md) | `bfaa5f7..46edad9` | 266 |
 ```
 
-- [ ] **Step 5: Kiểm tra bằng máy**
+- [x] **Step 5: Kiểm tra bằng máy**
 
 ```powershell
 $text = [IO.File]::ReadAllText('docs/roadmap.md')
@@ -402,7 +402,7 @@ $p2n  = [regex]::Matches($p2, '(?m)^\s*-\s*\[ \]').Count
 
 Expected: `5`, `5`, `0`.
 
-- [ ] **Step 6: Kiểm tra production trước khi khẳng định**
+- [x] **Step 6: Kiểm tra production trước khi khẳng định**
 
 ```powershell
 curl.exe -s -o NUL -w "%{http_code}`n" --max-time 60 https://ecommerce-demo-9phe.onrender.com/healthz
@@ -410,7 +410,7 @@ curl.exe -s -o NUL -w "%{http_code}`n" --max-time 60 https://ecommerce-demo-9phe
 
 Expected: `200`. Nếu khác: **không sửa số liệu khác**, đổi dòng production trong khối trạng thái thành `production: https://ecommerce-demo-9phe.onrender.com (kiểm tra lần cuối 2026-10-22; `/healthz` không phản hồi ngày 2026-10-27)` và ghi lại mã lỗi/kết quả vào report Task 6.
 
-- [ ] **Step 7: Graph gate + commit**
+- [x] **Step 7: Graph gate + commit**
 
 ```bash
 node .gitnexus/run.cjs detect-changes --scope all
@@ -431,7 +431,7 @@ Lưu ý: `docs/roadmap.md` đang có sẵn thay đổi **chưa commit** của ng
 - Consumes: cấu trúc `docs/` sau Task 1–3.
 - Produces: điểm vào duy nhất cho người mới và cho agent; quy trình chống tái phát nợ.
 
-- [ ] **Step 1: Viết file với đúng 6 mục sau**
+- [x] **Step 1: Viết file với đúng 6 mục sau**
 
 ```markdown
 # Tài liệu dự án ECommerce.Web
@@ -503,7 +503,7 @@ docs/
 - Chuyển đổi line-ending toàn repo (`.gitattributes` + renormalize) — việc riêng, không trộn vào commit tài liệu.
 ```
 
-- [ ] **Step 2: Kiểm tra link tương đối trong `docs/**/*.md` resolve (bỏ qua code fence)**
+- [x] **Step 2: Kiểm tra link tương đối trong `docs/**/*.md` resolve (bỏ qua code fence)**
 
 ```powershell
 $bad = @()
@@ -527,7 +527,7 @@ if ($bad.Count) { $bad; exit 1 } else { "OK: mọi link tương đối ngoài co
 
 Expected: `OK`. Có `->` nào → sửa link rồi chạy lại. Đây là bước chặn cho Review Focus 1.
 
-- [ ] **Step 3: Graph gate + commit**
+- [x] **Step 3: Graph gate + commit**
 
 ```bash
 node .gitnexus/run.cjs detect-changes --scope all
@@ -546,7 +546,7 @@ git commit -m "docs: add documentation index and closeout checklist"
 - Consumes: kết quả kiểm tra "không ai tham chiếu `specs/`".
 - Produces: root gọn, không còn thư mục gây nhầm với `docs/superpowers/specs/`; 1 commit xoá file.
 
-- [ ] **Step 1: Chứng minh không có cấu hình/tài liệu nào trỏ tới `specs/`**
+- [x] **Step 1: Chứng minh không có cấu hình/tài liệu nào trỏ tới `specs/`**
 
 ```powershell
 # 1) Không tooling/cấu hình nào dùng specs/
@@ -561,12 +561,12 @@ Get-ChildItem docs -Recurse -Filter *.md |
 
 Expected: lệnh 1 và 3 **rỗng**; lệnh 2 trả đúng một dòng `specs/README.md` (đã track từ `9256977`, nên Task 5 **cần** một commit). Có kết quả ở lệnh 1/3 → dừng, báo người dùng.
 
-- [ ] **Step 2: Xác nhận Playwright không dùng thư mục này**
+- [x] **Step 2: Xác nhận Playwright không dùng thư mục này**
 
 Run: `Select-String -Path playwright.config.ts -Pattern 'testDir'`
 Expected: `testDir: './tests'`.
 
-- [ ] **Step 3: Xoá bằng `git rm` (file đang được track)**
+- [x] **Step 3: Xoá bằng `git rm` (file đang được track)**
 
 ```powershell
 git rm specs/README.md
@@ -575,7 +575,7 @@ Test-Path specs                                              # False
 git status --short specs                                     # D  specs/README.md
 ```
 
-- [ ] **Step 4: Graph gate + commit**
+- [x] **Step 4: Graph gate + commit**
 
 ```bash
 node .gitnexus/run.cjs detect-changes --scope all
@@ -584,7 +584,7 @@ git commit -m "chore(docs): remove stray specs placeholder"
 
 Graph gate kỳ vọng section `specs/README.md` (docs-only, risk `low`); thấy file code → STOP.
 
-- [ ] **Step 5: Xác nhận lại**
+- [x] **Step 5: Xác nhận lại**
 
 ```powershell
 git ls-files specs          # rỗng
@@ -604,12 +604,12 @@ git status --short          # không còn dòng nào chứa specs/
 - Consumes: toàn bộ Task 1–5.
 - Produces: bằng chứng cuối cùng rằng tài liệu khớp code; là mẫu cho checklist đóng phase.
 
-- [ ] **Step 1: Chạy full test suite**
+- [x] **Step 1: Chạy full test suite**
 
 Run: `dotnet test --nologo -v q`
 Expected: `Passed! - Failed: 0, Passed: 266, Skipped: 0, Total: 266`. Khác → dừng, báo (có thể môi trường, không phải docs).
 
-- [ ] **Step 2: Kiểm chứng mọi commit SHA trong tài liệu tồn tại**
+- [x] **Step 2: Kiểm chứng mọi commit SHA trong tài liệu tồn tại**
 
 ```powershell
 $files = Get-ChildItem docs -Recurse -Filter *.md
@@ -632,7 +632,7 @@ if ($missing) { "THIẾU: $($missing -join ', ')"; exit 1 } else { "OK: $($shas.
 
 Expected: `OK: <n> SHA đều tồn tại`. SHA thiếu → sửa tài liệu hoặc bỏ khẳng định đó, không tick. Nếu SHA "thiếu" thực ra là số hiệu migration/ID, siết regex lại chứ **không** sửa tài liệu cho vừa regex.
 
-- [ ] **Step 3: Kiểm tra tính nhất quán tiến độ**
+- [x] **Step 3: Kiểm tra tính nhất quán tiến độ**
 
 ```powershell
 # 1) roadmap chỉ còn 5 ô trống = 5 mục P2
@@ -650,7 +650,7 @@ Get-ChildItem docs/superpowers/plans/*.md | Where-Object { $_.Name -ne '2026-10-
 
 Expected: `roadmap unchecked = 5`; mọi plan `todo=0 banner=True`. Dùng `[IO.File]::ReadAllText` (không `Get-Content -Raw`) để không phụ thuộc encoding mặc định của PowerShell.
 
-- [ ] **Step 4: Kiểm tra chỉ docs bị đổi so với `46edad9`**
+- [x] **Step 4: Kiểm tra chỉ docs bị đổi so với `46edad9`**
 
 ```powershell
 git diff --name-only 46edad9..HEAD
@@ -658,16 +658,16 @@ git diff --name-only 46edad9..HEAD
 
 Expected: mọi dòng bắt đầu bằng `docs/`, cộng đúng một dòng `specs/README.md` (Task 5). Có file khác → dừng, điều tra.
 
-- [ ] **Step 5: Kiểm tra không còn nợ "untracked docs"**
+- [x] **Step 5: Kiểm tra không còn nợ "untracked docs"**
 
 Run: `git status --short -- docs`
 Expected: rỗng — mọi thay đổi docs đã commit ở Task 1–4; report của Task 6 chưa được tạo ở bước này. Có dòng `??`/` M` → điều tra trước khi tiếp tục.
 
-- [ ] **Step 6: Viết report kiểm chứng**
+- [x] **Step 6: Viết report kiểm chứng**
 
 Tạo `docs/superpowers/reports/2026-10-27-docs-debt-cleanup.md` với các mục: bảng thay đổi theo task (file + commit), output thật của Step 1–5, danh sách kiểm tra Review Focus 1–5 (kèm bằng chứng từng mục), và mục "Nợ còn lại" ghi rõ: P2 chưa làm, report deploy không tồn tại, nhiễu CRLF chưa xử lý.
 
-- [ ] **Step 7: Tick toàn bộ hộp kiểm trong plan này + chạy lại 3 chốt chặn**
+- [x] **Step 7: Tick toàn bộ hộp kiểm trong plan này + chạy lại 3 chốt chặn**
 
 ```powershell
 $p = 'docs/superpowers/plans/2026-10-27-docs-debt-cleanup.md'
@@ -680,7 +680,7 @@ if ($new -ne $text) { [IO.File]::WriteAllText($p, $new, [Text.UTF8Encoding]::new
 
 Sau khi tick, chạy lại **nguyên** script link ở Task 4 Step 2 (fence-aware) và script SHA ở Step 2 trên — tick không được làm hỏng link hay SHA. Cả hai phải vẫn `OK`.
 
-- [ ] **Step 8: Graph gate + commit cuối**
+- [x] **Step 8: Graph gate + commit cuối**
 
 ```bash
 node .gitnexus/run.cjs detect-changes --scope all
@@ -688,7 +688,7 @@ git add docs/superpowers/reports/2026-10-27-docs-debt-cleanup.md docs/superpower
 git commit -m "docs: add docs cleanup verification report"
 ```
 
-- [ ] **Step 9: Báo cáo cho người dùng**
+- [x] **Step 9: Báo cáo cho người dùng**
 
 In ra: 6 commit mới (`git log --oneline -6`), số ô trống còn lại theo từng file, kết quả test, kết quả healthz, và 3 việc tiếp theo đề xuất (P2/C1, `.gitattributes`, report deploy còn thiếu).
 
