@@ -7,6 +7,7 @@ Một chỗ để biết **đọc gì**, **tin gì**, và **cập nhật gì** s
 | Câu hỏi | Đọc |
 |---|---|
 | Dự án đang ở đâu? | [`roadmap.md`](roadmap.md) — nguồn chân lý duy nhất cho tiến độ |
+| Phạm vi đã khóa / không làm gì nữa? | [`scope-lock.md`](scope-lock.md) — quy tắc đóng băng & tiêu chuẩn bản demo portfolio |
 | Yêu cầu gốc của khách? | [`01-Project-Overview-E-Commerce.docx`](01-Project-Overview-E-Commerce.docx) |
 | Vì sao thiết kế như vậy? | [`superpowers/specs/`](superpowers/specs/) — mỗi phase P1 có một design doc |
 | Đợt đó đã làm từng bước thế nào? | [`superpowers/plans/`](superpowers/plans/) — plan + hộp kiểm đã tick |
@@ -17,11 +18,11 @@ Một chỗ để biết **đọc gì**, **tin gì**, và **cập nhật gì** s
 
 | Hạng mục | Giá trị |
 |---|---|
-| Nhánh / commit | `main` @ `46edad9` (2026-10-22) |
-| Test | 266/266 PASS (`dotnet test`) |
+| Nhánh / commit | `main` @ `b78044d` (2026-10-28) |
+| Test | 277/277 PASS (`dotnet test`) |
 | Production | https://ecommerce-demo-9phe.onrender.com |
-| Đã xong | v1 (Phase 0–9), v2 P0 (A1–A10 + review fixes), v2 P1 (B1–B5) |
-| Chưa làm | v2 P2: catalog nâng cao, wishlist, reporting/export, audit log, sản phẩm liên quan |
+| Đã xong | v1 (Phase 0–9), v2 P0 (A1–A10 + review fixes), v2 P1 (B1–B5), Scope Lock (T1–T5) |
+| Chưa làm | v2 P2: đóng băng có chủ đích — xem [`scope-lock.md`](scope-lock.md) |
 | Nợ đã biết | upload ảnh thật (Render free dùng disk tạm), keepalive cold-start, background jobs, caching, CI/CD |
 
 > Snapshot này chỉ để đọc nhanh; số liệu chuẩn nằm ở `roadmap.md`.

@@ -1,6 +1,6 @@
 # E-Commerce Roadmap
 
-> **Cập nhật lần cuối:** 2026-10-27 · code `main` @ `46edad9` · test `266/266` PASS · production: <https://ecommerce-demo-9phe.onrender.com>
+> **Cập nhật lần cuối:** 2026-10-28 · code `main` @ `b78044d` · test `277/277` PASS · production: <https://ecommerce-demo-9phe.onrender.com>
 >
 > Đây là **nguồn chân lý duy nhất cho tiến độ**. Bản đồ tài liệu (spec / plan / report, quy ước cập nhật) ở [`docs/README.md`](README.md).
 
@@ -121,7 +121,7 @@ Dựa trên `01-Project-Overview-E-Commerce.docx`, chia nhỏ theo các phase c�
 - [x] Reviews & ratings sản phẩm (chỉ người đã mua) + duyệt ở Admin · B4
 - [x] Phương thức & phí vận chuyển + thuế (bỏ hardcode "Miễn phí") · B5
 
-### P2 — Tăng trưởng & vận hành
+### P2 — Tăng trưởng & vận hành (Đóng băng có chủ đích — xem [`docs/scope-lock.md`](scope-lock.md). Không lập plan)
 - [ ] Catalog nâng cao: sort (giá/mới), lọc khoảng giá, phân trang
 - [ ] Wishlist
 - [ ] Reporting/export (doanh thu, top sản phẩm, theo khoảng thời gian)
@@ -141,6 +141,7 @@ Dựa trên `01-Project-Overview-E-Commerce.docx`, chia nhỏ theo các phase c�
 | v2 P1 — coupon (B3) | `superpowers/plans/2026-10-19-phase-b3-coupons.md` | [`reports/2026-10-19-phase-b3-coupons.md`](superpowers/reports/2026-10-19-phase-b3-coupons.md) | `910b49d..8f89825` | 206 |
 | v2 P1 — reviews (B4) | `superpowers/plans/2026-10-22-phase-b4-reviews.md` | [`reports/2026-10-22-phase-b4-reviews.md`](superpowers/reports/2026-10-22-phase-b4-reviews.md) | `865ce74..1f35832` | 241 |
 | v2 P1 — shipping & tax (B5) | `superpowers/plans/2026-10-22-phase-b5-shipping-tax.md` | [`reports/2026-10-22-phase-b5-shipping-tax.md`](superpowers/reports/2026-10-22-phase-b5-shipping-tax.md) | `bfaa5f7..46edad9` | 266 |
+| Scope Lock (T1–T5) | `superpowers/plans/2026-10-28-scope-lock-ecommerce-web.md` | [`reports/2026-10-28-scope-lock.md`](superpowers/reports/2026-10-28-scope-lock.md) | `v1.0-demo` | 277 |
 
 ## Backlog còn lại (ngoài scope v2)
 - Background jobs, caching layer, CI/CD pipeline
