@@ -141,8 +141,10 @@ using (var scope = app.Services.CreateScope())
 
     if (useSqlite)
     {
-        // Dùng MigrateAsync cho SQLite (prod hardening): tránh bỏ qua migration incremental
-        await db.Database.MigrateAsync();
+        // SQLite demo: dùng EnsureCreatedAsync thay vì MigrateAsync
+        // (do migration/snapshot trong repo được scaffold cho SQL Server,
+        // MigrateAsync trên SQLite sẽ bị PendingModelChangesWarning sập startup SIGABRT exit 134).
+        await db.Database.EnsureCreatedAsync();
         // Demo nhiều người bấm cùng lúc: WAL cho phép đọc song song khi đang ghi,
         // giảm lỗi "database is locked" (vẫn có thể xảy ra nếu 2 checkout cùng lúc —
         // xem runbook demo).
